@@ -1,0 +1,26 @@
+AuroraChat projemin mobil arayüzünü ve kullanıcı deneyimini (UX) aşağıdaki kriterlere göre modernize et ve hataları gider:
+
+1. Mesajlaşma ve Emoji Sistemi (Görsel Hata Giderme)
+Girdi Görünürlüğü: Sohbet ekranında (#sohbet) emoji ismi yazıldığında çıkan öneri menüsü, kullanıcının yazdığı metnin üstünü kapatmamalı. Input alanının yüksekliğini dinamik ayarla ve z-index çakışmalarını gidererek yazılan metnin her zaman görünür kalmasını sağla.
+
+2. Sunucu ve Kanal Menüsü (Layout Revizyonu)
+Sidebar Birleştirme: Sunucu listesi (en soldaki bar) ile kanal listesini (kategorilerin olduğu yer) Discord mobil uygulamasındaki gibi birbiriyle uyumlu hale getir. Aradaki boşlukları kaldır ve kanal listesinin ekranın sağ tarafını tam kaplamasını sağla (Responsive Flexbox/Grid yapısı).
+
+Etkileşim Hatası: Sunucu ekleme (+ butonu) tıklanamama sorununu gider. Butonun üzerindeki görünmez katmanları temizle ve dokunma alanını (hitbox) mobil uyumlu yap.
+
+3. Üye Listesi ve Güvenli Alanlar
+Tam Ekran Görünüm: Sağ taraftan açılan üye listesi (Sunucu Sahibi/Çevrimdışı) mobil cihazlarda ekranı tam kaplayacak şekilde responsive olsun.
+
+Safe Area: Arayüzün çentikli telefonlarda (notch) veya alt navigasyon barlarında kesilmemesi için padding-top/bottom: env(safe-area-inset-...) değerlerini kullanarak güvenli alan ayarlarını yap.
+
+4. DM (Özel Mesaj) ve Gerçek Zamanlı Statü Sistemi
+Üst Bilgi Çubuğu: DM ekranında en üstte kullanıcının ismi ve o anki durumu (Çevrimiçi, Boşta vb.) yer alsın. Bu durum bilgisi WebSocket/Socket.io üzerinden gerçek zamanlı güncellensin.
+
+Veri Kaydı: Kullanıcıların ayarladığı statü bilgileri hem sunucu tarafındaki veri tabanına hem de localStorage (local) üzerine kaydedilsin. Sayfa yenilendiğinde statü kaybolmasın.
+
+Mesaj Tasarımı: DM arayüzünde (son resimdeki bozuklukları gidererek) kendi yazdığımız mesajlar ile karşı tarafın mesajlarını görsel olarak eşitle. İsteğim üzerine; her iki tarafın mesajı da aynı renkte ve sola hizalı olsun.
+
+5. Güncelleme Notu Ekle
+Uygulamanın 'Hakkında' veya 'Duyurular' kısmına şu notu ekle: "v0.3.7 Sürüm Notu: Mobil arayüz iyileştirmeleri, DM statü senkronizasyonu ve emoji girdi hataları giderildi."
+
+Kod yapısını temiz tut, CSS'de çakışan position: absolute değerlerini kontrol et ve mobil tarayıcılarda (Chrome/Safari) tam uyumluluk sağla."

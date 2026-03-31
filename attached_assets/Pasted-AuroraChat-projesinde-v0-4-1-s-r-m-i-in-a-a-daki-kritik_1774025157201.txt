@@ -1,0 +1,25 @@
+AuroraChat projesinde v0.4.1 sürümü için aşağıdaki kritik hata düzeltmelerini, UI iyileştirmelerini ve yeni özellikleri uygula:
+
+1. Komut Mantığı ve Bot Hataları
+AFK Sistemi Revizyonu: /afk modundaki bir kullanıcı etiketlendiğinde, botun verdiği 'Bu kullanıcı şu an AFK' cevabını sadece sunucu sahibi değil, kanaldaki herkes görebilmeli. Mesajın gönderilme mantığını ephemeral: true yerine genel mesaj (channel.send) olarak değiştir.
+
+Info Komutu: /info (sunucu/kullanıcı bilgisi) komutundaki bozukluğu gider. Verilerin doğru çekildiğinden ve mesajın düzgün bir embed yapısıyla gönderildiğinden emin ol.
+
+2. UserInfoPanel (Kullanıcı Paneli) Görsel Düzeltenler
+Kullanıcı Adı Görünürlüğü: Sol alttaki panelde (image_a8c463.png) kullanıcı adının 'T...' şeklinde kesilmesini engelle. Genişliği (width) dinamik ayarla veya text-overflow: ellipsis yerine daha geniş bir alan ayırarak tam görünmesini sağla.
+
+İkon ve Rozet Sistemi: >   - Taç İkonu: Sadece 'Sunucu Sahibi' için kalsın. Üzerine gelindiğinde (tooltip) 'Sunucu Sahibi' yazsın.
+
+Premium İkonu: Premium üyeler için taç yerine farklı bir ikon (Örn: Elmas/Diamond veya Yıldız) koy. Üzerine gelindiğinde 'AuroraChat Premium Üyeliği' yazsın.
+
+3. DMDashboard ve Genel Arayüz Geliştirmesi
+Discord Tarzı DM: DM arayüzünü (image_a8c463.png) geliştir. Sol tarafa DM geçmişi listesi, sağ tarafa ise daha geniş ve modern bir arkadaş listesi alanı ekle. Renk paletini ve boşlukları (padding/margin) Discord'un modern "Friends" sekmesine benzet.
+
+Loading Screen (Yükleme Ekranı): Yükleme ekranını daha şık bir hale getir. Orta kısma bir logo alanı ekle (bu alana kullanıcıdan gelecek olan logo yerleştirilecek).
+
+4. Devamlılık ve Sürüm Yönetimi
+Remix/Devamlılık: Eğer daha önceki işlemlerden yarım kalan bir kod dizisi veya state yapısı varsa, mevcut yapıya sadık kalarak üzerine inşa et.
+
+Sürüm Notu: Uygulama içindeki güncelleme paneline şunu ekle: 'v0.4.1 Sürüm Notu: AFK mesaj senkronizasyonu düzeltildi, /info komutu onarıldı, kullanıcı paneli ve DM arayüzü modernize edildi, yeni rozet sistemine geçildi.'
+
+Kodları temiz, responsive ve performanslı bir şekilde güncelle."

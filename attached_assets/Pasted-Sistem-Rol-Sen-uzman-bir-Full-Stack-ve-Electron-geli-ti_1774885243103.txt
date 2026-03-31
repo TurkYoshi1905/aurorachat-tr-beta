@@ -1,0 +1,35 @@
+Sistem Rolü: Sen uzman bir Full-Stack ve Electron geliştiricisisin. Uygulamamızı v0.6.1 sürümüne yükseltmek için aşağıdaki görevleri sırasıyla ve birbirini bozmayacak şekilde tamamla.
+
+1. Masaüstü Uygulaması (Electron) Hatasının Çözümü:
+
+Resimdeki ReferenceError: require is not defined hatasını gidermek için Nativefier build komutuna --node-integration ve --context-isolation false parametrelerini ekle. Proje type: module kullandığı için ana işlemdeki (main process) import/require çakışmasını giderecek yapılandırmayı uygula.
+
+2. CSS Animasyon ve Gradient Düzeltmesi:
+
+Kullanıcı adı gradient geçişini soldan sağa (to right) olacak şekilde güncelle.
+
+Animasyon hızını artır. Animasyon varsayılan olarak paused (durmuş) olsun; sadece :hover (üzerine gelindiğinde) running durumuna geçsin ve kullanıcı adı üzerinde kalındığı sürece sonsuz döngüde devam etsin.
+
+3. DM Arama Sistemi (Calling UI & Logic):
+
+Arama Ekranı: A kullanıcısı arama başlattığında ekranda "[Kullanıcı] Aranıyor..." yazısı ve dönen bir yükleme ikonu olan tam ekran bir overlay çıkar.
+
+İptal Butonu: Arama ekranına anında "Aramayı Kapat/İptal Et" butonu ekle. Bu buton bekleme süresi olmadan soket bağlantısını sonlandırıp ekranı kapatsın.
+
+Dashboard Entegrasyonu: Arkadaşlar listesindeki 3 nokta menüsünde bulunan "Sesli Arama" seçeneğini işlevsel hale getir; tıklandığında DM arama sürecini başlatsın.
+
+4. Güvenlik ve Sunucu Mantığı:
+
+Yasaklı (Ban) Kontrolü: Bir kullanıcı sunucudan yasaklandığında, sunucu ID'si ile giriş yapmaya çalışsa bile backend (veritabanı check) üzerinden erişimi engelle. Yasaklıysa "Bu sunucudan yasaklandınız" uyarısı ver.
+
+Davet Embed (Resim 2): Davet mesajındaki "0 Üye" hatasını düzelt. Veritabanından o sunucuya ait güncel üye sayısını çekip embed içine yazdır.
+
+5. Real-Time (Gerçek Zamanlı) Akış:
+
+Yeni sunucu oluşturulduğunda veya bir davetle katılınca, sol taraftaki sunucu listesi sayfa yenilenmeden güncellensin ve kullanıcı otomatik olarak o sunucunun genel kanalına yönlendirilsin.
+
+Bildirim Yönlendirme: DM bildirimindeki "Mesaja Git" butonuna basıldığında sadece ilgili DM sayfasına gitmekle kalma, messageId üzerinden o mesaja odaklan (scrollIntoView).
+
+6. Yayınlama:
+
+v0.6.1 sürüm notlarını hazırla. Projeyi güncel haliyle GitHub'a push et. Masaüstü build dosyasının adını değiştirmeden sürümü güncelle.

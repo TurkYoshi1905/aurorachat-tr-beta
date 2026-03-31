@@ -1,0 +1,29 @@
+Görev: AuroraChat uygulamasında engelleme sistemi, rol tabanlı yetkilendirme (RBAC) ve real-time (anlık) veri güncellemelerini düzelt.
+
+1. Gelişmiş Engelleme Sistemi ve Mesajlaşma UI (Resim 2 & 4):
+
+Engelleme Mantığı: Eğer A kullanıcısı B kullanıcısını engellemişse; A kullanıcısı DM sayfasına girdiğinde mesaj yazma alanı yerine Resim 2'deki gibi "Engellediğin bir kullanıcıya mesaj gönderemezsin. [Engeli Kaldır]" barı çıkmalı.
+
+Sistem Mesajları: Engelli kullanıcılar arasındaki mesaj gönderim denemelerinde hata mesajları real-time olarak tetiklenmeli ve mesaj gönderimi hem client hem de server tarafında engellenmeli.
+
+Onay Modalı: Bir kullanıcıyı engelleme butonuna tıklandığında, Resim 4'teki gibi kapsamlı bir "Kişiyi Engelle?" uyarı penceresi (Modal) açılmalı. (Direkt mesajları durdur, profili sınırla gibi detayları içeren bir UI).
+
+2. Rol ve İzin Sistemi (Resim 3):
+
+Yetki Kontrolü: Sunucu ayarlarında bir kullanıcıya "Sunucu Sahibi" veya yönetici izinlerine sahip bir rol (Deneme, Üye vb.) atandığında, bu izinlerin kod tarafında (frontend/backend) karşılığı olmalı.
+
+Erişim Engeli Kaldırma: "Sunucu Sahibi" veya "Yönetici" yetkisi olan kullanıcıların sunucu ayarlarını değiştirememesi hatasını düzelt. server_members ve roles tablolarını kontrol ederek, kullanıcının sahip olduğu en yüksek yetkiye göre UI elementlerini (kanal silme, üye yasaklama vb.) aktif et.
+
+Real-time Rol Güncelleme: Bir kullanıcıya rol verildiğinde veya rolü alındığında, sayfa yenilenmeden kullanıcının yetkileri anında güncellenmeli.
+
+3. Real-time (Anlık) Senkronizasyon Hataları (/poll & Tepkiler):
+
+Silme İşlemleri: /poll (anket) komutunda bir seçenek kaldırıldığında veya bir mesajdan emoji tepkisi (reaction) geri çekildiğinde, bu durum diğer kullanıcılarda anlık olarak yansımıyor.
+
+Çözüm: Supabase Realtime listener'larını sadece INSERT için değil, DELETE ve UPDATE olaylarını da kapsayacak şekilde güncelle. Payload içindeki eski veriyi (old_record) yakalayarak state'den temizle.
+
+4. UI/UX İyileştirmeleri:
+
+UserProfileCard üzerindeki "Mesaj" butonuna tıklandığında, engelleme durumu kontrol edilerek DM penceresine yönlendir.
+
+Tüm bu işlemler sırasında kullanıcıya Discord tarzı toast bildirimleri gönderilmeye devam edilsin.

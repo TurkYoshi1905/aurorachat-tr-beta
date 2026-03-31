@@ -1,0 +1,41 @@
+Rol ve Görev: Sen kıdemli bir Full-Stack Geliştiricisin. Discord benzeri uygulamamızın v0.5.0 güncellemesini geliştiriyoruz. Lütfen aşağıdaki 7 görevi sırasıyla, temiz kod (clean code) prensiplerine ve modüler yapıya uygun şekilde gerçekleştir. Her adımı bitirdiğinde bana bilgi ver.
+
+1. Arayüz (UI) ve Tam Ekran Düzeltmesi:
+
+Tam ekran modundayken kullanıcı adının kontrol panelinin altında kalması/gözükmemesi sorununu çöz. İlgili div'lerin z-index ve position değerlerini düzenleyerek kullanıcı profilinin/adının her zaman doğru katmanda görünür olmasını sağla.
+
+2. Sesli Sohbet ve Metin Kanalı Geçişi:
+
+Sesli sohbet (toplantı) arayüzünün tasarımını daha modern ve temiz bir hale getir.
+
+Kullanıcıların sesli sohbet paneli ile standart metin sohbeti arasında geçiş yapabilmesi için bir "aç/kapat" (toggle) yapısı kur. Sesli sohbetteyken metin kanalına dönülebilmeli, panel küçültülebilmeli veya tamamen kapatılabilmeli.
+
+3. Kullanıcı Ayarları Entegrasyonu:
+
+Kullanıcı ayarlarındaki "Görünüm ve Dil" sekmesinde bulunan ses ayarlarını veritabanına (veya kalıcı state'e/localStorage) bağla. Kullanıcı bir ayar değiştirdiğinde bu kaydedilsin ve sayfa yenilendiğinde aynı şekilde kalsın.
+
+4. Bildirim Sistemi (Web-Push & In-App):
+
+Projeye web-push kütüphanesini kur ve entegre et (VAPID key yapılandırmalarını dahil et).
+
+Bir kullanıcı etiketlendiğinde (@mention) hem tarayıcı (web-push) bildirimi hem de uygulama içi (Discord tarzı) bildirim gönder.
+
+Bildirim Geçmişi UI'ını geliştir. Bildirimlerin (hem geçmişteki hem de anlık gelenlerin) üzerine tıklandığında, kullanıcının doğrudan o mesajın bulunduğu kanala ve mesaja odaklanmasını (scroll/redirect) sağla.
+
+Sağ alttan çıkan uygulama içi bildirimlerin (toast) tasarımını iyileştir, diğer UI elementlerinin üstünü örtmeyecek daha ergonomik bir konuma taşı.
+
+5. /poll (Anket) Gerçek Zamanlı Güncelleme Sorunu:
+
+Kullanıcı bir anket seçeneğine tıkladığında ve oyunu geri çektiğinde, bu işlemin UI'da anında yansımaması sorununu WebSocket/Socket.io eventleri ile çöz. Oy ekleme ve oy kaldırma durumları için state'i anında güncelleyecek emit/broadcast mantığını kur.
+
+6. Gerçek Zamanlı Üye Yönetimi (Kick/Atma):
+
+Sunucu ayarları "Üyeler" listesinden bir kullanıcı atıldığında;
+
+Atılan kullanıcı o anda aktifse, WebSocket üzerinden bir event ile arayüzden atılsın ve anında ana sayfaya/dışarı yönlendirilsin.
+
+O sırada sunucuda olan diğer tüm kullanıcıların "Kullanıcı Listesi" paneli sayfayı yenilemeye gerek kalmadan gerçek zamanlı olarak güncellensin.
+
+7. Sürüm Notları (v0.5.0):
+
+Ana sayfaya, duyurular kısmına veya uygun bir modal içine "0.5.0 Sürüm Notları"nı ekle ve bu güncellemelerin (Sesli sohbet iyileştirmeleri, bildirim güncellemeleri, anket düzeltmeleri vb.) listelendiği şık bir arayüz tasarla.

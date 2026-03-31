@@ -1,0 +1,32 @@
+Rol: Uzman Full-Stack Geliştirici (React 19, Supabase, Web API'leri)
+
+Görev: Mevcut uygulamanın mimarisini güncelle ve izinler, gerçek zamanlı güncellemeler ve bildirim sistemlerindeki kritik hataları düzelt.
+
+1. Çekirdek Güncellemeler
+React Güncellemesi: React ve React-DOM kütüphanelerini en son kararlı sürüme (v19) yükselt. Tüm hook'ların ve bileşenlerin yeni sürümle uyumlu olduğundan emin ol.
+
+Service Workers & Push API: >     * Arka plan görevleri için service-worker.js yapılandırmasını kur.
+
+Web Push API ve Notifications API entegrasyonunu tamamla.
+
+Kullanıcıların bildirim izni almasını sağlayan akışı oluştur ve push_subscription verilerini Supabase'de (profiles veya subscriptions tablosu) sakla.
+
+2. Hata Düzeltmeleri ve Mantık İyileştirmeleri
+Üye Atma (Kick) Mantığı: Sunucu ayarlarındaki "Kick" işlevini düzelt. Bir kullanıcı server_members tablosundan silindiğinde, bu değişikliğin anında yansımasını ve kullanıcının erişiminin Supabase RLS (Row Level Security) üzerinden kesilmesini sağla.
+
+Engelleme Sistemi (A, B'yi Engeller): >     * A kullanıcısı B kullanıcısını engellediğinde, B'nin A'ya mesaj yazmasını ve arkadaşlık isteği atmasını hem arayüzde hem de veritabanı seviyesinde engelle.
+
+Bildirim Geçmişi ve DM Dashboard: >     * Bildirim sistemini genel (global) bir yapıya dönüştür. Bildirimler sadece sunucularla kısıtlı kalmasın; DM Dashboard üzerinde de tüm bildirim geçmişi görüntülenebilir olsun.
+
+"Mesaja Git" Hatası: Bildirim geçmişindeki "Mesaja Git" butonunun ilgili channel_id veya dm_id rotasına doğru yönlendirme yapmasını ve mesajı odağa almasını sağla.
+
+Real-time Anketler (/poll): Anket mantığını güncelle. Şu an sadece seçenek eklerken gerçek zamanlı çalışıyor; bir seçenek kaldırıldığında veya oy geri çekildiğinde de Supabase Realtime üzerinden tüm kullanıcılarda anlık güncellenmesini sağla.
+
+3. Teknik Gereksinimler
+Performans için Vite yapılandırmasını kontrol et.
+
+Tüm Supabase sorgularında Row Level Security (RLS) kurallarına sadık kal.
+
+Klasör yapısını temiz ve modüler tut (/components, /hooks, /services, /context).
+
+Lütfen adım adım ilerle. Önce bağımlılıkları güncelle, ardından Service Worker kurulumuna geç ve hataları sırasıyla gider.

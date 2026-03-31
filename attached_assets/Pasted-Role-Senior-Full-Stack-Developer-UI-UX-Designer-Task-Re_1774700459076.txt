@@ -1,0 +1,41 @@
+Role: Senior Full-Stack Developer & UI/UX Designer
+
+Task: Resimdeki sesli sohbet/toplantı arayüzünü modern bir "Video Konferans" deneyimine dönüştür, teknik hataları gider ve WebRTC özelliklerini geliştir.
+
+1. Görsel ve Arayüz (UI/UX) İyileştirmeleri
+Genel Tasarım: Resimdeki karanlık temayı koru ancak Glassmorphism efektleri ekle. Arka planı daha derin bir #0f0f0f tonuna çek. Bileşen kenarlarını rounded-2xl yaparak yumuşat.
+
+Alt Kontrol Paneli (Bottom Bar): >     * Mevcut kaba butonları kaldır. Daha şık, yarı şeffaf (blur) bir panel oluştur.
+
+Butonlar aktif/pasif durumuna göre renk değiştirsin (Örn: Mikrofon kapalıyken kırmızı, açıkken neon yeşil).
+
+"Ayrıl" butonunu panelden biraz ayır veya daha belirgin bir kırmızı yap.
+
+Sağ Kullanıcı Listesi Fix: >     * Ekran paylaşımı açıkken sağ tarafta üst üste binen veya bozuk görünen kullanıcı kartlarını düzelt.
+
+Kullanıcı profil resimlerini (Avatar) tam daire yap, etrafına "konuşuyor" efekti (yeşil halka) ekle.
+
+İsimlerin okunabilirliğini artırmak için hafif bir text-shadow veya gradyan ekle.
+
+2. Ekran Paylaşımı & Ses Teknolojisi
+Yüksek Kalite: getDisplayMedia ayarlarını güncelle. Çözünürlüğü ideal: 1080p, kare hızını frameRate: 30 veya 60 olarak sabitle.
+
+Ekran Paylaşımı Sesi: Ekran paylaşımı başlatıldığında sistem sesini (audio track) yakala. Alt panele "Sistem Sesini Paylaş/Kapat" butonu ekle. Bu buton, paylaşılan stream içindeki audioTrack.enabled özelliğini yönetmeli.
+
+3. Push API & Bildirim Hatası Çözümü (Kritik)
+Hata Giderme: Push subscription failed: AbortError hatasını çözmek için:
+
+manifest.json dosyasının doğruluğunu ve gcm_sender_id eksikliğini kontrol et.
+
+Service Worker kayıt (registration) sürecini navigator.serviceWorker.ready ile asenkron bekleme yapacak şekilde güncelle.
+
+VAPID Public Key'in urlBase64ToUint8Array dönüşümünü kontrol et.
+
+Masaüstü Bildirimleri: Uygulama açık değilken bile mesaj veya arama geldiğinde Windows/MacOS yerel bildirimini tetikleyecek mantığı kur.
+
+4. Teknik Stack & Supabase
+Kullanıcıların sesli kanaldaki durumlarını (mikrofon açık mı, ekran paylaşıyor mu?) Supabase presence veya realtime üzerinden senkronize et.
+
+Tüm veri trafiğini useContext veya Zustand ile yöneterek prop-drilling'den kaçın.
+
+Lütfen önce alt kontrol panelini ve ekran paylaşımı kalitesini düzelterek başla, ardından Push API hatasına odaklan.

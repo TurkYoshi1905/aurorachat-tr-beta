@@ -1,0 +1,29 @@
+Görev: AuroraChat uygulamasında WebRTC ses bağlantı sorunlarını çöz, global state yönetimini düzelterek ayarlara girildiğinde sesten düşme hatasını gider, Discord benzeri sesli sohbet arayüzünü ekle ve sürümü 0.4.8'e yükselt.
+
+1. Sesten Kopma Hatası (Global State & Bağlantı Kopması):
+
+Sorun: Kullanıcı ayarlar veya sunucu ayarları sayfasına (veya farklı bir route'a) geçtiğinde sesli sohbet bağlantısı kopuyor.
+
+Çözüm: Sesli sohbet bağlantı mantığını (WebRTC RTCPeerConnection, MediaStream ve Socket/Realtime sinyalleşme işlemleri) kanal bazlı bir bileşenden çıkarıp uygulamanın en üst seviyesine (örneğin VoiceContext, Zustand store veya App.jsx seviyesinde bir provider'a) taşı. Böylece UI değişse bile arka plandaki ses bağlantısı (stream) açık kalmaya devam etsin.
+
+2. Ses Gelmeme Sorunu (WebRTC Debugging):
+
+Yan yana iki sekmede test edildiğinde ses iletilmiyor. Lütfen getUserMedia ile mikrofon izinlerinin doğru alındığından ve srcObject olarak <audio> etiketlerine (tercihen gizli veya UI'da olan) eklendiğinden emin ol.
+
+Gelen stream'lerin (remote streams) audio elementlerinin autoPlay özelliğine sahip olduğunu ve muted olmadığını kontrol et (kendi sesimiz muted olmalı, karşı tarafınki olmamalı).
+
+3. Discord Tarzı Sesli Sohbet Arayüzü (UI):
+
+Bir ses kanalına bağlanıldığında, sağ tarafa (veya kanal listesinin altına) Discord'daki gibi bir "Aktif Sesli Sohbet" arayüzü ekle.
+
+Bu arayüzde odadaki kullanıcıların avatarları/isimleri görünmeli. Kullanıcı konuşurken (audio stream'den volume algılanarak) profilinin etrafında yeşil bir yanıp sönme efekti (halo) olsun.
+
+Bu sağ paneli/arayüzü açıp kapatabilmek için bir "Görünümü Değiştir" (Toggle) butonu ekle.
+
+4. Sürüm 0.4.8 Güncellemesi ve Karşılama Toast'u:
+
+Uygulama sürümünü her yerde 0.4.8 olarak güncelle.
+
+Sürüm Notları / Hakkında: "0.4.8 Sürümü: Sesli sohbet altyapısı yenilendi, ayarlara girince sesten düşme sorunu çözüldü ve yeni sesli sohbet arayüzü eklendi." metnini ilgili yerlere ekle.
+
+Açılış Bildirimi (Toast): Kullanıcı siteye girdiğinde ekrana bir kez çıkacak şekilde: 🎉 "Yeni Güncelleme! AuroraChat 0.4.8 yayınlandı! Sesli sohbet iyileştirmelerini deneyin." şeklinde bir toast notification tetikle.

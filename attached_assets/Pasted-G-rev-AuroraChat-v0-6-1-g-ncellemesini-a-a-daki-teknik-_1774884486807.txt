@@ -1,0 +1,33 @@
+Görev: AuroraChat v0.6.1 güncellemesini aşağıdaki teknik gereksinimlere göre tamamla. Her adımı "Clean Code" prensipleriyle uygula ve tamamlandığında GitHub'a push et.
+
+1. Electron Çalıştırma Hatasının Düzeltilmesi (Görsel 1):
+
+package.json dosyasında "type": "module" tanımlı olduğu için Electron require komutunu tanımıyor. Main process dosyasında require yerine import kullanmaya geçiş yap veya build sırasında CommonJS uyumluluğu sağla.
+
+2. CSS Animasyon ve Gradient Revizesi:
+
+Kullanıcı adı gradient'ını soldan sağa (to right) olacak şekilde düzelt.
+
+Animasyonu varsayılan olarak animation-play-state: paused; yap.
+
+Animasyon sadece mouse ile kullanıcı adının üzerine gelindiğinde (:hover) çalışsın ve mouse orada kaldığı sürece oynamaya devam etsin (animation-play-state: running;).
+
+3. DM Arama ve "Aranıyor" Ekranı:
+
+A kullanıcısı arama başlattığında, ekranda tam sayfa veya modal şeklinde "B Kullanıcısı Aranıyor..." ibaresi görünsün.
+
+Bu ekrana bir "Kapat/İptal" butonu ekle. Bu buton, karşı taraf yanıtlamadan aramayı WebSocket üzerinden sonlandırmalı.
+
+Arkadaşlar listesindeki (Dashboard) 3 nokta menüsünde bulunan "Sesli Arama" butonunu işlevsel hale getir; tıklandığında ilgili DM odasına yönlendirip aramayı başlatsın.
+
+4. Güvenlik ve Sunucu Mantığı:
+
+Yasaklı (Ban) Kontrolü: Bir kullanıcı bir sunucudan yasaklandığında, veritabanında bans tablosunu kontrol et. Eğer kullanıcı yasaklıysa, sunucu URL'sine manuel gitmeye çalışsa bile erişimi engelle ve ana sayfaya yönlendir.
+
+Davet Sistemi (Görsel 2): Davet embed mesajındaki "Üye Sayısı" kısmını düzelt. 0 görünmesi yerine veritabanından o sunucunun anlık üye sayısını çek.
+
+Real-time Server List: Bir sunucuya katıldığında veya yeni bir tane oluşturduğunda, sol menüdeki sunucu listesi sayfa yenilenmeden güncellensin ve kullanıcı otomatik olarak o sunucunun genel kanalına yönlendirilsin.
+
+5. Bildirim ve Navigasyon:
+
+DM bildirimlerindeki "Mesaja Git" butonuna basıldığında, sadece DM odasını açmakla kalma; ilgili mesajın ID'sine odaklan (scrollIntoView) ve mesajı vurgula.

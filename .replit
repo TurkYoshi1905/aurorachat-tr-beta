@@ -1,0 +1,54 @@
+modules = ["nodejs-20", "web", "postgresql-16"]
+[agent]
+expertMode = true
+integrations = ["javascript_database:1.0.0"]
+
+[nix]
+channel = "stable-25_05"
+packages = ["supabase-cli"]
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["npx", "serve", "-s", "dist", "-l", "5000"]
+build = ["npm", "run", "build"]
+
+[userenv]
+
+[userenv.shared]
+VITE_SUPABASE_URL = "https://ktittqaubkaylprxnoya.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0aXR0cWF1YmtheWxwcnhub3lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzI3NDAsImV4cCI6MjA4ODIwODc0MH0.nmgU8lXCueNmDyoDtX94x9uOAY9292ZTFaaXz8XI3dU"
+VITE_SUPABASE_PROJECT_ID = "ktittqaubkaylprxnoya"
+VITE_VAPID_PUBLIC_KEY = "BFZa6JuafWQIRRMYKyQf1JsIa-4MqIFjVi9mFguUKpag6SxxoM8tmufl2UwG7UXbTLlBwtS1vuIyYFJuTC-b-Rc"
+RECAPTCHA_SECRET_KEY = "6LdS-J8sAAAAAGfmYkT2JGKLxEakkfwMOzbOlJGW"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000

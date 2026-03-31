@@ -1,0 +1,31 @@
+AuroraChat projemde v0.4.0 sürümüne geçiyoruz. Aşağıdaki kritik hataları gider, eksik özellikleri tamamla ve performansı optimize et:
+
+1. Real-time (Gerçek Zamanlı) Sistem ve Bot Senkronizasyonu
+Mesaj Silme Senkronizasyonu: Sunucu sahibi bir bot mesajını sildiğinde, bu değişiklik tüm bağlı kullanıcıların ekranından anında (Supabase Realtime veya Socket.io üzerinden) silinmeli. State yönetimini (useEffect veya store) güncelle.
+
+AFK Sistemi: Bir kullanıcı AFK olduğunda botun gönderdiği mesajın tüm kullanıcılara ulaştığından emin ol. Broadcast/Realtime kanalını kontrol et.
+
+Rol Atama: Sunucu ayarlarında bir kullanıcıya rol atandığında, sayfa yenilenmeden kullanıcının ismi veya rengi (render) anında güncellenmeli.
+
+Davet Sistemi: Normal üyelerin de sunucuya davet linki oluşturabilmesini sağla. Davetler gerçek zamanlı çalışmalı ve veri tabanına kaydedilmeli.
+
+2. i18n ve Kullanıcı Ayarları Geliştirmesi
+i18n Hatası: Gizlilik Politikası sayfasındaki privacy.title gibi ham anahtar isimlerini düzelt. Eksik olan tüm çeviri dosyalarını (TR/EN) tamamla.
+
+Ayarlar Menüsü: Kullanıcı ayarlarındaki 'Hesap', 'Görünüm', 'Bildirimler' gibi tüm alt sayfaları görsel olarak geliştir ve eksik dil çevirilerini ekle.
+
+3. Güvenlik ve 2FA (İki Faktörlü Doğrulama)
+2FA Hatası: 2FA etkin olduğu halde giriş yaparken kod istememe sorununu çöz. Supabase Auth akışını kontrol et; kullanıcı şifre girdikten sonra eğer 2FA aktifse OTP (tek kullanımlık kod) sayfasına yönlendirilmeli.
+
+4. Performans ve Optimizasyon
+Yükleme Hızı: Sunucular ve kanallar listesinin yüklenme mantığını optimize et. Gerekirse Suspense kullan veya verileri önbelleğe (cache) al.
+
+Bot Gecikmesi: Bot komutlarının işlenme süresini (latency) azalt. Komut geldiğinde anında tepki verecek bir asenkron yapı kur.
+
+Loading Screen: Uygulama açılışındaki yükleme ekranını daha modern ve akıcı bir animasyonla (Lottie veya CSS Skeleton) değiştir.
+
+5. Supabase SQL Gereksinimleri
+Bu özellikler için (Roller, Davetler, 2FA durumu) veri tabanında yapılması gereken bir değişiklik (yeni tablo veya kolon) varsa, bana çalıştırabileceğim SQL kodunu blok halinde ver.
+
+6. Sürüm Notu
+Uygulamanın güncelleme kısmına şunu ekle: 'v0.4.0 Sürüm Notu: 2FA güvenlik düzeltmeleri, gerçek zamanlı rol ve mesaj senkronizasyonu, gelişmiş i18n desteği ve performans iyileştirmeleri yapıldı.'"

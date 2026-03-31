@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "qMZ6BclFPBHzBOIZ-M2P1"
+uri = "file://builds/AuroraChat-linux-x64.tar.gz"
+type = "unspecified"
+title = "AuroraChat - Linux x64 (tar.gz)"
+
+[[outputs]]
+id = "sS-IU8e5MR4pV6E5FC6s_"
+uri = "file://builds/AuroraChat-Windows-x64.zip"
+type = "unspecified"
+title = "AuroraChat - Windows x64 (.exe) Zip"
+
+[[outputs]]
+id = "1wsKEM8DY43YzxvFHF_x6"
+uri = "file://builds/AuroraChat-Windows-x64-v057.zip"
+type = "unspecified"
+title = "AuroraChat v0.5.7 - Windows x64 (İkonlu .zip)"
