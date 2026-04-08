@@ -1,0 +1,13 @@
+{
+  "name": "AuroraChat",
+  "targetUrl": "https://aurorachat-tr-beta--gojofanitr.replit.app",
+  "appVersion": "0.6.1",
+  "overwrite": true,
+  "asar": false,
+  "browserwindow-options": {
+    "webPreferences": {
+      "nodeIntegration": true,
+      "contextIsolation": false
+    }
+  }
+}
