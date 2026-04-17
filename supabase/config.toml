@@ -1,0 +1,16 @@
+project_id = "ktittqaubkaylprxnoya"
+
+[functions.verify-recaptcha]
+verify_jwt = false
+
+[functions.toggle-premium-badge]
+verify_jwt = false
+
+[functions.livekit-token]
+verify_jwt = false
+
+[functions.send-push]
+verify_jwt = false
+
+[functions.spotify-token]
+verify_jwt = false
