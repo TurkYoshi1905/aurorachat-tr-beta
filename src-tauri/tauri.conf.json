@@ -1,0 +1,75 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "https://aurorachat-beta-tr.netlify.app/",
+    "distDir": "webview-dist",
+    "withGlobalTauri": false
+  },
+  "package": {
+    "productName": "AuroraChat",
+    "version": "1.0.2"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "nsis",
+      "identifier": "com.aurorachat.app",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.ico"
+      ],
+      "resources": [],
+      "externalBin": [],
+      "copyright": "Copyright © 2026 AuroraChat",
+      "category": "SocialNetworking",
+      "shortDescription": "AuroraChat Desktop",
+      "longDescription": "Discord benzeri gerçek zamanlı sohbet uygulaması",
+      "windows": {
+        "nsis": {
+          "installMode": "perMachine",
+          "languages": ["Turkish"],
+          "displayLanguageSelector": false
+        }
+      }
+    },
+    "updater": {
+      "active": true,
+      "dialog": true,
+      "pubkey": "RWRrvYHZXuWdZE1zJzAFkU/4L6CKNTAxmSFN9TGLgB2a+wY5+5/kp1oA",
+      "endpoints": [
+        "https://github.com/TurkYoshi1905/aurorachat-tr-beta/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "AuroraChat",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "url": "https://aurorachat-beta-tr.netlify.app/",
+        "fileDropEnabled": false
+      }
+    ]
+  }
+}

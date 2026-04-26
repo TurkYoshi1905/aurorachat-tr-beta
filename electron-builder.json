@@ -1,0 +1,62 @@
+{
+  "appId": "com.aurorachat.app",
+  "productName": "AuroraChat",
+  "copyright": "Copyright © 2026 AuroraChat",
+  "npmRebuild": false,
+  "forceCodeSigning": false,
+  "asar": true,
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "electron/main.js",
+    "electron/preload.js",
+    "electron/package.json",
+    "build/icon.png",
+    "package.json",
+    "!node_modules/**",
+    "!src/**",
+    "!public/**",
+    "!dist/**",
+    "!builds/**",
+    "!*.md",
+    "!*.zip",
+    "!*.exe"
+  ],
+  "extraMetadata": {
+    "main": "electron/main.js",
+    "name": "aurorachat",
+    "productName": "AuroraChat",
+    "description": "AuroraChat - Discord-like real-time chat app",
+    "author": "AuroraChat Team",
+    "type": "module",
+    "dependencies": {}
+  },
+  "win": {
+    "artifactName": "AuroraChat-Windows-${arch}.${ext}",
+    "target": [
+      { "target": "zip", "arch": ["x64"] },
+      { "target": "zip", "arch": ["ia32"] }
+    ],
+    "icon": "build/icon.png",
+    "requestedExecutionLevel": "asInvoker",
+    "signAndEditExecutable": false
+  },
+  "mac": {
+    "target": [
+      { "target": "dmg", "arch": ["x64", "arm64"] }
+    ],
+    "icon": "build/icon.png",
+    "category": "public.app-category.social-networking",
+    "artifactName": "AuroraChat-macOS-${arch}.${ext}"
+  },
+  "linux": {
+    "target": [
+      { "target": "AppImage", "arch": ["x64"] },
+      { "target": "zip", "arch": ["x64"] }
+    ],
+    "icon": "build/icon.png",
+    "category": "Network",
+    "artifactName": "AuroraChat-Linux-${arch}.${ext}"
+  }
+}

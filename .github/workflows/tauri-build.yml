@@ -1,0 +1,284 @@
+name: AuroraChat Tauri Build (Windows)
+
+on:
+  push:
+    tags:
+      - 'v*-tauri'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (örn: 1.0.2)'
+        required: true
+        default: '1.0.2'
+
+permissions:
+  contents: write
+
+jobs:
+  # ── x64 build (zorunlu) ────────────────────────────────────────────
+  build-x64:
+    name: Windows 64-bit (.exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable (x64)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli@1
+
+      - name: Generate icons
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path src-tauri/icons | Out-Null
+          magick src/assets/logo.jpg -resize 32x32   src-tauri/icons/32x32.png
+          magick src/assets/logo.jpg -resize 128x128 src-tauri/icons/128x128.png
+          magick src/assets/logo.jpg -resize 256x256 "src-tauri/icons/128x128@2x.png"
+          magick src/assets/logo.jpg -resize 256x256 src-tauri/icons/icon_256.png
+          magick src-tauri/icons/32x32.png src-tauri/icons/128x128.png src-tauri/icons/icon_256.png src-tauri/icons/icon.ico
+          Write-Host "Icons generated:"
+          Get-ChildItem src-tauri/icons
+
+      - name: Build Tauri x64 (signed)
+        working-directory: src-tauri
+        run: tauri build --target x86_64-pc-windows-msvc
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+      - name: List build output
+        shell: pwsh
+        run: |
+          $dir = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle"
+          if (Test-Path $dir) {
+            Write-Host "Bundle contents:"
+            Get-ChildItem -Recurse $dir | Select-Object FullName
+          } else {
+            Write-Host "Bundle dir NOT found: $dir"
+          }
+
+      - name: Read x64 signature
+        id: sig
+        shell: pwsh
+        run: |
+          $nsisDir = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis"
+          if (Test-Path $nsisDir) {
+            $sigFile = Get-ChildItem $nsisDir -Filter "*.sig" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($sigFile) {
+              $sig = (Get-Content $sigFile.FullName -Raw).Trim()
+              echo "sig=$sig" >> $env:GITHUB_OUTPUT
+              Write-Host "Sig found: $($sigFile.Name)"
+            } else {
+              Write-Host "No .sig file in $nsisDir"
+              echo "sig=" >> $env:GITHUB_OUTPUT
+            }
+          } else {
+            Write-Host "NSIS dir not found"
+            echo "sig=" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Upload x64 exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuroraChat-x64-setup
+          path: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+      - name: Upload x64 sig
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuroraChat-x64-sig
+          path: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.sig
+          if-no-files-found: warn
+
+  # ── x86 build (isteğe bağlı) ─────────────────────────────────────
+  build-x86:
+    name: Windows 32-bit (.exe)
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable (i686)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-pc-windows-msvc
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: ./src-tauri -> target
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli@1
+
+      - name: Generate icons
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path src-tauri/icons | Out-Null
+          magick src/assets/logo.jpg -resize 32x32   src-tauri/icons/32x32.png
+          magick src/assets/logo.jpg -resize 128x128 src-tauri/icons/128x128.png
+          magick src/assets/logo.jpg -resize 256x256 "src-tauri/icons/128x128@2x.png"
+          magick src/assets/logo.jpg -resize 256x256 src-tauri/icons/icon_256.png
+          magick src-tauri/icons/32x32.png src-tauri/icons/128x128.png src-tauri/icons/icon_256.png src-tauri/icons/icon.ico
+
+      - name: Build Tauri x86 (signed)
+        working-directory: src-tauri
+        run: tauri build --target i686-pc-windows-msvc
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+      - name: List build output
+        shell: pwsh
+        run: |
+          $dir = "src-tauri/target/i686-pc-windows-msvc/release/bundle"
+          if (Test-Path $dir) {
+            Get-ChildItem -Recurse $dir | Select-Object FullName
+          } else {
+            Write-Host "Bundle dir NOT found: $dir"
+          }
+
+      - name: Read x86 signature
+        id: sig
+        shell: pwsh
+        run: |
+          $nsisDir = "src-tauri/target/i686-pc-windows-msvc/release/bundle/nsis"
+          if (Test-Path $nsisDir) {
+            $sigFile = Get-ChildItem $nsisDir -Filter "*.sig" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($sigFile) {
+              $sig = (Get-Content $sigFile.FullName -Raw).Trim()
+              echo "sig=$sig" >> $env:GITHUB_OUTPUT
+            } else {
+              echo "sig=" >> $env:GITHUB_OUTPUT
+            }
+          } else {
+            Write-Host "NSIS dir not found — x86 build may have failed"
+            echo "sig=" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Upload x86 exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuroraChat-x86-setup
+          path: src-tauri/target/i686-pc-windows-msvc/release/bundle/nsis/*.exe
+          if-no-files-found: warn
+
+      - name: Upload x86 sig
+        uses: actions/upload-artifact@v4
+        with:
+          name: AuroraChat-x86-sig
+          path: src-tauri/target/i686-pc-windows-msvc/release/bundle/nsis/*.sig
+          if-no-files-found: warn
+
+  # ── Release ───────────────────────────────────────────────────────
+  release:
+    name: Create GitHub Release + latest.json
+    runs-on: ubuntu-latest
+    needs: [build-x64, build-x86]
+    if: ${{ always() && needs.build-x64.result == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Get version
+        id: ver
+        run: |
+          V="${{ github.event.inputs.version || '1.0.2' }}"
+          echo "version=$V" >> $GITHUB_OUTPUT
+          echo "tag=v${V}-tauri" >> $GITHUB_OUTPUT
+
+      - name: List downloaded artifacts
+        run: find release-assets -type f | sort
+
+      - name: Rename artifacts
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          mkdir -p release-final
+          X64_EXE=$(find release-assets/AuroraChat-x64-setup -name "*.exe" 2>/dev/null | head -1)
+          X64_SIG=$(find release-assets/AuroraChat-x64-sig   -name "*.sig" 2>/dev/null | head -1)
+          if [ -n "$X64_EXE" ]; then cp "$X64_EXE" "release-final/AuroraChat_${V}_x64-setup.exe"; fi
+          if [ -n "$X64_SIG" ]; then cp "$X64_SIG" "release-final/AuroraChat_${V}_x64-setup.exe.sig"; fi
+          X86_EXE=$(find release-assets/AuroraChat-x86-setup -name "*.exe" 2>/dev/null | head -1)
+          X86_SIG=$(find release-assets/AuroraChat-x86-sig   -name "*.sig" 2>/dev/null | head -1)
+          if [ -n "$X86_EXE" ]; then cp "$X86_EXE" "release-final/AuroraChat_${V}_x86-setup.exe"; fi
+          if [ -n "$X86_SIG" ]; then cp "$X86_SIG" "release-final/AuroraChat_${V}_x86-setup.exe.sig"; fi
+          echo "--- release-final ---"
+          ls -lh release-final/
+
+      - name: Generate latest.json
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          BASE="https://github.com/TurkYoshi1905/aurorachat-tr-beta/releases/download/${{ steps.ver.outputs.tag }}"
+          SIG_X64=$(cat "release-final/AuroraChat_${V}_x64-setup.exe.sig" 2>/dev/null | tr -d '\n' || echo "")
+          SIG_X86=$(cat "release-final/AuroraChat_${V}_x86-setup.exe.sig" 2>/dev/null | tr -d '\n' || echo "")
+          PLATFORMS=""
+          if [ -n "$SIG_X64" ]; then
+            PLATFORMS="\"windows-x86_64\": { \"signature\": \"$SIG_X64\", \"url\": \"${BASE}/AuroraChat_${V}_x64-setup.exe\" }"
+          fi
+          if [ -n "$SIG_X86" ]; then
+            if [ -n "$PLATFORMS" ]; then PLATFORMS="$PLATFORMS,"; fi
+            PLATFORMS="$PLATFORMS\"windows-i686\": { \"signature\": \"$SIG_X86\", \"url\": \"${BASE}/AuroraChat_${V}_x86-setup.exe\" }"
+          fi
+          cat > release-final/latest.json << EOF
+          {
+            "version": "$V",
+            "notes": "AuroraChat v$V — Windows masaüstü uygulaması. Otomatik güncelleme destekli.",
+            "pub_date": "$DATE",
+            "platforms": { $PLATFORMS }
+          }
+          EOF
+          cat release-final/latest.json
+
+      - name: Delete old release if exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.ver.outputs.tag }}"
+          gh release delete "$TAG" --yes --repo TurkYoshi1905/aurorachat-tr-beta 2>/dev/null || true
+          git push origin ":refs/tags/$TAG" 2>/dev/null || true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          name: "AuroraChat v${{ steps.ver.outputs.version }} — Windows Desktop"
+          body: |
+            ## AuroraChat v${{ steps.ver.outputs.version }} — Windows Masaüstü (Tauri)
+
+            Tauri tabanlı hafif Windows masaüstü uygulaması (~8MB).
+            Web: https://aurorachat-beta-tr.netlify.app/
+
+            ### İndir
+            | Platform | Dosya |
+            |---|---|
+            | Windows 10/11 64-bit | `AuroraChat_${{ steps.ver.outputs.version }}_x64-setup.exe` |
+            | Windows 32-bit | `AuroraChat_${{ steps.ver.outputs.version }}_x86-setup.exe` _(mevcut ise)_ |
+
+            ### Özellikler
+            - Otomatik güncelleme (her açılışta kontrol eder)
+            - Bağlı cihazlarda şehir/ülke bilgisi
+            - Discord benzeri mesaj gruplama
+          files: release-final/*
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: false
