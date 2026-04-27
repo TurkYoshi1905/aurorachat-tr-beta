@@ -1,0 +1,74 @@
+name: ♻️ Supabase Yedekten Geri Yükle
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_file:
+        description: 'Geri yüklenecek .dump dosyası adı (örn: backup_2026-04-17_03-00-00_otomatik.dump)'
+        required: true
+      confirm:
+        description: 'Geri yükleme mevcut veriyi SİLER. Onaylıyor musun? (EVET yazın)'
+        required: true
+
+jobs:
+  restore:
+    name: Veritabanını Geri Yükle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 🔐 Onay kontrolü
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "EVET" ]; then
+            echo "❌ Onaylanmadı. 'EVET' yazmanız gerekiyor."
+            exit 1
+          fi
+          echo "✅ Onaylandı, geri yükleme başlıyor..."
+
+      - name: 📥 Yedek branch'ini çek
+        uses: actions/checkout@v4
+        with:
+          ref: database-backups
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔧 PostgreSQL araçlarını kur
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+
+      - name: 🔍 Yedek dosyasını kontrol et
+        run: |
+          BACKUP_PATH="backups/${{ github.event.inputs.backup_file }}"
+          if [ ! -f "$BACKUP_PATH" ]; then
+            echo "❌ HATA: Dosya bulunamadı: $BACKUP_PATH"
+            echo ""
+            echo "Mevcut yedekler:"
+            ls -lh backups/*.dump 2>/dev/null || echo "Hiç yedek yok."
+            exit 1
+          fi
+          SIZE=$(du -sh "$BACKUP_PATH" | cut -f1)
+          echo "✅ Dosya bulundu: $BACKUP_PATH (${SIZE})"
+
+      - name: ♻️ Veritabanını geri yükle
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "🔄 Geri yükleme başlıyor: ${{ github.event.inputs.backup_file }}"
+
+          pg_restore \
+            -h db.ktittqaubkaylprxnoya.supabase.co \
+            -p 5432 \
+            -U postgres \
+            -d postgres \
+            --no-owner \
+            --no-acl \
+            --no-privileges \
+            --clean \
+            --if-exists \
+            "backups/${{ github.event.inputs.backup_file }}" \
+            2>&1 | grep -v "^pg_restore: warning"
+
+          echo ""
+          echo "✅ Geri yükleme tamamlandı!"
+          echo "📅 Tarih: $(date '+%d.%m.%Y %H:%M UTC')"
+          echo "📁 Dosya: ${{ github.event.inputs.backup_file }}"

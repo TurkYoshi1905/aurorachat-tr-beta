@@ -1,0 +1,16 @@
+{
+  "name": "AuroraChat",
+  "short_name": "AuroraChat",
+  "description": "Modern, gerçek zamanlı sohbet uygulaması",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#5865F2",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
