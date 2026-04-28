@@ -1,0 +1,97 @@
+name: 🗄️ Supabase Otomatik Yedek
+
+on:
+  schedule:
+    # Her gün saat 03:00 UTC (Türkiye 06:00)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      label:
+        description: 'Yedek etiketi (isteğe bağlı)'
+        required: false
+        default: 'manuel'
+
+jobs:
+  backup:
+    name: Veritabanı Yedekle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Yedek branch'ini çek
+        uses: actions/checkout@v4
+        with:
+          ref: database-backups
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔧 PostgreSQL araçlarını kur
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+
+      - name: 📁 Yedek klasörünü hazırla
+        run: mkdir -p backups
+
+      - name: 🗄️ pg_dump ile yedek al
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+          LABEL="${{ github.event.inputs.label || 'otomatik' }}"
+          FILENAME="backup_${TIMESTAMP}_${LABEL}.dump"
+
+          pg_dump \
+            -h db.ktittqaubkaylprxnoya.supabase.co \
+            -p 5432 \
+            -U postgres \
+            -d postgres \
+            --no-owner \
+            --no-acl \
+            --no-privileges \
+            -F c \
+            -Z 6 \
+            -f "backups/${FILENAME}"
+
+          SIZE=$(du -sh "backups/${FILENAME}" | cut -f1)
+          echo "✅ Yedek alındı: ${FILENAME} (${SIZE})"
+          echo "BACKUP_FILE=${FILENAME}" >> $GITHUB_ENV
+          echo "BACKUP_SIZE=${SIZE}" >> $GITHUB_ENV
+
+      - name: 🧹 Eski yedekleri temizle (son 30 adet tut)
+        run: |
+          cd backups
+          COUNT=$(ls -1 *.dump 2>/dev/null | wc -l)
+          if [ "$COUNT" -gt 30 ]; then
+            ls -t *.dump | tail -n +31 | xargs rm -f
+            echo "🗑️ Eski yedekler silindi. Kalan: 30"
+          else
+            echo "📦 Toplam yedek sayısı: ${COUNT}"
+          fi
+
+      - name: 📊 Yedek listesini güncelle
+        run: |
+          cd backups
+          echo "# AuroraChat Supabase Yedek Listesi" > INDEX.md
+          echo "" >> INDEX.md
+          echo "Son güncelleme: $(date '+%d.%m.%Y %H:%M UTC')" >> INDEX.md
+          echo "" >> INDEX.md
+          echo "| Dosya | Boyut | Tarih |" >> INDEX.md
+          echo "|-------|-------|-------|" >> INDEX.md
+          for f in $(ls -t *.dump 2>/dev/null); do
+            SIZE=$(du -sh "$f" | cut -f1)
+            DATE=$(echo "$f" | grep -oP '\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}' | sed 's/_/ /' | sed 's/-/./g')
+            echo "| \`${f}\` | ${SIZE} | ${DATE} |" >> INDEX.md
+          done
+
+      - name: 💾 Yedeki GitHub'a kaydet
+        run: |
+          git config user.email "asfurkan140@gmail.com"
+          git config user.name "AuroraChat Backup Bot"
+          git add backups/
+          if git diff --cached --quiet; then
+            echo "Değişiklik yok."
+          else
+            git commit -m "🗄️ Yedek: $(date '+%d.%m.%Y %H:%M UTC') — ${{ env.BACKUP_FILE }} (${{ env.BACKUP_SIZE }})"
+            git push
+            echo "✅ Yedek başarıyla GitHub'a kaydedildi!"
+          fi
