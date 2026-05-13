@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, X, User, Shield, Megaphone, Camera, ExternalLink, Pencil, Check, XIcon, Calendar, Lock, Globe, Monitor, Sun, Moon as MoonIcon, QrCode, ShieldCheck, ArrowLeft, Crown, Star, Zap, Mic, Volume2, MessageCircle, Bell, Info, Gem, Activity, Laptop, Database, Palette, Video, Code2, Server, GitBranch, Sparkles, Download, CheckCircle2, Link2, Trash2, Music, Flag, Clock, AlertCircle, AlertTriangle, Eye, EyeOff, Smartphone, Cake, User2, Gamepad2, Puzzle, Bot, RefreshCw } from 'lucide-react';
+import { LogOut, X, User, Shield, Megaphone, Camera, ExternalLink, Pencil, Check, XIcon, Calendar, Lock, Globe, Monitor, Sun, Moon as MoonIcon, QrCode, ShieldCheck, ArrowLeft, Crown, Star, Zap, Mic, Volume2, MessageCircle, Bell, Info, Gem, Activity, Laptop, Database, Palette, Video, Code2, Server, GitBranch, Sparkles, Download, CheckCircle2, Link2, Trash2, Music, Flag, Clock, AlertCircle, AlertTriangle, Eye, EyeOff, Smartphone, Cake, User2, Gamepad2, Puzzle, Bot, RefreshCw, Upload, ImageIcon } from 'lucide-react';
 import PluginsTab from '@/components/PluginsTab';
 import { Checkbox } from '@/components/ui/checkbox';
 import { initiateSpotifyOAuth } from '@/lib/spotify';
@@ -20,6 +20,7 @@ import { changelogData } from '@/data/changelogData';
 import { useTranslation } from '@/i18n';
 import { LANGUAGES, type Language } from '@/i18n';
 import AvatarCropModal from '@/components/AvatarCropModal';
+import BannerUploadSuccessModal from '@/components/BannerUploadSuccessModal';
 import ChangeGenderModal from '@/components/ChangeGenderModal';
 import ChangeBirthDateModal from '@/components/ChangeBirthDateModal';
 import {
@@ -1525,6 +1526,11 @@ const Settings = () => {
   const [privacyLoaded, setPrivacyLoaded] = useState(false);
   const [savingPrivacy, setSavingPrivacy] = useState(false);
 
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const [bannerSuccessOpen, setBannerSuccessOpen] = useState(false);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
   const FOUNDER_EMAIL = 'asfurkan140@gmail.com';
   const isAppAdmin = !!(profile as any)?.is_app_admin || user?.email === FOUNDER_EMAIL;
 
@@ -1569,6 +1575,7 @@ const Settings = () => {
 
   useEffect(() => {
     if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+    if ((profile as any)?.banner_url) setBannerUrl((profile as any).banner_url);
     if (profile && !privacyLoaded) {
       const allowDms = (profile as any).allow_dms !== false;
       const friendReqSetting = (profile as any).friend_request_setting || 'everyone';
@@ -1581,6 +1588,46 @@ const Settings = () => {
       setPrivacyLoaded(true);
     }
   }, [profile, privacyLoaded]);
+
+  const handleBannerSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !user) return;
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowed.includes(file.type)) { toast.error('Sadece JPEG, PNG, GIF veya WebP yükleyebilirsin'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Banner 10MB\'dan büyük olamaz'); return; }
+    setBannerUploading(true);
+    try {
+      const ext = file.type === 'image/gif' ? 'gif' : file.name.split('.').pop() || 'jpg';
+      const path = `${user.id}/banner.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from('profile-banners').upload(path, file, { upsert: true, contentType: file.type });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from('profile-banners').getPublicUrl(path);
+      const url = `${urlData.publicUrl}?t=${Date.now()}`;
+      const { error: updateErr } = await supabase.from('profiles').update({ banner_url: url } as any).eq('id', user.id);
+      if (updateErr) throw updateErr;
+      setBannerUrl(url);
+      setBannerSuccessOpen(true);
+    } catch (err: any) {
+      toast.error(err?.message || 'Banner yüklenemedi');
+    } finally {
+      setBannerUploading(false);
+    }
+  };
+
+  const handleBannerRemove = async () => {
+    if (!user) return;
+    setBannerUploading(true);
+    try {
+      await supabase.from('profiles').update({ banner_url: null } as any).eq('id', user.id);
+      setBannerUrl(null);
+      toast.success('Banner kaldırıldı');
+    } catch {
+      toast.error('Banner kaldırılamadı');
+    } finally {
+      setBannerUploading(false);
+    }
+  };
 
   const handlePrivacyAllowDMChange = async (value: boolean) => {
     if (!user) return;
@@ -2150,6 +2197,61 @@ const Settings = () => {
               {/* Custom Status */}
               <CustomStatusSection />
 
+              {/* Profile Banner */}
+              <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                    <p className="text-sm font-semibold text-foreground">Özel Profil Banner</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">Profilinde görünecek banner resmi veya GIF yükle. (Maks. 10MB, jpeg/png/gif/webp)</p>
+                </div>
+                <div className="h-28 w-full rounded-lg overflow-hidden border border-border relative group">
+                  {bannerUrl ? (
+                    <img src={bannerUrl} alt="Profil banner" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-accent/15 flex flex-col items-center justify-center gap-1.5">
+                      <Upload className="w-5 h-5 text-muted-foreground/60" />
+                      <p className="text-xs text-muted-foreground/60">Banner yüklenmedi</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleBannerSelect}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => bannerInputRef.current?.click()}
+                    disabled={bannerUploading}
+                    className="flex-1"
+                  >
+                    {bannerUploading ? (
+                      <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin mr-2" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    {bannerUrl ? 'Banner Değiştir' : 'Banner Yükle'}
+                  </Button>
+                  {bannerUrl && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleBannerRemove}
+                      disabled={bannerUploading}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               {/* Audio Devices */}
               <AudioDeviceSection />
 
@@ -2203,6 +2305,12 @@ const Settings = () => {
               </div>
             </div>
           )}
+
+          <BannerUploadSuccessModal
+            open={bannerSuccessOpen}
+            bannerUrl={bannerUrl}
+            onClose={() => setBannerSuccessOpen(false)}
+          />
 
           {activeTab === 'premium' && (
             <PremiumTab profile={profile} refreshProfile={refreshProfile} user={user} />

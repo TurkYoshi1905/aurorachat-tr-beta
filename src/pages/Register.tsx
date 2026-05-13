@@ -288,17 +288,23 @@ const Register = () => {
         }
 
         if (signUpData.user) {
+          if (signUpData.session) {
+            await supabase.auth.setSession(signUpData.session);
+          }
+
           await supabase.from('profiles').update({
             gender: gender || null,
             birth_date: birthDate,
           } as any).eq('id', signUpData.user.id);
 
           if (avatarFile) {
-            const ext = avatarFile.name.split('.').pop();
+            const ext = avatarFile.name.split('.').pop() || 'jpg';
             const path = `${signUpData.user.id}/avatar.${ext}`;
-            await supabase.storage.from('avatars').upload(path, avatarFile, { upsert: true });
-            const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-            await supabase.from('profiles').update({ avatar_url: urlData.publicUrl } as any).eq('id', signUpData.user.id);
+            const { error: uploadError } = await supabase.storage.from('avatars').upload(path, avatarFile, { upsert: true });
+            if (!uploadError) {
+              const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+              await supabase.from('profiles').update({ avatar_url: urlData.publicUrl } as any).eq('id', signUpData.user.id);
+            }
           }
         }
 

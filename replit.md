@@ -64,7 +64,7 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260506000000_v113_announcements_system.sql` — announcements + comments tables, server order_index column, RLS, realtime, helper RPCs
 - `20260506100000_v114_bot_member_commands_fix.sql` — bots.commands NOT NULL fix, server_bots SELECT policy, get_server_members_full EXCEPTION block, get_server_bot_commands RPC
 
-## Current Version: v1.1.6 (10 Mayıs 2026)
+## Current Version: v1.1.7 (13 Mayıs 2026)
 
 ### Features by version
 - **v1.1.5**: Aurora Guard güvenlik katmanı (IP Ban, Rate Limit 6/s, 30-dk cooldown, XSS sanitize), Bot Profil Modalı (BotProfileModal.tsx), komut değişken sistemi ({user}/{username}/{memberCount}/{serverName}), komut düzenleme, moderasyon rol hiyerarşisi (Yetkili/Admin/Moderatör/Deneme), Güvenlik sekmesi modpanelde, mic chevron görünürlük fix, announcement comment RLS 42501 fix, SEO meta güncelleme
@@ -83,6 +83,20 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `src/utils/sanitize.ts` — XSS sanitization utilities
 - `src/components/BotProfileModal.tsx` — bot profile modal with "Sunucuya Ekle"
 - `src/components/IpBanModal.tsx` — IP ban modal shown to IP-banned users
+
+## Changes (v1.1.7)
+- `src/components/BannerUploadSuccessModal.tsx` — NEW: banner upload başarı modalı (animasyon, preview, oto-kapanma)
+- `src/pages/Settings.tsx` — Özel Profil Banner bölümü (görünüm sekmesi), gizlilik senkronizasyonu fix, Upload/ImageIcon imports, BannerUploadSuccessModal entegrasyonu
+- `src/components/UserProfileCard.tsx` — banner_url desteği (interface, select query, image render, realtime güncelleme)
+- `src/contexts/AuthContext.tsx` — banner_url, gender_visibility, birth_date_visibility alanları Profile interface + buildProfile + fetchProfile
+- `src/components/ChatArea.tsx` — bot mesajlarında UserProfileCard'a isBot/botName/botAvatarUrl prop'ları eklendi (BotProfileModal tetiklenir)
+- `src/hooks/useVoice.ts` — joiningRef guard (eş zamanlı join önleme), _cachedLivekitToken (session boyunca token cache)
+- `src/pages/Register.tsx` — avatar race condition fix: signUpData.session varsa setSession ile auth sonra upload
+- `src/pages/ModerationPage.tsx` — handleModRoleError helper (403/42501 tespiti + açıklayıcı hata mesajı), tüm mod rol fonksiyonlarında error capture
+- `supabase/migrations/20260513000000_v117_banner_mod_fixes.sql` — profiles.banner_url kolonu, profile-banners bucket, mod_role_assignments ALL policy, profiles admin update policy
+- `src/data/changelogData.ts` — v1.1.7 girişi (başa eklendi)
+- `src/components/ReleaseNotesModal.tsx` — v1.1.7 sürüm notları
+- `src/pages/Landing.tsx` — footer v1.1.7
 
 ## Changes (v1.1.6)
 - `src/pages/ModerationPage.tsx` — userModRoles state, myModRole (mod panel access for role holders), mod role tags in Users tab, inline role assignment in user cards, canAccess includes mod roles

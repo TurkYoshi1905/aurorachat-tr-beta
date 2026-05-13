@@ -5,7 +5,7 @@ import { Sparkles, Wrench, Bug, Shield, Bot, Globe, Crown, Puzzle } from 'lucide
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.1.6';
+const RELEASE_VERSION = '1.1.7';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,52 +18,52 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Crown,
+    icon: Sparkles,
     iconBg: 'bg-yellow-500/15',
     iconColor: 'text-yellow-400',
-    label: 'Moderasyon Rol Yönetimi: Kullanıcılar sekmesinde her üyeye doğrudan "Deneme Moderatör / Moderatör / Admin / Yetkili" rolü atanabilir ve renkli etiket görünür.',
-    badge: 'Yeni',
-  },
-  {
-    icon: Puzzle,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Eklenti Mağazası Revizyonu: Oluşturan kişinin bilgileri kartlarda gösteriliyor, kendi eklentilerini satır içi düzenleyebilirsin, dokümantasyon sekmesi eklendi.',
+    label: 'Özel Profil Banner: Ayarlar > Görünüm\'den resim veya GIF yükle; tüm kullanıcılara gerçek zamanlı yansır.',
     badge: 'Yeni',
   },
   {
     icon: Bot,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Bot Profil Modalı Yeniden Tasarımı: Modern banner, sekme yapısı (Hakkında / Komutlar / Sunucuya Ekle), bot istatistikleri.',
+    label: 'Bot Profil Modalı (Sohbet): Özel bot mesajına tıklayınca tam Bot Profil Modalı açılıyor.',
     badge: 'Yeni',
-  },
-  {
-    icon: Globe,
-    iconBg: 'bg-emerald-500/15',
-    iconColor: 'text-emerald-400',
-    label: 'Sunucu Sıralama Kalıcılığı: Sürükle-bırak sırası DB\'ye kaydediliyor ve sayfa yenilenince geri yükleniyor.',
-    badge: 'İyileştirme',
   },
   {
     icon: Shield,
     iconBg: 'bg-cyan-500/15',
     iconColor: 'text-cyan-400',
-    label: 'Gizlilik Ayarları Düzeltmesi: Cinsiyet ve Doğum Tarihi görünürlük tercihleri artık kalıcı.',
+    label: 'Gizlilik Senkronizasyonu Fix: Cinsiyet ve Doğum Tarihi görünürlük ayarları sayfa yenilenince artık sıfırlanmıyor.',
     badge: 'Düzeltme',
   },
   {
     icon: Bug,
     iconBg: 'bg-red-500/15',
     iconColor: 'text-red-400',
-    label: 'Moderasyon 403 Hatası: profiles RLS güncellendi — app adminler başkasının profilini yönetebiliyor.',
+    label: 'Moderasyon 403 Fix: mod_role_assignments RLS güncellendi — adminler rol atayabiliyor.',
     badge: 'Düzeltme',
+  },
+  {
+    icon: Crown,
+    iconBg: 'bg-orange-500/15',
+    iconColor: 'text-orange-400',
+    label: 'Kayıt Avatar Fix: Kayıtta seçilen profil resmi artık giriş sonrası kaybolmuyor.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Globe,
+    iconBg: 'bg-emerald-500/15',
+    iconColor: 'text-emerald-400',
+    label: 'Sesli Sohbet Optimizasyonu: Region isteği oturum boyunca sadece 1 kez atılıyor.',
+    badge: 'İyileştirme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
-    label: 'SQL: gender_visibility, birth_date_visibility, server_members.order_index kolonları, user_login_ips tablosu eklendi.',
+    label: 'SQL: profiles.banner_url kolonu, profile-banners storage bucket\'ı, mod RLS fix.',
     badge: 'Teknik',
   },
 ];

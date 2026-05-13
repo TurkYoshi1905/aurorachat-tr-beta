@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+let _cachedLivekitToken: { token: string; channelId: string } | null = null;
+
 export interface VoiceParticipant {
   identity: string;
   displayName: string;
@@ -455,11 +457,15 @@ export const useVoice = (): VoiceState => {
     setParticipants(parts);
   }, []);
 
+  const joiningRef = useRef(false);
+
   const joinVoice = useCallback(async (channelId: string, channelName: string, serverId?: string | null) => {
     if (!user || !profile) { toast.error('Oturum açmanız gerekiyor.'); return; }
     if (serverId) voiceServerIdRef.current = serverId;
 
     if (voiceChannelId === channelId && connected) return;
+    if (joiningRef.current) return;
+    joiningRef.current = true;
 
     if (roomRef.current) {
       await roomRef.current.disconnect();
@@ -479,21 +485,32 @@ export const useVoice = (): VoiceState => {
         throw new Error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
       }
 
-      const { data, error } = await supabase.functions.invoke('livekit-token', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-        body: {
-          roomName: channelId,
-          participantIdentity: user.id,
-          participantName: profile.display_name || profile.username || 'Kullanıcı',
-          metadata: JSON.stringify({
-            displayName: profile.display_name || profile.username || 'Kullanıcı',
-            avatarUrl: profile.avatar_url || null,
-          }),
-        },
-      });
+      let tokenData: string;
+      if (_cachedLivekitToken && _cachedLivekitToken.channelId === channelId) {
+        tokenData = _cachedLivekitToken.token;
+      } else {
+        const { data, error } = await supabase.functions.invoke('livekit-token', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: {
+            roomName: channelId,
+            participantIdentity: user.id,
+            participantName: profile.display_name || profile.username || 'Kullanıcı',
+            metadata: JSON.stringify({
+              displayName: profile.display_name || profile.username || 'Kullanıcı',
+              avatarUrl: profile.avatar_url || null,
+            }),
+          },
+        });
+        if (error || !data?.token) {
+          throw new Error(error?.message || 'Token alınamadı');
+        }
+        tokenData = data.token;
+        _cachedLivekitToken = { token: tokenData, channelId };
+      }
+      const data = { token: tokenData };
 
-      if (error || !data?.token) {
-        throw new Error(error?.message || 'Token alınamadı');
+      if (!data?.token) {
+        throw new Error('Token alınamadı');
       }
 
       const room = new Room({

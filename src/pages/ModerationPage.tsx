@@ -420,21 +420,32 @@ const ModerationPage = () => {
     deneme_moderator: { label: 'Deneme Moderatör', color: 'text-emerald-400', bg: 'bg-emerald-500/15', icon: Star, level: 1 },
   };
 
+  const handleModRoleError = (error: any) => {
+    if (!error) return;
+    if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('403')) {
+      toast.error('Yetki hatası (403): mod_role_assignments RLS politikası güncellenmeli. SQL migration\'ı çalıştırın.');
+    } else {
+      toast.error(error.message || 'Rol işlemi başarısız');
+    }
+  };
+
   const assignModRole = async (userId: string, role: string) => {
     if ((!isFounder && !isAppAdmin) || !user) return;
     setAssigningRole(userId + role);
     try {
-      await (supabase as any).from('mod_role_assignments').upsert({ user_id: userId, mod_role: role, assigned_by: user.id }, { onConflict: 'user_id' });
+      const { error } = await (supabase as any).from('mod_role_assignments').upsert({ user_id: userId, mod_role: role, assigned_by: user.id }, { onConflict: 'user_id' });
+      if (error) { handleModRoleError(error); return; }
       toast.success('Rol atandı!');
       fetchModRoles();
       setUserModRoles(prev => ({ ...prev, [userId]: role }));
-    } catch { toast.error('Rol atanamadı'); }
+    } catch (err: any) { toast.error(err?.message || 'Rol atanamadı'); }
     finally { setAssigningRole(null); }
   };
 
   const removeModRole = async (userId: string) => {
     if (!isFounder && !isAppAdmin) return;
-    await (supabase as any).from('mod_role_assignments').delete().eq('user_id', userId);
+    const { error } = await (supabase as any).from('mod_role_assignments').delete().eq('user_id', userId);
+    if (error) { handleModRoleError(error); return; }
     toast.success('Rol kaldırıldı');
     fetchModRoles();
     setUserModRoles(prev => { const n = { ...prev }; delete n[userId]; return n; });
@@ -445,13 +456,15 @@ const ModerationPage = () => {
     const existing = userModRoles[userId];
     if (existing === role) {
       setAssigningUserRole(userId);
-      await (supabase as any).from('mod_role_assignments').delete().eq('user_id', userId);
+      const { error } = await (supabase as any).from('mod_role_assignments').delete().eq('user_id', userId);
+      if (error) { handleModRoleError(error); setAssigningUserRole(null); return; }
       toast.success('Mod rolü kaldırıldı');
       setUserModRoles(prev => { const n = { ...prev }; delete n[userId]; return n; });
       setAssigningUserRole(null);
     } else {
       setAssigningUserRole(userId);
-      await (supabase as any).from('mod_role_assignments').upsert({ user_id: userId, mod_role: role, assigned_by: user.id }, { onConflict: 'user_id' });
+      const { error } = await (supabase as any).from('mod_role_assignments').upsert({ user_id: userId, mod_role: role, assigned_by: user.id }, { onConflict: 'user_id' });
+      if (error) { handleModRoleError(error); setAssigningUserRole(null); return; }
       toast.success('Mod rolü atandı!');
       setUserModRoles(prev => ({ ...prev, [userId]: role }));
       setAssigningUserRole(null);

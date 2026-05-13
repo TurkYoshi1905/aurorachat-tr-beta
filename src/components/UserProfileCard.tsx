@@ -40,6 +40,7 @@ interface ProfileData {
   created_at: string;
   bio: string;
   banner_color: string;
+  banner_url: string | null;
   has_premium_badge: boolean;
   has_basic_badge: boolean;
   custom_status: string | null;
@@ -431,7 +432,7 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
 
       const { data: prof } = await supabase
         .from('profiles')
-        .select('display_name, username, avatar_url, updated_at, bio, banner_color, has_premium_badge, has_basic_badge, custom_status, premium_expires_at, basic_expires_at, platform, gender, birth_date, gender_visibility, birth_date_visibility, steam_id, steam_persona, steam_profile_url, steam_avatar_url, steam_game_name, spotify_display_name, status')
+        .select('display_name, username, avatar_url, updated_at, bio, banner_color, banner_url, has_premium_badge, has_basic_badge, custom_status, premium_expires_at, basic_expires_at, platform, gender, birth_date, gender_visibility, birth_date_visibility, steam_id, steam_persona, steam_profile_url, steam_avatar_url, steam_game_name, spotify_display_name, status')
         .eq('id', userId)
         .maybeSingle();
       if (prof) {
@@ -447,6 +448,7 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
           created_at: (prof as any).updated_at || '',
           bio: (prof as any).bio || '',
           banner_color: (prof as any).banner_color || '',
+          banner_url: (prof as any).banner_url || null,
           has_premium_badge: premActive,
           has_basic_badge: basActive && !premActive,
           custom_status: (prof as any).custom_status || null,
@@ -520,6 +522,7 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
           avatar_url: updated.avatar_url ?? prev.avatar_url,
           bio: updated.bio ?? prev.bio,
           banner_color: updated.banner_color || prev.banner_color,
+          banner_url: updated.banner_url !== undefined ? (updated.banner_url || null) : prev.banner_url,
           has_premium_badge: updated.has_premium_badge ?? prev.has_premium_badge,
           has_basic_badge: updated.has_basic_badge ?? prev.has_basic_badge,
           custom_status: updated.custom_status ?? null,
@@ -673,7 +676,13 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
   const profileContent = (
     <div className="flex flex-col">
       {/* Banner */}
-      <div className="h-[60px] w-full rounded-t-xl overflow-hidden shrink-0" style={{ background: bannerBg }} />
+      <div className="h-[60px] w-full rounded-t-xl overflow-hidden shrink-0 relative">
+        {profile?.banner_url ? (
+          <img src={profile.banner_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full" style={{ background: bannerBg }} />
+        )}
+      </div>
 
       {/* Avatar + premium badge */}
       <div className="px-4 relative flex items-end justify-between">

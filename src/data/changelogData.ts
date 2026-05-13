@@ -16,6 +16,53 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.1.7',
+    date: '13 Mayıs 2026',
+    summary: 'Özel Profil Banner (resim/GIF), Bot Profil Modalı sohbet entegrasyonu, Moderasyon 403 düzeltmesi, Gizlilik senkronizasyonu fix, Kayıt avatar kalıcılığı, Sesli sohbet region cache optimizasyonu.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-yellow-400',
+        items: [
+          'Özel Profil Banner: Ayarlar > Görünüm bölümünden resim veya GIF yükleyerek profil bannerını özelleştirebilirsin. Yükleme tamamlandığında şık bir başarı modalı gösterilir.',
+          'Banner Gerçek Zamanlı: Yüklenen banner tüm kullanıcılara Supabase Realtime ile anında yansır.',
+          'Bot Profil Modalı (Sohbet): Sohbette özel bot mesajlarının avatarına veya adına tıklayınca artık tam BotProfileModal açılıyor — bot bilgileri, komutlar ve sunucuya ekleme sekmesi ile.',
+        ],
+      },
+      {
+        title: 'İyileştirmeler',
+        icon: Wrench,
+        color: 'text-blue-400',
+        items: [
+          'Sesli Sohbet Region Optimizasyonu: LiveKit region isteği artık sesli oturum boyunca sadece bir kere atılıyor — tekrarlayan istek döngüsü kırıldı.',
+          'Gizlilik Ayarları Senkronizasyonu: Cinsiyet ve doğum tarihi görünürlük ayarları doğrudan Supabase\'den yükleniyor; AuthContext üzerinden gelen stale veri sorunu giderildi.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Moderasyon 403 Forbidden: mod_role_assignments tablosuna INSERT/UPDATE/DELETE RLS politikası güncellendi — app adminler artık rol atayabiliyor.',
+          'Profil update 403: profiles tablosu için admin güncelleme politikası yeniden yazıldı.',
+          'Kayıt Avatar Kaybı: Kayıt sırasında seçilen profil resmi artık kalıcı — session doğrulaması eklenerek race condition giderildi.',
+        ],
+      },
+      {
+        title: 'Altyapı',
+        icon: Wrench,
+        color: 'text-blue-400',
+        items: [
+          'SQL migration: 20260513000000_v117_banner_mod_fixes.sql',
+          'Yeni kolon: profiles.banner_url (resim veya GIF URL).',
+          'Yeni storage bucket: profile-banners (10MB limit, jpeg/png/gif/webp).',
+          'RLS güncellemeleri: mod_role_assignments tam CRUD, profiles admin update fix.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.1.6',
     date: '10 Mayıs 2026',
     summary: 'Moderasyon rol yönetimi Users sekmesine taşındı, gizlilik ayarları kalıcı hale getirildi, Eklenti Mağazası revize edildi, sunucu sıralama DB\'ye kaydediliyor, Bot Profil Modalı yeniden tasarlandı.',

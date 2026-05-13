@@ -11,6 +11,7 @@ interface Profile {
   bio: string | null;
   language: string;
   banner_color: string;
+  banner_url: string | null;
   is_premium: boolean;
   has_premium_badge: boolean;
   has_basic_badge: boolean;
@@ -19,6 +20,8 @@ interface Profile {
   is_app_admin: boolean;
   gender: string | null;
   birth_date: string | null;
+  gender_visibility: string;
+  birth_date_visibility: string;
 }
 
 export interface AccountBanInfo {
@@ -75,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       bio: data.bio,
       language: data.language || 'tr',
       banner_color: data.banner_color || '#1a1a2e',
+      banner_url: data.banner_url || null,
       is_premium: isPremiumActive,
       has_premium_badge: !!(data.has_premium_badge) && isPremiumActive,
       has_basic_badge: isBasicActive,
@@ -83,6 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       is_app_admin: !!data.is_app_admin,
       gender: data.gender ?? null,
       birth_date: data.birth_date ?? null,
+      gender_visibility: data.gender_visibility || 'everyone',
+      birth_date_visibility: data.birth_date_visibility || 'everyone',
     };
   };
 
@@ -96,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = async (userId: string) => {
     try {
       const result = await withTimeout(
-        supabase.from("profiles").select("id, username, display_name, avatar_url, status, bio, language, banner_color, is_premium, has_premium_badge, has_basic_badge, premium_expires_at, basic_expires_at, is_app_admin, gender, birth_date").eq("id", userId).single(),
+        supabase.from("profiles").select("id, username, display_name, avatar_url, status, bio, language, banner_color, banner_url, is_premium, has_premium_badge, has_basic_badge, premium_expires_at, basic_expires_at, is_app_admin, gender, birth_date, gender_visibility, birth_date_visibility").eq("id", userId).single(),
         6000
       );
       const data = (result as any)?.data;

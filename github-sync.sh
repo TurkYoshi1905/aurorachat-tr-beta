@@ -1,21 +1,24 @@
 #!/bin/bash
 
+# Değişkenler
 REPO_URL="https://TurkYoshi1905:${GITHUB_PAT}@github.com/TurkYoshi1905/aurorachat-tr-beta.git"
 TEMP_DIR="/tmp/github_sync_$$"
 WORKSPACE="/home/runner/workspace"
 
 echo "GitHub sync basliyor..."
 
+# Geçici dizini temizle ve depoyu CLONE et (Geçmişi korumak için init yerine clone)
 rm -rf "$TEMP_DIR"
-mkdir -p "$TEMP_DIR"
+git clone "$REPO_URL" "$TEMP_DIR"
 cd "$TEMP_DIR"
 
-git init -b main
+# Git kullanıcı ayarlarını yap
 git config user.email "asfurkan140@gmail.com"
 git config user.name "TurkYoshi1905"
 
-echo "Dosyalar hazirlaniyor..."
+echo "Dosyalar guncelleniyor..."
 
+# Dosyaları kopyala (Dosyaları üzerine yazar, .git klasörüne dokunmaz)
 cp -r "$WORKSPACE/src"      "$TEMP_DIR/"
 cp -r "$WORKSPACE/public"   "$TEMP_DIR/"
 cp -r "$WORKSPACE/supabase" "$TEMP_DIR/"
@@ -24,6 +27,7 @@ cp -r "$WORKSPACE/electron" "$TEMP_DIR/" 2>/dev/null || true
 cp -r "$WORKSPACE/.github"  "$TEMP_DIR/" 2>/dev/null || true
 cp -r "$WORKSPACE/scripts"  "$TEMP_DIR/" 2>/dev/null || true
 
+# Tekil dosyaları kopyala
 for f in \
   package.json package-lock.json index.html vite.config.ts tailwind.config.ts \
   tsconfig.json tsconfig.app.json tsconfig.node.json \
@@ -37,11 +41,14 @@ done
 
 COMMIT_MSG="${1:-Otomatik guncelleme: $(date '+%Y-%m-%d %H:%M')}"
 
+# Değişiklikleri ekle ve commitle
 git add -A
-git commit -m "$COMMIT_MSG"
+# Eğer değişiklik yoksa hata vermemesi için kontrol
+git diff-index --quiet HEAD || git commit -m "$COMMIT_MSG"
 
 echo "GitHub'a yukleniyor..."
-git push "$REPO_URL" main --force
+# --force kaldırıldı, normal push yapılıyor
+git push origin main
 
 STATUS=$?
 if [ $STATUS -eq 0 ]; then
@@ -53,14 +60,14 @@ else
   echo "HATA: Push basarisiz oldu! (Cikis kodu: $STATUS)"
 fi
 
+# Temizlik
 rm -rf "$TEMP_DIR"
 
-# Supabase Edge Functions'lari deploy et
+# --- Supabase Bölümü (Aynı Kaldı) ---
 echo ""
 echo "Supabase Edge Functions deploy ediliyor..."
 cd "$WORKSPACE"
 
-# Supabase CLI yoksa indir
 SUPA_BIN="/tmp/supabase_cli_bin"
 if [ ! -f "$SUPA_BIN" ]; then
   echo "  Supabase CLI indiriliyor..."
