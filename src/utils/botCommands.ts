@@ -5,6 +5,8 @@ export interface BotResponse {
   isEmbed?: boolean;
   fields?: { label: string; value: string }[];
   botName?: string;
+  botId?: string;
+  botAvatarUrl?: string;
 }
 
 export interface CommandDef {
@@ -295,7 +297,8 @@ export async function executeBotCommand(
                   .replace(/\{username\}/g, callerMember?.name?.toLowerCase().replace(/\s+/g, '_') || 'kullanici')
                   .replace(/\{memberCount\}/g, String(memberCount))
                   .replace(/\{serverName\}/g, serverName);
-                return { content: rendered, botName: bot.name };
+                const { data: botProfile } = await (supabase as any).from('bots').select('avatar_url').eq('id', bot.id).maybeSingle();
+                return { content: rendered, botName: bot.name, botId: bot.id, botAvatarUrl: botProfile?.avatar_url || undefined };
               }
             }
           }

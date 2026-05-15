@@ -64,7 +64,7 @@ interface ChatAreaProps {
   slowModeInterval?: number;
   wordFilter?: string[];
   wordFilterExemptRoleIds?: string[];
-  onBotMessage?: (content: string, botName?: string) => void;
+  onBotMessage?: (content: string, botName?: string, botId?: string, botAvatarUrl?: string) => void;
   hasMoreMessages?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
@@ -443,11 +443,12 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
             content: response.content,
             server_id: serverId || null,
             is_bot: true,
+            ...(response.botId ? { bot_id: response.botId } : {}),
           } as any);
         }
 
         // Directly notify parent to add bot message to state immediately (reliable for current user)
-        onBotMessage?.(response.content, response.botName);
+        onBotMessage?.(response.content, response.botName, response.botId, response.botAvatarUrl);
         
         setInput('');
         setPendingFiles([]);
@@ -670,7 +671,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
               ) : (() => {
                 const m = memberMap.get(msg.userId);
                 return (
-                  <UserProfileCard userId={msg.userId} serverId={serverId} status={m?.status} platform={m?.platform} isBot={msg.isBot} botName={msg.isBot ? msg.author : undefined} botAvatarUrl={msg.isBot ? (msg.avatarUrl || undefined) : undefined}>
+                  <UserProfileCard userId={msg.userId} serverId={serverId} status={m?.status} platform={m?.platform} isBot={msg.isBot} botId={msg.botId} botName={msg.isBot ? msg.author : undefined} botAvatarUrl={msg.isBot ? (msg.avatarUrl || undefined) : undefined}>
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 font-semibold overflow-hidden cursor-pointer ${msg.isBot ? 'bg-primary/20 aurora-glow' : 'bg-secondary'}`}>
                       {msg.avatarUrl ? (<img src={msg.avatarUrl} alt="" className="w-full h-full object-cover" />) : (msg.avatar)}
                     </div>
@@ -693,7 +694,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                   const member = memberMap.get(msg.userId);
                   return (
                 <div className="flex items-baseline gap-2">
-                  <UserProfileCard userId={msg.userId} serverId={serverId} status={member?.status} platform={member?.platform} isBot={msg.isBot} botName={msg.isBot ? msg.author : undefined} botAvatarUrl={msg.isBot ? (msg.avatarUrl || undefined) : undefined}>
+                  <UserProfileCard userId={msg.userId} serverId={serverId} status={member?.status} platform={member?.platform} isBot={msg.isBot} botId={msg.botId} botName={msg.isBot ? msg.author : undefined} botAvatarUrl={msg.isBot ? (msg.avatarUrl || undefined) : undefined}>
                     {(() => {
                       const hasGradient = !!(member?.roleColor && member?.roleGradientEnd);
                       const authorStyle: React.CSSProperties = hasGradient

@@ -5,7 +5,7 @@ import { Sparkles, Wrench, Bug, Shield, Bot, Globe, Crown, Puzzle } from 'lucide
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.1.7';
+const RELEASE_VERSION = '1.1.8';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,52 +18,38 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Sparkles,
-    iconBg: 'bg-yellow-500/15',
-    iconColor: 'text-yellow-400',
-    label: 'Özel Profil Banner: Ayarlar > Görünüm\'den resim veya GIF yükle; tüm kullanıcılara gerçek zamanlı yansır.',
-    badge: 'Yeni',
-  },
-  {
     icon: Bot,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Bot Profil Modalı (Sohbet): Özel bot mesajına tıklayınca tam Bot Profil Modalı açılıyor.',
-    badge: 'Yeni',
+    label: 'Özel Bot Profil Modalı: Sohbette özel bot mesajına tıklayınca artık o botun gerçek BotProfileModal\'ı açılıyor — bot adı, avatar, komutlar ve sunucuya ekleme sekmesiyle.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Sparkles,
+    iconBg: 'bg-yellow-500/15',
+    iconColor: 'text-yellow-400',
+    label: 'Bot ID Mesaj Desteği: messages tablosuna bot_id kolonu eklendi — özel botların mesajları gerçek bot kimliğiyle ilişkilendiriliyor.',
+    badge: 'Teknik',
   },
   {
     icon: Shield,
     iconBg: 'bg-cyan-500/15',
     iconColor: 'text-cyan-400',
-    label: 'Gizlilik Senkronizasyonu Fix: Cinsiyet ve Doğum Tarihi görünürlük ayarları sayfa yenilenince artık sıfırlanmıyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Bug,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'Moderasyon 403 Fix: mod_role_assignments RLS güncellendi — adminler rol atayabiliyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Crown,
-    iconBg: 'bg-orange-500/15',
-    iconColor: 'text-orange-400',
-    label: 'Kayıt Avatar Fix: Kayıtta seçilen profil resmi artık giriş sonrası kaybolmuyor.',
-    badge: 'Düzeltme',
+    label: 'Profil Banner İyileştirmesi: Kart ve Ayarlar\'daki banner önizlemesi daha geniş ve orantılı; resimler tam kaplama ile gösteriliyor.',
+    badge: 'İyileştirme',
   },
   {
     icon: Globe,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Sesli Sohbet Optimizasyonu: Region isteği oturum boyunca sadece 1 kez atılıyor.',
+    label: 'Sesli Sohbet Region İyileştirmesi: Region bağlantı denemesi sayısı düşürüldü; bağlantı kopukluklarında gereksiz region istekleri azaltıldı.',
     badge: 'İyileştirme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
-    label: 'SQL: profiles.banner_url kolonu, profile-banners storage bucket\'ı, mod RLS fix.',
+    label: 'SQL: messages.bot_id kolonu (UUID, FK → bots.id, ON DELETE SET NULL).',
     badge: 'Teknik',
   },
 ];

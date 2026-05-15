@@ -28,6 +28,7 @@ interface UserProfileCardProps {
   status?: string;
   platform?: string;
   isBot?: boolean;
+  botId?: string;
   botName?: string;
   botAvatarUrl?: string;
   side?: 'left' | 'right';
@@ -353,7 +354,7 @@ const BotProfileCard = ({ children, isMobile }: { children: React.ReactNode; isM
   );
 };
 
-const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: externalStatus, platform: externalPlatform, isBot, botName, botAvatarUrl, side = 'right' }: UserProfileCardProps) => {
+const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: externalStatus, platform: externalPlatform, isBot, botId, botName, botAvatarUrl, side = 'right' }: UserProfileCardProps) => {
   const { t, language } = useTranslation();
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -563,11 +564,12 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
     }
   };
 
-  if (userId === AURORA_BOT_ID) {
-    return <BotProfileCard isMobile={isMobile}>{children}</BotProfileCard>;
+  const resolvedBotId = botId || (isBot && userId !== AURORA_BOT_ID ? userId : undefined);
+  if (isBot && resolvedBotId && resolvedBotId !== AURORA_BOT_ID && botName) {
+    return <CustomBotWrapper botId={resolvedBotId} botName={botName} botAvatarUrl={botAvatarUrl}>{children}</CustomBotWrapper>;
   }
-  if (isBot && botName && userId !== AURORA_BOT_ID) {
-    return <CustomBotWrapper botId={userId} botName={botName} botAvatarUrl={botAvatarUrl}>{children}</CustomBotWrapper>;
+  if (userId === AURORA_BOT_ID && !botId) {
+    return <BotProfileCard isMobile={isMobile}>{children}</BotProfileCard>;
   }
 
   const handleNoteChange = (val: string) => {
@@ -676,9 +678,14 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
   const profileContent = (
     <div className="flex flex-col">
       {/* Banner */}
-      <div className="h-[60px] w-full rounded-t-xl overflow-hidden shrink-0 relative">
+      <div className="w-full rounded-t-xl overflow-hidden shrink-0 relative" style={{ height: profile?.banner_url ? '90px' : '60px' }}>
         {profile?.banner_url ? (
-          <img src={profile.banner_url} alt="" className="w-full h-full object-cover" />
+          <img
+            src={profile.banner_url}
+            alt=""
+            className="w-full h-full"
+            style={{ objectFit: 'cover', objectPosition: 'center top' }}
+          />
         ) : (
           <div className="w-full h-full" style={{ background: bannerBg }} />
         )}

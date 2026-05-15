@@ -2206,9 +2206,9 @@ const Settings = () => {
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">Profilinde görünecek banner resmi veya GIF yükle. (Maks. 10MB, jpeg/png/gif/webp)</p>
                 </div>
-                <div className="h-28 w-full rounded-lg overflow-hidden border border-border relative group">
+                <div className="w-full rounded-lg overflow-hidden border border-border relative group" style={{ aspectRatio: '21/6', minHeight: '80px' }}>
                   {bannerUrl ? (
-                    <img src={bannerUrl} alt="Profil banner" className="w-full h-full object-cover" />
+                    <img src={bannerUrl} alt="Profil banner" className="w-full h-full" style={{ objectFit: 'cover', objectPosition: 'center top' }} />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-accent/15 flex flex-col items-center justify-center gap-1.5">
                       <Upload className="w-5 h-5 text-muted-foreground/60" />
@@ -2601,9 +2601,9 @@ const Settings = () => {
                     <h3 className="text-2xl font-bold tracking-tight text-foreground">AuroraChat</h3>
                     <div className="flex items-center justify-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold">
-                        <Sparkles className="w-3 h-3" /> v1.1.6
+                        <Sparkles className="w-3 h-3" /> v1.1.8
                       </span>
-                      <span className="text-xs text-muted-foreground">10 Mayıs 2026</span>
+                      <span className="text-xs text-muted-foreground">14 Mayıs 2026</span>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">

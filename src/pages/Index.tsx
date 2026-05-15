@@ -743,6 +743,7 @@ const Index = () => {
       const nameMap = new Map(profilesResult.data?.map((p: any) => [p.id, (p as any).display_name || p.username]) || []);
       return rawData.map((m) => {
         const isBot = (m as any).is_bot === true || (m as any).author_name === 'AuroraChat Bot';
+        const isCustomBot = isBot && (m as any).author_name && (m as any).author_name !== 'AuroraChat Bot';
         const botDisplayName = isBot ? ((m as any).author_name || 'AuroraChat Bot') : null;
         const content = isBot && m.content ? m.content.replace(/\{user\}/g, 'kullanıcı').replace(/\{server\}/g, '') : m.content;
         const deletedAuthor = (m as any).deleted_user_id ? `Deleted User (${String((m as any).deleted_user_id).slice(0, 8)})` : null;
@@ -751,9 +752,10 @@ const Index = () => {
           id: m.id,
           author: deletedAuthor || liveName,
           avatar: (deletedAuthor ? 'D' : liveName).charAt(0).toUpperCase(),
-          avatarUrl: isBot ? '/aurora-bot-avatar.jpg' : (m.user_id ? (avatarMap.get(m.user_id) || null) : null),
+          avatarUrl: isCustomBot ? ((m as any).bot_avatar_url || null) : (isBot ? '/aurora-bot-avatar.jpg' : (m.user_id ? (avatarMap.get(m.user_id) || null) : null)),
           userId: isBot ? 'aurora-bot' : (m.user_id || (m as any).deleted_user_id || 'deleted-user'),
           isBot,
+          botId: isCustomBot ? ((m as any).bot_id || undefined) : undefined,
           content,
           timestamp: formatTimestamp(m.inserted_at),
           insertedAt: m.inserted_at,
@@ -768,7 +770,7 @@ const Index = () => {
     const fetchMessages = async () => {
       const { data } = await supabase
         .from('messages')
-        .select('id, channel_id, user_id, content, inserted_at, updated_at, author_name, is_bot, attachments, reply_to, is_pinned, parent_id, deleted_user_id')
+        .select('id, channel_id, user_id, content, inserted_at, updated_at, author_name, is_bot, bot_id, attachments, reply_to, is_pinned, parent_id, deleted_user_id')
         .eq('channel_id', activeChannel)
         .order('inserted_at', { ascending: false })
         .limit(PAGE_SIZE)
@@ -817,6 +819,7 @@ const Index = () => {
       const nameMap = new Map((profilesResult.data || []).map((p: any) => [p.id, p.display_name || p.username]));
       return rawData.map((m: any) => {
         const isBot = m.is_bot === true || m.author_name === 'AuroraChat Bot';
+        const isCustomBot = isBot && m.author_name && m.author_name !== 'AuroraChat Bot';
         const botDisplayName = isBot ? (m.author_name || 'AuroraChat Bot') : null;
         const content = isBot && m.content ? m.content.replace(/\{user\}/g, 'kullanıcı').replace(/\{server\}/g, '') : m.content;
         const deletedAuthor = m.deleted_user_id ? `Deleted User (${String(m.deleted_user_id).slice(0, 8)})` : null;
@@ -825,9 +828,9 @@ const Index = () => {
           id: m.id,
           author: deletedAuthor || liveName,
           avatar: (deletedAuthor ? 'D' : liveName).charAt(0).toUpperCase(),
-          avatarUrl: isBot ? '/aurora-bot-avatar.jpg' : (m.user_id ? (avatarMap.get(m.user_id) || null) : null),
+          avatarUrl: isCustomBot ? (m.bot_avatar_url || null) : (isBot ? '/aurora-bot-avatar.jpg' : (m.user_id ? (avatarMap.get(m.user_id) || null) : null)),
           userId: isBot ? 'aurora-bot' : (m.user_id || m.deleted_user_id || 'deleted-user'),
-          isBot, content,
+          isBot, botId: isCustomBot ? (m.bot_id || undefined) : undefined, content,
           timestamp: formatTimestamp(m.inserted_at),
           insertedAt: m.inserted_at,
           edited: !!(m.updated_at) && m.updated_at !== m.inserted_at,
@@ -846,7 +849,7 @@ const Index = () => {
 
         supabase
           .from('messages')
-          .select('id, channel_id, user_id, content, inserted_at, updated_at, author_name, is_bot, attachments, reply_to, is_pinned, parent_id, deleted_user_id')
+          .select('id, channel_id, user_id, content, inserted_at, updated_at, author_name, is_bot, bot_id, attachments, reply_to, is_pinned, parent_id, deleted_user_id')
           .eq('channel_id', activeChannel)
           .lt('inserted_at', oldestTs)
           .order('inserted_at', { ascending: false })
@@ -908,9 +911,9 @@ const Index = () => {
             return [...prev, {
               id: m.id, author: liveAuthor,
               avatar: liveAuthor.charAt(0).toUpperCase(),
-              avatarUrl: isBot ? '/aurora-bot-avatar.jpg' : (prof?.avatar_url || null),
+              avatarUrl: (isBot && m.author_name && m.author_name !== 'AuroraChat Bot') ? (m.bot_avatar_url || null) : (isBot ? '/aurora-bot-avatar.jpg' : (prof?.avatar_url || null)),
               userId: isBot ? 'aurora-bot' : (m.user_id || m.deleted_user_id || 'deleted-user'),
-              isBot, content: rtContent, timestamp: formatTimestamp(m.inserted_at),
+              isBot, botId: (isBot && m.author_name && m.author_name !== 'AuroraChat Bot') ? (m.bot_id || undefined) : undefined, content: rtContent, timestamp: formatTimestamp(m.inserted_at),
               insertedAt: m.inserted_at,
               attachments: m.attachments || undefined,
             }];
@@ -1518,15 +1521,17 @@ const Index = () => {
     else { setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, status: undefined } : m)); }
   }, [user, profile, activeServer, activeChannel]);
 
-  const handleBotMessage = useCallback((content: string, botName?: string) => {
+  const handleBotMessage = useCallback((content: string, botName?: string, botId?: string, botAvatarUrl?: string) => {
     const displayName = botName || 'AuroraChat Bot';
+    const isCustomBot = !!botId;
     const botMsg: DbMessage = {
       id: `local-bot-${crypto.randomUUID()}`,
       author: displayName,
       avatar: displayName.charAt(0).toUpperCase(),
-      avatarUrl: '/aurora-bot-avatar.jpg',
+      avatarUrl: isCustomBot ? (botAvatarUrl || null) : '/aurora-bot-avatar.jpg',
       userId: 'aurora-bot',
       isBot: true,
+      botId: botId || undefined,
       content,
       timestamp: formatTimestamp(new Date().toISOString()),
       edited: false,

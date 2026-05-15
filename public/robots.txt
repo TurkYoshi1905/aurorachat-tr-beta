@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://aurorachat-beta-tr.netlify.app/sitemap.xml

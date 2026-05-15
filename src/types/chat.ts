@@ -8,6 +8,7 @@ export interface DbMessage {
   timestamp: string;
   insertedAt?: string;
   isBot?: boolean;
+  botId?: string;
   edited?: boolean;
   status?: 'sending' | 'failed';
   attachments?: string[];

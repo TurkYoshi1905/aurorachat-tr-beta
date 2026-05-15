@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 let _cachedLivekitToken: { token: string; channelId: string } | null = null;
+let _cachedLivekitRegionUrl: string | null = null;
 
 export interface VoiceParticipant {
   identity: string;
@@ -522,11 +523,11 @@ export const useVoice = (): VoiceState => {
           resolution: { width: 1920, height: 1080, frameRate: 60 },
           audio: true,
         },
-        // Conservative reconnect — prevents repeated region fetches on transient drops
+        // Conservative reconnect — limits repeated region fetches on transient drops
         reconnectPolicy: {
-          maxRetries: 5,
+          maxRetries: 3,
           nextRetryDelayInMs: (context: { retryCount: number }) =>
-            Math.min(1000 * Math.pow(2, context.retryCount), 30000),
+            Math.min(2000 * Math.pow(2, context.retryCount), 20000),
         } as any,
       });
       roomRef.current = room;
