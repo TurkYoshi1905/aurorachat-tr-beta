@@ -4032,4 +4032,5 @@ export const changelogData: ChangelogRelease[] = [
         ],
       },
     ],
+  },
 ];
