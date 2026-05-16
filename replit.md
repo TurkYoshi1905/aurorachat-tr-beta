@@ -64,7 +64,7 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260506000000_v113_announcements_system.sql` — announcements + comments tables, server order_index column, RLS, realtime, helper RPCs
 - `20260506100000_v114_bot_member_commands_fix.sql` — bots.commands NOT NULL fix, server_bots SELECT policy, get_server_members_full EXCEPTION block, get_server_bot_commands RPC
 
-## Current Version: v1.1.8 (14 Mayıs 2026)
+## Current Version: v1.1.8 (16 Mayıs 2026)
 
 ### Features by version
 - **v1.1.5**: Aurora Guard güvenlik katmanı (IP Ban, Rate Limit 6/s, 30-dk cooldown, XSS sanitize), Bot Profil Modalı (BotProfileModal.tsx), komut değişken sistemi ({user}/{username}/{memberCount}/{serverName}), komut düzenleme, moderasyon rol hiyerarşisi (Yetkili/Admin/Moderatör/Deneme), Güvenlik sekmesi modpanelde, mic chevron görünürlük fix, announcement comment RLS 42501 fix, SEO meta güncelleme
@@ -83,6 +83,15 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `src/utils/sanitize.ts` — XSS sanitization utilities
 - `src/components/BotProfileModal.tsx` — bot profile modal with "Sunucuya Ekle"
 - `src/components/IpBanModal.tsx` — IP ban modal shown to IP-banned users
+
+## Changes (v1.1.8)
+- `src/pages/ChangelogDetail.tsx` — geri butonu navigate('/changelog') yerine navigate(-1) ile döngü düzeltildi
+- `src/components/UserProfileCard.tsx` — banner yüksekliği 90px→150px, objectPosition center center; bot yönlendirme mantığı botName öncelikli hale getirildi; CustomBotWrapper name fallback sorgusu eklendi
+- `src/pages/Settings.tsx` — banner aspectRatio 21/6→7/3, objectPosition center center
+- `src/hooks/useVoice.ts` — joinVoice başarı ve hata sonrası joiningRef.current=false sıfırlanıyor (regions flooding düzeltmesi)
+- `src/data/changelogData.ts` — v1.1.8 girişi güncellendi (5 bug fix açıklaması)
+- `src/components/ReleaseNotesModal.tsx` — v1.1.8 sürüm notları güncellendi
+- `supabase/migrations/20260514000000_v118_custom_bot_message_id.sql` — messages.bot_id kolonu
 
 ## Changes (v1.1.7)
 - `src/components/BannerUploadSuccessModal.tsx` — NEW: banner upload başarı modalı (animasyon, preview, oto-kapanma)

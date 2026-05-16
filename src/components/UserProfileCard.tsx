@@ -86,10 +86,18 @@ const CustomBotWrapper = ({ children, botId, botName, botAvatarUrl }: { children
 
   const handleClick = async () => {
     try {
-      const { data } = await (supabase as any).from('bots').select('id, name, username, description, avatar_url, owner_id').eq('id', botId).maybeSingle();
-      setBotData(data || { id: botId, name: botName, username: botName?.toLowerCase().replace(/\s+/g, '_') || 'bot', description: null, avatar_url: botAvatarUrl || null, owner_id: '' });
+      let data: any = null;
+      if (botId) {
+        const { data: d } = await (supabase as any).from('bots').select('id, name, username, description, avatar_url, owner_id').eq('id', botId).maybeSingle();
+        data = d;
+      }
+      if (!data && botName) {
+        const { data: d } = await (supabase as any).from('bots').select('id, name, username, description, avatar_url, owner_id').eq('name', botName).maybeSingle();
+        data = d;
+      }
+      setBotData(data || { id: botId || botName, name: botName, username: botName?.toLowerCase().replace(/\s+/g, '_') || 'bot', description: null, avatar_url: botAvatarUrl || null, owner_id: '' });
     } catch {
-      setBotData({ id: botId, name: botName, username: botName?.toLowerCase().replace(/\s+/g, '_') || 'bot', description: null, avatar_url: botAvatarUrl || null, owner_id: '' });
+      setBotData({ id: botId || botName, name: botName, username: botName?.toLowerCase().replace(/\s+/g, '_') || 'bot', description: null, avatar_url: botAvatarUrl || null, owner_id: '' });
     }
     setOpen(true);
   };
@@ -564,11 +572,11 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
     }
   };
 
-  const resolvedBotId = botId || (isBot && userId !== AURORA_BOT_ID ? userId : undefined);
-  if (isBot && resolvedBotId && resolvedBotId !== AURORA_BOT_ID && botName) {
+  if (isBot && botName && botName !== 'AuroraChat Bot') {
+    const resolvedBotId = botId || (userId !== AURORA_BOT_ID ? userId : undefined) || '';
     return <CustomBotWrapper botId={resolvedBotId} botName={botName} botAvatarUrl={botAvatarUrl}>{children}</CustomBotWrapper>;
   }
-  if (userId === AURORA_BOT_ID && !botId) {
+  if (isBot) {
     return <BotProfileCard isMobile={isMobile}>{children}</BotProfileCard>;
   }
 
@@ -678,13 +686,13 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
   const profileContent = (
     <div className="flex flex-col">
       {/* Banner */}
-      <div className="w-full rounded-t-xl overflow-hidden shrink-0 relative" style={{ height: profile?.banner_url ? '90px' : '60px' }}>
+      <div className="w-full rounded-t-xl overflow-hidden shrink-0 relative" style={{ height: profile?.banner_url ? '150px' : '60px' }}>
         {profile?.banner_url ? (
           <img
             src={profile.banner_url}
             alt=""
             className="w-full h-full"
-            style={{ objectFit: 'cover', objectPosition: 'center top' }}
+            style={{ objectFit: 'cover', objectPosition: 'center center' }}
           />
         ) : (
           <div className="w-full h-full" style={{ background: bannerBg }} />

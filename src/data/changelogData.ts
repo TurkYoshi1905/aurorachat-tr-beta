@@ -17,28 +17,19 @@ export interface ChangelogRelease {
 export const changelogData: ChangelogRelease[] = [
   {
     version: '1.1.8',
-    date: '14 Mayıs 2026',
-    summary: 'Özel bot profil modalı düzeltmesi (bot_id ile gerçek BotProfileModal), profil banner iyileştirmesi, sesli sohbet region optimizasyonu, messages.bot_id DB kolonu.',
+    date: '16 Mayıs 2026',
+    summary: '5 kritik hata düzeltmesi: Changelog geri döngüsü, banner boyutu, bot profil yönlendirme, sesli sohbet region flooding, Ayarlar banner oranı.',
     sections: [
       {
         title: 'Hata Düzeltmeleri',
         icon: Bug,
         color: 'text-red-400',
         items: [
-          'Özel Bot Profil Modalı: Sohbette özel bot mesajının avatar veya adına tıklayınca artık o bota ait gerçek BotProfileModal açılıyor — tüm bot bilgileri, komutlar ve sunucuya ekleme sekmesiyle. Daha önce her zaman AuroraChat Bot modalı açılıyordu.',
-          'Bot ID Aktarımı: executeBotCommand artık özel komutlar için botId ve botAvatarUrl döndürüyor; mesaj state\'e ve DB\'ye bot_id ile kaydediliyor.',
-          'handleBotMessage Prop Güncellemesi: onBotMessage callback\'i botId ve botAvatarUrl parametrelerini de alıyor; yerel mesaj state\'i doğru bot kimliğiyle oluşturuluyor.',
-        ],
-      },
-      {
-        title: 'İyileştirmeler',
-        icon: Wrench,
-        color: 'text-blue-400',
-        items: [
-          'Profil Banner Kart Görünümü: UserProfileCard\'daki banner alanı banner yüklüyken 90px yüksekliğe genişledi; object-position: center top ile görüntü daha iyi hizalandı.',
-          'Banner Önizleme (Ayarlar): Ayarlar > Görünüm\'deki banner önizlemesi artık 21/6 en-boy oranıyla daha geniş ve orantılı görünüyor.',
-          'Sesli Sohbet Region: LiveKit yeniden bağlanma sayısı 5\'ten 3\'e düşürüldü; yeniden deneme gecikmesi 2000ms taban ile üstel artışa güncellendi — gereksiz region HTTP isteklerini azaltır.',
-          'Region URL Cache: _cachedLivekitRegionUrl modül değişkeni eklendi; ileriki optimizasyonlar için hazır.',
+          'Changelog Geri Butonu Döngüsü: ChangelogDetail sayfasında geri butonuna basmak artık döngüye girmiyor — navigate(\'/changelog\') yerine navigate(-1) kullanılarak tarayıcı geçmişine doğru geri dönüş sağlandı.',
+          'Özel Bot Profil Modalı: Sohbette özel bot mesajına tıklayınca artık o bota ait gerçek BotProfileModal açılıyor. Daha önce bot_id eksik olduğunda her zaman AuroraChat Bot modalı açılıyordu. Artık botName ile DB\'den de arama yapılıyor.',
+          'Sesli Sohbet Region Flooding: joinVoice tamamlandıktan (başarılı veya hatalı) sonra joiningRef.current=false yapılmadığı için sonraki kanal geçişlerinde LiveKit bağlantısı engelleniyor ve regions API\'ye tekrar tekrar istek gidiyordu. Her iki durumda da ref sıfırlanarak düzeltildi.',
+          'Profil Banner Kart Yüksekliği: UserProfileCard\'daki banner alanı 90px\'den 150px\'e çıkarıldı — banner yüklendiğinde görüntü artık düzgün görünüyor.',
+          'Ayarlar Banner Oran Hatası: Ayarlar > Görünüm\'deki banner önizlemesi 21/6 (çok geniş ve kısa) yerine 7/3 oranını kullanıyor; objectPosition center center ile görüntü ortalanıyor.',
         ],
       },
       {
@@ -46,10 +37,9 @@ export const changelogData: ChangelogRelease[] = [
         icon: Wrench,
         color: 'text-blue-400',
         items: [
-          'SQL migration: 20260514000000_v118_custom_bot_message_id.sql',
-          'Yeni kolon: messages.bot_id (UUID, FK → bots.id, ON DELETE SET NULL) — özel bot mesajları veritabanında doğru bot kaydıyla ilişkilendiriliyor.',
-          'BotResponse interface: botId ve botAvatarUrl alanları eklendi.',
-          'DbMessage type: botId? alanı eklendi.',
+          'SQL migration: 20260514000000_v118_custom_bot_message_id.sql — messages.bot_id (UUID, FK → bots.id, ON DELETE SET NULL)',
+          'CustomBotWrapper: botId bulunamazsa bots tablosunda name sütununa göre fallback sorgusu yapıyor.',
+          'DbMessage type: botId? alanı eklendi; UserProfileCard bot yönlendirme mantığı botName öncelikli hale getirildi.',
         ],
       },
     ],

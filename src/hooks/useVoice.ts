@@ -717,7 +717,9 @@ export const useVoice = (): VoiceState => {
         // Ask if anyone is already in a voice channel (we are the new joiner)
         bc.postMessage({ type: 'voice_query', tabId: tabIdRef.current });
       }
+      joiningRef.current = false;
       } catch (err: any) {
+      joiningRef.current = false;
       console.error('Voice join error:', err);
       if (!String(err?.message || '').includes('Client initiated disconnect')) {
         toast.error(`Ses kanalına bağlanılamadı: ${err.message}`);
