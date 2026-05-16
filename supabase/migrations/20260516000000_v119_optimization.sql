@@ -21,8 +21,8 @@ CREATE INDEX IF NOT EXISTS idx_account_bans_user_active
 CREATE INDEX IF NOT EXISTS idx_mod_role_assignments_user
   ON public.mod_role_assignments(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_mod_role_assignments_assigned_to
-  ON public.mod_role_assignments(assigned_to_user_id);
+CREATE INDEX IF NOT EXISTS idx_mod_role_assignments_assigned_by
+  ON public.mod_role_assignments(assigned_by);
 
 -- announcements: ordered by created_at DESC for listing
 CREATE INDEX IF NOT EXISTS idx_announcements_created_desc
