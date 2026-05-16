@@ -69,16 +69,17 @@ CREATE INDEX IF NOT EXISTS idx_server_bots_server
 CREATE INDEX IF NOT EXISTS idx_server_bots_bot
   ON public.server_bots(bot_id);
 
--- bots: queried by creator_id
-CREATE INDEX IF NOT EXISTS idx_bots_creator
-  ON public.bots(creator_id);
+-- bots: queried by owner_id (creator_id does not exist; column is owner_id)
+CREATE INDEX IF NOT EXISTS idx_bots_owner
+  ON public.bots(owner_id);
 
--- plugins: queried by creator_id and status in store
+-- plugins: queried by creator_id and approval status in store
+-- (column is is_approved boolean, not status)
 CREATE INDEX IF NOT EXISTS idx_plugins_creator
   ON public.plugins(creator_id);
 
-CREATE INDEX IF NOT EXISTS idx_plugins_status
-  ON public.plugins(status);
+CREATE INDEX IF NOT EXISTS idx_plugins_is_approved
+  ON public.plugins(is_approved);
 
 -- user_plugins: queried per user_id
 CREATE INDEX IF NOT EXISTS idx_user_plugins_user
