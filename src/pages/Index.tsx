@@ -321,9 +321,14 @@ const Index = () => {
   }, [myStatus, user?.id]);
 
   // Sync user status to profiles table (realtime for other users)
+  // Debounced 800ms — prevents rapid-fire DB writes when idle/online oscillates on tab hide/show
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').update({ status: myStatus as any, last_seen: new Date().toISOString() } as any).eq('id', user.id).then(() => {});
+    const userId = user.id;
+    const timer = setTimeout(() => {
+      supabase.from('profiles').update({ status: myStatus as any, last_seen: new Date().toISOString() } as any).eq('id', userId).then(() => {});
+    }, 800);
+    return () => clearTimeout(timer);
   }, [myStatus, user?.id]);
 
   // Heartbeat: keep last_seen fresh while the tab is visible.
@@ -355,12 +360,15 @@ const Index = () => {
   }, [activeServer, activeChannel, user?.id]);
 
   // Idle detection — skip if user is actively in a voice channel
+  // Uses myStatusRef (not myStatus state) so this effect is NOT recreated on every status change.
+  // Without this, the effect re-registers the listener every time idle→online→idle oscillates,
+  // causing redundant DB writes via the myStatus sync effect above.
   const previousStatusRef = useRef<string | null>(null);
   useEffect(() => {
     const handleVisibility = () => {
       const inVoice = voice.connected;
-      if (document.hidden && myStatus === 'online' && !inVoice) {
-        previousStatusRef.current = myStatus;
+      if (document.hidden && myStatusRef.current === 'online' && !inVoice) {
+        previousStatusRef.current = myStatusRef.current;
         setMyStatus('idle');
       } else if (!document.hidden && previousStatusRef.current && !inVoice) {
         setMyStatus(previousStatusRef.current as DbMember['status']);
@@ -369,7 +377,7 @@ const Index = () => {
     };
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [myStatus, voice.connected]);
+  }, [voice.connected]);
 
   // Global open-dm event listener (from UserProfileCard without onSendMessage prop)
   useEffect(() => {
@@ -647,7 +655,7 @@ const Index = () => {
       appCache.set(cacheKey, perms, 300_000); // 5 min — invalidated on role changes
       setUserPermissions(perms);
     }
-  }, [activeServer, user]);
+  }, [activeServer, user?.id]);
 
   // Real-time: member list updates for role changes and joins/kicks
   // NOTE: DELETE subscriptions intentionally have NO filter because Supabase Postgres Changes
@@ -1169,7 +1177,7 @@ const Index = () => {
         }
       });
     return () => { presenceChannelRef.current = null; supabase.removeChannel(presenceChannel); };
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     myStatusRef.current = myStatus;
@@ -1197,7 +1205,7 @@ const Index = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, signOut]);
+  }, [user?.id, signOut]);
 
   // Listen for kick/ban events broadcast by admins
   useEffect(() => {
@@ -1226,7 +1234,7 @@ const Index = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user, fetchServers]);
+  }, [user?.id, fetchServers]);
 
   // Refresh server list when joining via DM embed invite link
   useEffect(() => {
@@ -1242,7 +1250,7 @@ const Index = () => {
     };
     window.addEventListener('aurorachat:server-joined', handler);
     return () => window.removeEventListener('aurorachat:server-joined', handler);
-  }, [user, fetchServers]);
+  }, [user?.id, fetchServers]);
 
   // Navigate to a server from embed "Sunucuya Git" button
   useEffect(() => {

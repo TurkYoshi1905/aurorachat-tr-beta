@@ -16,6 +16,37 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.1.9',
+    date: '16 Mayıs 2026',
+    summary: 'Supabase aşırı yük ve bağlantı sızıntısı düzeltmeleri: presence kanalı yeniden oluşturma hatası, durum DB yazısı debounce, boştaki GroupDM polling, ek indeksler.',
+    sections: [
+      {
+        title: 'Performans & Optimizasyon',
+        icon: Wrench,
+        color: 'text-blue-400',
+        items: [
+          'Presence kanalı sızıntısı giderildi: presence-room kanalı artık her token yenilemesinde yeniden oluşturulmuyor — bağımlılık [user] → [user?.id] olarak düzeltildi. Her yenileme bir DB yazısı ve yeni WebSocket bağlantısı açıyordu.',
+          'Durum DB yazısı debounce: myStatus değiştiğinde (boşta/çevrimiçi geçişi) profiles tablosuna anlık yazım yerine 800ms beklenip tek seferde yazılıyor. Sekme gizleme/gösterme döngülerinde yazım fırtınası engellendi.',
+          'Boşta algılama optimizasyonu: idle detection useEffect artık myStatus state\'ine değil myStatusRef\'e bakıyor — durum değiştikçe listener yeniden kayıt edilmiyor.',
+          'GroupDM 30s polling kaldırıldı: Supabase Presence zaten anlık üye durumu sağlıyor; her GroupDM görünümü başına dakikada 2 gereksiz DB sorgusu üretiyordu.',
+          'fetchPerms bağımlılığı düzeltildi: useCallback bağımlılığı [user] nesnesinden [user?.id] string\'e indirgendi — token yenilemede gereksiz yeniden çalışma engellendi.',
+          'force-logout / kick-ban kanalları: bağımlılıklar [user] → [user?.id] olarak düzeltildi; her token yenilemesinde kanal yeniden oluşturulup subscribe edilmiyordu.',
+        ],
+      },
+      {
+        title: 'Veritabanı İndeksleri',
+        icon: Wrench,
+        color: 'text-cyan-400',
+        items: [
+          'Yeni SQL migration: 20260516000000_v119_optimization.sql',
+          'Yeni indeksler: voice_channel_members(user_id/channel_id), account_bans(banned_user_id, active), mod_role_assignments(user_id/assigned_to), announcements(created_at DESC), announcement_comments(announcement_id), banned_ips(ip_address), rate_limit_cooldowns(user_id), user_login_ips(user_id), direct_messages(conversation_id, inserted_at DESC), dm_conversations(user1_id/user2_id), server_member_roles(member_id/role_id), server_bots(server_id/bot_id), bots(creator_id), plugins(creator_id/status), user_plugins(user_id), messages(bot_id), notifications(user_id, read, created_at DESC)',
+          'is_server_member_check() security definer fonksiyonu: RLS politikalarında server_members öz-referans döngüsünü önler.',
+          'Eski voice_channel_members satırları temizlendi: 10 dakikadan eski hayalet üye kayıtları silindi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.1.8',
     date: '16 Mayıs 2026',
     summary: '5 kritik hata düzeltmesi: Changelog geri döngüsü, banner boyutu, bot profil yönlendirme, sesli sohbet region flooding, Ayarlar banner oranı.',

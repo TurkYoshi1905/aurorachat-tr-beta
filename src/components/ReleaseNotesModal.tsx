@@ -5,7 +5,7 @@ import { Sparkles, Wrench, Bug, Shield, Bot, Globe, Crown, Puzzle } from 'lucide
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.1.8';
+const RELEASE_VERSION = '1.1.9';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,39 +18,46 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Bug,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'Changelog Geri Butonu Döngüsü: Değişiklik kaydı detay sayfasından geri butonuna basmak artık aynı sayfada döngüye girmiyor — tarayıcı geçmişine doğru geri dönüş.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Bot,
-    iconBg: 'bg-primary/15',
-    iconColor: 'text-primary',
-    label: 'Özel Bot Profil Modalı: Sohbette özel bot mesajına tıklayınca artık o botun gerçek BotProfileModal\'ı açılıyor — bot adı, avatar, komutlar ve sunucuya ekleme sekmesiyle. Artık bot adına göre fallback DB sorgusu da yapılıyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Shield,
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    label: 'Profil Banner Boyutu: UserProfileCard\'daki banner 90px\'den 150px\'e çıkarıldı; Ayarlar önizlemesi 21/6 yerine doğru 7/3 oranına getirildi.',
-    badge: 'Düzeltme',
-  },
-  {
     icon: Globe,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Sesli Sohbet Region Flooding: joiningRef bağlantı sonrası sıfırlanmıyordu — kanal geçişlerinde regions API\'ye tekrarlı istek gidiyordu. Her iki sonuçta da ref sıfırlanarak düzeltildi.',
+    label: 'Presence Kanalı Sızıntısı: presence-room artık her token yenilemesinde yeniden oluşturulmuyor. [user] bağımlılığı [user?.id] olarak düzeltildi — bağlantı havuzu tüketimi dramatik ölçüde azaldı.',
     badge: 'Düzeltme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
-    label: 'SQL: messages.bot_id kolonu (UUID, FK → bots.id, ON DELETE SET NULL) — özel bot mesajları bot kaydıyla ilişkilendiriliyor.',
+    label: 'Durum DB Yazısı Debounce: myStatus değiştiğinde 800ms beklenerek yazım yapılıyor. Sekme gizleme/gösterme döngüsünde birden fazla DB isteği engelliyor.',
+    badge: 'İyileştirme',
+  },
+  {
+    icon: Bug,
+    iconBg: 'bg-red-500/15',
+    iconColor: 'text-red-400',
+    label: 'GroupDM 30s Polling Kaldırıldı: Supabase Presence zaten anlık durum sağlıyor. Polling her GroupDM görünümünde dakikada 2 gereksiz sorgu üretiyordu.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Shield,
+    iconBg: 'bg-cyan-500/15',
+    iconColor: 'text-cyan-400',
+    label: 'Boşta Algılama Düzeltmesi: idle detection artık myStatusRef kullanıyor — durum her değiştiğinde listener yeniden kayıt edilmiyor, gereksiz DB yazısı oluşmuyor.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Sparkles,
+    iconBg: 'bg-yellow-500/15',
+    iconColor: 'text-yellow-400',
+    label: '17 Yeni DB İndeksi: voice_channel_members, account_bans, mod_role_assignments, announcements, dm_conversations, direct_messages, server_member_roles, server_bots ve daha fazlası için indeks eklendi.',
     badge: 'Teknik',
+  },
+  {
+    icon: Bot,
+    iconBg: 'bg-primary/15',
+    iconColor: 'text-primary',
+    label: 'force-logout / kick-ban Kanalları: [user] → [user?.id] bağımlılık düzeltmesi — token yenilemede gereksiz WebSocket yeniden bağlantısı engellendi.',
+    badge: 'Düzeltme',
   },
 ];
 

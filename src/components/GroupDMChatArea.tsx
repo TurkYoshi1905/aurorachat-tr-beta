@@ -317,14 +317,9 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
     if (showAddPanel) loadFriends();
   }, [showAddPanel, loadFriends]);
 
-  // 30-second polling fallback for member statuses
-  useEffect(() => {
-    if (!group) return;
-    const interval = setInterval(() => {
-      if (!document.hidden) loadMembers(group.ownerId);
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [group, loadMembers]);
+  // 30-second polling removed — Supabase Presence (group-dm-presence-{groupId}) handles
+  // real-time online/offline status and the postgres_changes subscription covers member changes.
+  // Polling was generating ~2 extra DB queries/minute per active GroupDM view.
 
   // Supabase Presence: real-time online/offline status for GroupDM members
   useEffect(() => {
