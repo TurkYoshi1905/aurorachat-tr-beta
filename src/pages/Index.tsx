@@ -1103,8 +1103,13 @@ const Index = () => {
 
         // 'offline' from DB always wins over stale presence.
         // For online/idle/dnd the live presence channel is more accurate.
+        // For the current user, always trust the local myStatusRef — prevents
+        // stale presence cache from overriding a manual status change before
+        // the presence sync catches up.
         const effectiveStatus: DbMember['status'] =
-          dbStatus === 'offline' ? 'offline' : ((presenceStatus || dbStatus) as DbMember['status']) || 'offline';
+          dbStatus === 'offline' ? 'offline'
+          : updated.id === userRef.current ? myStatusRef.current
+          : ((presenceStatus || dbStatus) as DbMember['status']) || 'offline';
 
         setMembers((prev) => prev.map((m) => {
           if (m.id !== updated.id) return m;

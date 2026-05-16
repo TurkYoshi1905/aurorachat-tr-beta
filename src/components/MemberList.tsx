@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { DbMember } from '@/types/chat';
-import { ArrowLeft, Moon, Search, Crown, Zap, Smartphone } from 'lucide-react';
+import { ArrowLeft, Moon, Search, Crown, Zap, Smartphone, CircleMinus } from 'lucide-react';
 import { useTranslation } from '@/i18n';
 import UserProfileCard from './UserProfileCard';
 
@@ -87,6 +87,10 @@ const MemberRow = ({
           ) : effectiveStatus === 'idle' ? (
             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 flex items-center justify-center bg-[#313338] rounded-full">
               <Moon className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
+            </div>
+          ) : effectiveStatus === 'dnd' ? (
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 flex items-center justify-center bg-[#313338] rounded-full">
+              <CircleMinus className="w-3 h-3 text-red-500" />
             </div>
           ) : (
             <div

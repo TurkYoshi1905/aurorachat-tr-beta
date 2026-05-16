@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { tr as trLocale, enUS, ru as ruLocale, ja as jaLocale, de as deLocale } from 'date-fns/locale';
-import { MessageSquare, Moon, Smile, Bot, Zap, Gem, Star, CalendarDays, Server, ShieldCheck, UserPlus, UserCheck, UserX, Smartphone, Tablet, ExternalLink, SkipBack, Play, Pause, SkipForward, User2, Cake, Crown, Gamepad2, Link2, Plus, Loader2, Check } from 'lucide-react';
+import { MessageSquare, Moon, CircleMinus, Smile, Bot, Zap, Gem, Star, CalendarDays, Server, ShieldCheck, UserPlus, UserCheck, UserX, Smartphone, Tablet, ExternalLink, SkipBack, Play, Pause, SkipForward, User2, Cake, Crown, Gamepad2, Link2, Plus, Loader2, Check } from 'lucide-react';
 import ConnectionsModal from './ConnectionsModal';
 // Note: SkipBack, Play, Pause, SkipForward, ExternalLink kept for Spotify controls passed to ConnectionsModal
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -720,6 +720,10 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
             <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 flex items-center justify-center bg-sidebar rounded-full">
               <Moon className="w-3.5 h-3.5 text-status-idle fill-status-idle" />
             </div>
+          ) : userStatus === 'dnd' ? (
+            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 flex items-center justify-center bg-sidebar rounded-full">
+              <CircleMinus className="w-4 h-4 text-red-500" />
+            </div>
           ) : (
             <div className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full border-[3.5px] border-sidebar ${statusDotClass[userStatus]}`} />
           )}
@@ -771,6 +775,8 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
             <Tablet className="w-3 h-3 text-green-500 shrink-0" />
           ) : userStatus === 'idle' ? (
             <Moon className="w-3 h-3 text-status-idle fill-status-idle shrink-0" />
+          ) : userStatus === 'dnd' ? (
+            <CircleMinus className="w-3 h-3 text-red-500 shrink-0" />
           ) : (
             <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusDotClass[userStatus]}`} />
           )}

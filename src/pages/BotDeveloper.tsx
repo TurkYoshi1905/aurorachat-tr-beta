@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import {
   ArrowLeft, Bot, Plus, Trash2, Copy, Eye, EyeOff,
   RefreshCw, Upload, Server, Check, Loader2, Settings2,
-  Code2, Terminal, ChevronLeft, X, Pencil,
+  Code2, Terminal, ChevronLeft, X, Pencil, BookOpen,
 } from 'lucide-react';
+import BotDocModal from '@/components/BotDocModal';
 
 interface BotCommand {
   id: string;
@@ -90,6 +91,7 @@ const BotDeveloper = () => {
   const [editingCmd, setEditingCmd] = useState<BotCommand | null>(null);
   const [editCmdData, setEditCmdData] = useState({ description: '', response: '' });
   const [savingEditCmd, setSavingEditCmd] = useState(false);
+  const [showDocModal, setShowDocModal] = useState(false);
 
   const loadBots = async () => {
     if (!user) return;
@@ -942,13 +944,28 @@ const BotDeveloper = () => {
               </p>
             </div>
           </div>
-          {(!isMobile || mobileView === 'list') && (
-            <div className="ml-auto shrink-0">
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowDocModal(true)}
+              className="gap-1.5 hidden sm:flex"
+            >
+              <BookOpen className="w-3.5 h-3.5" /> Dokümantasyon
+            </Button>
+            <button
+              onClick={() => setShowDocModal(true)}
+              className="sm:hidden p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              title="Dokümantasyon"
+            >
+              <BookOpen className="w-4 h-4" />
+            </button>
+            {(!isMobile || mobileView === 'list') && (
               <Button size="sm" onClick={() => { setShowCreate(true); if (isMobile) setMobileView('detail'); }} className="gap-1.5">
                 <Plus className="w-4 h-4" /> Yeni Bot
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -962,6 +979,8 @@ const BotDeveloper = () => {
           </div>
         )}
       </div>
+
+      <BotDocModal open={showDocModal} onClose={() => setShowDocModal(false)} />
     </div>
   );
 };

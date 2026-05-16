@@ -16,6 +16,34 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.0',
+    date: '16 Mayıs 2026',
+    summary: 'Durum senkronizasyon düzeltmesi, Rahatsız Etme ikonu, Premium kart hizalama, Bot Dokümantasyon modalı, gelişmiş davet sayfası ve moderasyon 42501 izin hatası çözümü.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Bot Geliştirici Merkezi\'ne Dokümantasyon butonu ve modalı eklendi: Başlarken, API Kullanımı, Komutlar, Değişkenler ve Örnekler sekmeleriyle kapsamlı bot geliştirme rehberi.',
+          'Sunucu davet sayfası yeniden tasarlandı: "[Sunucu Adı] Sunucusuna Katıl" büyük başlık, gradient header, giriş yapmamış kullanıcılar için göz alıcı "Hesap Oluştur" CTA\'sı.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Durum senkronizasyon hatası giderildi: DND → Çevrimiçi geçişinde üye listesi ve profil kartı artık anlık güncelleniyor. DB realtime handler\'ında mevcut kullanıcı için myStatusRef\'e güvenilecek şekilde düzeltildi.',
+          'Rahatsız Etme ikonu güncellendi: tüm üye listelerinde ve profil kartlarında kırmızı CircleMinus ikonu kullanılıyor.',
+          'Premium kart hizalaması düzeltildi: Basic AI ve Premium AI butonları flex-col + mt-auto ile her zaman kartların en altında aynı hizada duruyor.',
+          'Moderasyon 42501 izin hatası giderildi: mod rolü atamalarında "permission denied for table users" sorunu SQL migration ile çözüldü.',
+          'SQL migration kolon hataları düzeltildi: assigned_to_user_id → assigned_by, creator_id → owner_id (bots tablosu), status → is_approved (plugins tablosu).',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.1.9',
     date: '16 Mayıs 2026',
     summary: 'Supabase aşırı yük ve bağlantı sızıntısı düzeltmeleri: presence kanalı yeniden oluşturma hatası, durum DB yazısı debounce, boştaki GroupDM polling, ek indeksler.',

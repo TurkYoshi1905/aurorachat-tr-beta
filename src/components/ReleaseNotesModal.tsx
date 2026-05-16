@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Bug, Shield, Bot, Globe, Crown, Puzzle } from 'lucide-react';
+import { Sparkles, Wrench, Bug, Shield, Bot, Globe, Crown, CircleMinus, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.1.9';
+const RELEASE_VERSION = '1.2.0';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,45 +18,66 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Globe,
-    iconBg: 'bg-emerald-500/15',
-    iconColor: 'text-emerald-400',
-    label: 'Presence Kanalı Sızıntısı: presence-room artık her token yenilemesinde yeniden oluşturulmuyor. [user] bağımlılığı [user?.id] olarak düzeltildi — bağlantı havuzu tüketimi dramatik ölçüde azaldı.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Wrench,
-    iconBg: 'bg-blue-500/15',
-    iconColor: 'text-blue-400',
-    label: 'Durum DB Yazısı Debounce: myStatus değiştiğinde 800ms beklenerek yazım yapılıyor. Sekme gizleme/gösterme döngüsünde birden fazla DB isteği engelliyor.',
+    icon: CircleMinus,
+    iconBg: 'bg-red-500/15',
+    iconColor: 'text-red-400',
+    label: 'Rahatsız Etme ikonu güncellendi: Tüm üye listelerinde ve profil kartlarında kırmızı CircleMinus ikonu kullanılıyor.',
     badge: 'İyileştirme',
   },
   {
-    icon: Bug,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'GroupDM 30s Polling Kaldırıldı: Supabase Presence zaten anlık durum sağlıyor. Polling her GroupDM görünümünde dakikada 2 gereksiz sorgu üretiyordu.',
+    icon: Globe,
+    iconBg: 'bg-emerald-500/15',
+    iconColor: 'text-emerald-400',
+    label: 'Durum senkronizasyon hatası giderildi: DND → Çevrimiçi geçişinde üye listesi ve profil kartı anlık güncelleniyor.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Crown,
+    iconBg: 'bg-accent/15',
+    iconColor: 'text-accent',
+    label: 'Premium kart hizalaması düzeltildi: Basic AI ve Premium AI butonları her zaman kartların en altında aynı hizada görünüyor.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Bot,
+    iconBg: 'bg-primary/15',
+    iconColor: 'text-primary',
+    label: 'Bot Geliştirici Merkezi\'ne Dokümantasyon modalı eklendi: API kullanımı, komut değişkenleri ve örnek botlar.',
+    badge: 'Yeni',
+  },
+  {
+    icon: Sparkles,
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Sunucu davet sayfası yeniden tasarlandı: "[Sunucu Adı] Sunucusuna Katıl" başlığı ve şık hesap oluştur yönlendirmesi.',
+    badge: 'İyileştirme',
+  },
+  {
+    icon: Lock,
+    iconBg: 'bg-orange-500/15',
+    iconColor: 'text-orange-400',
+    label: 'Moderasyon 42501 izin hatası giderildi: Mod rolü atamalarında "permission denied for table users" artık yaşanmıyor.',
     badge: 'Düzeltme',
   },
   {
     icon: Shield,
     iconBg: 'bg-cyan-500/15',
     iconColor: 'text-cyan-400',
-    label: 'Boşta Algılama Düzeltmesi: idle detection artık myStatusRef kullanıyor — durum her değiştiğinde listener yeniden kayıt edilmiyor, gereksiz DB yazısı oluşmuyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Sparkles,
-    iconBg: 'bg-yellow-500/15',
-    iconColor: 'text-yellow-400',
-    label: '17 Yeni DB İndeksi: voice_channel_members, account_bans, mod_role_assignments, announcements, dm_conversations, direct_messages, server_member_roles, server_bots ve daha fazlası için indeks eklendi.',
+    label: 'Veritabanı optimizasyonları: auth.users erişim izinleri, mod_role_assignments indeks düzeltmeleri.',
     badge: 'Teknik',
   },
   {
-    icon: Bot,
-    iconBg: 'bg-primary/15',
-    iconColor: 'text-primary',
-    label: 'force-logout / kick-ban Kanalları: [user] → [user?.id] bağımlılık düzeltmesi — token yenilemede gereksiz WebSocket yeniden bağlantısı engellendi.',
+    icon: Wrench,
+    iconBg: 'bg-blue-500/15',
+    iconColor: 'text-blue-400',
+    label: 'Supabase optimizasyon devamı (v1.1.9): Presence kanalı sızıntısı, durum debounce, indeks düzeltmeleri.',
+    badge: 'Teknik',
+  },
+  {
+    icon: Bug,
+    iconBg: 'bg-red-500/15',
+    iconColor: 'text-red-400',
+    label: 'SQL migration düzeltmeleri: assigned_to_user_id → assigned_by, creator_id → owner_id (bots), status → is_approved (plugins).',
     badge: 'Düzeltme',
   },
 ];

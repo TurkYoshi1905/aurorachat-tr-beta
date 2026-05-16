@@ -672,7 +672,7 @@ const PremiumTab = ({ profile, refreshProfile, user }: { profile: any; refreshPr
       {/* Plans grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Basic Plan */}
-        <div className={`rounded-xl border border-border bg-card p-5 space-y-4 relative overflow-hidden ${isPremiumActive ? 'opacity-60' : ''}`}>
+        <div className={`rounded-xl border border-border bg-card p-5 flex flex-col gap-4 relative overflow-hidden ${isPremiumActive ? 'opacity-60' : ''}`}>
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/70 to-primary/20" />
           {isPremiumActive && (
             <div className="absolute inset-0 bg-card/60 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
@@ -702,7 +702,7 @@ const PremiumTab = ({ profile, refreshProfile, user }: { profile: any; refreshPr
             ))}
           </ul>
           <Button
-            className="w-full"
+            className="w-full mt-auto"
             variant={isBasicActive || isPremiumActive ? 'secondary' : 'outline'}
             disabled={claimingBasic || isBasicActive || isPremiumActive}
             onClick={claimBasic}
@@ -713,7 +713,7 @@ const PremiumTab = ({ profile, refreshProfile, user }: { profile: any; refreshPr
         </div>
 
         {/* Premium Plan */}
-        <div className="rounded-xl border border-accent/35 bg-card p-5 space-y-4 relative overflow-hidden shadow-[0_0_24px_hsl(var(--accent)/0.10)]">
+        <div className="rounded-xl border border-accent/35 bg-card p-5 flex flex-col gap-4 relative overflow-hidden shadow-[0_0_24px_hsl(var(--accent)/0.10)]">
           <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-xl bg-gradient-to-r from-accent via-violet-500 to-blue-500" />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -738,7 +738,7 @@ const PremiumTab = ({ profile, refreshProfile, user }: { profile: any; refreshPr
             ))}
           </ul>
           <Button
-            className="w-full bg-accent hover:bg-accent/90 text-white"
+            className="w-full mt-auto bg-accent hover:bg-accent/90 text-white"
             disabled={claimingPremium || isPremiumActive || (isBasicActive && !isPremiumActive)}
             onClick={claimPremium}
             data-testid="button-claim-premium"
@@ -2601,7 +2601,7 @@ const Settings = () => {
                     <h3 className="text-2xl font-bold tracking-tight text-foreground">AuroraChat</h3>
                     <div className="flex items-center justify-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold">
-                        <Sparkles className="w-3 h-3" /> v1.1.8
+                        <Sparkles className="w-3 h-3" /> v1.2.0
                       </span>
                       <span className="text-xs text-muted-foreground">16 Mayıs 2026</span>
                     </div>
