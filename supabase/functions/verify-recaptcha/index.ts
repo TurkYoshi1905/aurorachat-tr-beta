@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 // Fallback secret key if env var is not set
-const FALLBACK_SECRET_KEY = '6LdS-J8sAAAAAGfmYkT2JGKLxEakkfwMOzbOlJGW';
+const FALLBACK_SECRET_KEY = '6LfHJeosAAAAAF9QQS7rMkyabYXS064R6TmVWI5i';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

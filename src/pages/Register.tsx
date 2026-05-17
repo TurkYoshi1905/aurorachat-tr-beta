@@ -8,7 +8,7 @@ import EmailSentModal from '@/components/EmailSentModal';
 
 type Step = 'names' | 'birthday' | 'avatar' | 'password' | 'terms' | 'email';
 
-const RECAPTCHA_SITE_KEY = '6LdS-J8sAAAAAOiGrK87r8WNkmyOEhQuSCRXHC9P';
+const RECAPTCHA_SITE_KEY = '6LfHJeosAAAAALeAHpS1gAKZ7lQ_XguO6KLYlqAW';
 
 const MONTHS = [
   'Ocak','Şubat','Mart','Nisan','Mayıs','Haziran',

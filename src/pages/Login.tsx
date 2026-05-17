@@ -10,7 +10,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Button } from '@/components/ui/button';
 import LoginBanModal from '@/components/LoginBanModal';
 
-const RECAPTCHA_SITE_KEY = '6LdS-J8sAAAAAOiGrK87r8WNkmyOEhQuSCRXHC9P';
+const RECAPTCHA_SITE_KEY = '6LfHJeosAAAAALeAHpS1gAKZ7lQ_XguO6KLYlqAW';
 
 const Login = () => {
   const navigate = useNavigate();
