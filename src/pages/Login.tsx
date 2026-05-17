@@ -10,7 +10,16 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Button } from '@/components/ui/button';
 import LoginBanModal from '@/components/LoginBanModal';
 
-const RECAPTCHA_SITE_KEY = '6LfHJeosAAAAALeAHpS1gAKZ7lQ_XguO6KLYlqAW';
+// Domain-based reCAPTCHA key selection:
+// Vercel site (aurorachat-tr.vercel.app) → new keys
+// Netlify site (aurorachat-beta-tr.netlify.app) → old keys
+const RECAPTCHA_SITE_KEY = (() => {
+  const h = window.location.hostname;
+  if (h.includes('vercel.app') || h.includes('aurorachat-tr.vercel')) {
+    return '6LfHJeosAAAAALeAHpS1gAKZ7lQ_XguO6KLYlqAW'; // Vercel
+  }
+  return '6LdS-J8sAAAAAOiGrK87r8WNkmyOEhQuSCRXHC9P'; // Netlify (default)
+})();
 
 const Login = () => {
   const navigate = useNavigate();
