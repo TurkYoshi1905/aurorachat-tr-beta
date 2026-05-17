@@ -271,10 +271,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     registerSession();
-    // Her 5 dakikada bir session'ı güncelle (tab gizliyse atla)
+    // Session heartbeat — run every 10 min (reduced from 5 min to halve background DB writes).
+    // Tab visibility check prevents writes when the user is not actively using the app.
     const interval = setInterval(() => {
       if (!document.hidden) registerSession();
-    }, 5 * 60 * 1000);
+    }, 10 * 60 * 1000);
 
     // beforeunload: true page close (desktop)
     window.addEventListener('beforeunload', markInactive);

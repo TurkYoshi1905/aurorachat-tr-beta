@@ -180,11 +180,12 @@ const Index = () => {
           if (msg.sender_id === user.id) return;
           // Skip if user is currently viewing this DM conversation
           if (selectedDMUserRef.current === msg.sender_id && activeServerRef.current === 'home') return;
-          const { data: senderProfile } = await supabase
-            .from('profiles')
-            .select('display_name, username')
-            .eq('id', msg.sender_id)
-            .maybeSingle();
+          // ── Profile cache: avoid a new DB round-trip for every incoming DM ──
+          const senderProfile = await appCache.fetch(
+            `profile:${msg.sender_id}`,
+            () => supabase.from('profiles').select('display_name, username, avatar_url').eq('id', msg.sender_id).maybeSingle().then(r => r.data),
+            5 * 60 * 1000 // cache for 5 minutes
+          );
           const senderName = (senderProfile as any)?.display_name || (senderProfile as any)?.username || 'Biri';
           const body: string = msg.content || '';
           const notifTitle = `${senderName} sana mesaj gönderdi`;
@@ -336,7 +337,7 @@ const Index = () => {
   // Other clients use the staleness of last_seen to detect "effectively offline".
   useEffect(() => {
     if (!user) return;
-    const INTERVAL = 3 * 60 * 1000; // 3 minutes
+    const INTERVAL = 5 * 60 * 1000; // 5 minutes — matches usePresenceKeeper WRITE_COOLDOWN_MS
     const tick = setInterval(() => {
       if (!document.hidden) {
         supabase.from('profiles')
@@ -910,7 +911,12 @@ const Index = () => {
             });
             return;
           }
-          const prof = (!isBot && m.user_id) ? (await supabase.from('profiles').select('avatar_url, display_name, username').eq('id', m.user_id).maybeSingle()).data : null;
+          // ── Profile cache: same user's profile is fetched only once per 5 min ──
+          const prof = (!isBot && m.user_id) ? await appCache.fetch(
+            `profile:${m.user_id}`,
+            () => supabase.from('profiles').select('avatar_url, display_name, username').eq('id', m.user_id).maybeSingle().then(r => r.data),
+            5 * 60 * 1000
+          ) : null;
           const rtContent = isBot && m.content ? m.content.replace(/\{user\}/g, 'kullanıcı').replace(/\{server\}/g, '') : m.content;
           const rtDeletedAuthor = m.deleted_user_id ? `Deleted User (${String(m.deleted_user_id).slice(0, 8)})` : null;
           setMessages((prev) => {
@@ -1044,8 +1050,9 @@ const Index = () => {
 
   // Realtime channels/servers – all table listeners on a SINGLE channel to minimise concurrent subscriptions
   useEffect(() => {
-    const invalidateAndFetchServers = () => { appCache.invalidate('servers:'); fetchServers(); };
-    const invalidateAndFetchMembers = () => { appCache.invalidate(`members:${activeServerRef.current}`); fetchMembers(); };
+    // Debounced so burst realtime events (e.g. bulk channel edits) only trigger one refetch
+    const invalidateAndFetchServers = debounce(() => { appCache.invalidate('servers:'); fetchServers(); }, 800);
+    const invalidateAndFetchMembers = debounce(() => { appCache.invalidate(`members:${activeServerRef.current}`); fetchMembers(); }, 800);
     const globalRealtime = supabase
       .channel('global-app-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'channels' }, () => { invalidateAndFetchServers(); })
@@ -1089,6 +1096,8 @@ const Index = () => {
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
         const updated = payload.new as any;
+        // Evict stale profile from cache so the next realtime message shows fresh data
+        appCache.invalidate(`profile:${updated.id}`);
         const newName = updated.display_name || updated.username || 'Kullanıcı';
         const newAvatar = newName.charAt(0).toUpperCase();
         const dbStatus = updated.status as DbMember['status'] | undefined;

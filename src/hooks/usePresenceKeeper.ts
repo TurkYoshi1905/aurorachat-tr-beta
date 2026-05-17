@@ -9,7 +9,7 @@ export const usePresenceKeeper = (userId: string | undefined) => {
 
     const getStatus = () => localStorage.getItem(`aurorachat_status_${userId}`) || 'online';
 
-    const WRITE_COOLDOWN_MS = 3 * 60 * 1000;
+    const WRITE_COOLDOWN_MS = 5 * 60 * 1000; // 5 min — matches Index.tsx heartbeat interval
 
     const markOnlineDB = () => {
       const now = Date.now();
@@ -31,6 +31,7 @@ export const usePresenceKeeper = (userId: string | undefined) => {
         .then(() => {});
     };
 
+    // Supabase Presence channel — tracks online members without DB writes
     const ch = supabase.channel('presence-room', { config: { presence: { key: userId } } });
     ch.subscribe(async (s) => {
       if (s === 'SUBSCRIBED') {
@@ -40,21 +41,19 @@ export const usePresenceKeeper = (userId: string | undefined) => {
       }
     });
 
-    const heartbeat = setInterval(() => {
-      if (document.hidden) return;
-      markOnlineDB();
-    }, 3 * 60 * 1000);
+    // NOTE: The periodic heartbeat interval has been REMOVED here.
+    // Index.tsx already runs a 5-minute setInterval that updates last_seen.
+    // Having two intervals writing to the same column doubles DB writes for no benefit.
+    // This hook now only handles: initial online mark, beforeunload offline mark,
+    // and visibility-change events (re-mark online when tab becomes visible again).
 
     const handleBeforeUnload = () => markOfflineDB();
 
-    // Visibility change: Index.tsx already handles idle/online transitions
-    // and writes to DB — do NOT write offline here to avoid race condition.
-    // Only reset the cooldown so the next markOnlineDB call writes immediately.
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        lastWriteRef.current = 0;
+        lastWriteRef.current = 0; // reset so next online mark writes immediately
       } else {
-        lastWriteRef.current = 0; // force immediate write on return
+        lastWriteRef.current = 0;
         markOnlineDB();
       }
     };
@@ -64,12 +63,8 @@ export const usePresenceKeeper = (userId: string | undefined) => {
 
     return () => {
       supabase.removeChannel(ch);
-      clearInterval(heartbeat);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      // Do NOT call markOfflineDB() here — this cleanup runs on every
-      // React unmount (Settings→Index navigation etc.) and would incorrectly
-      // mark the user offline. Only beforeunload handles true page-close.
     };
   }, [userId]);
 };
