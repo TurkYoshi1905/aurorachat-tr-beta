@@ -892,11 +892,13 @@ const Index = () => {
           // Message in the currently active channel
           if (m.user_id === userRef.current) {
             setMessages((prev) => {
+              // The optimistic message uses the same UUID as the DB row (tempId → DB id),
+              // so the ID check below is always sufficient for deduplication.
+              // We do NOT use a hasTempMsg fallback because it incorrectly blocked
+              // subsequent rapid messages that had different IDs from being confirmed.
               if (prev.some((msg) => msg.id === m.id)) return prev;
-              // Bot messages from the current user are added locally via onBotMessage — skip realtime duplicate
+              // Bot messages from the current user are added locally via onBotMessage
               if (isBot) return prev;
-              const hasTempMsg = prev.some((msg) => msg.userId === m.user_id && msg.status === 'sending');
-              if (hasTempMsg) return prev;
               const myDisplay = profile?.display_name || profile?.username || m.author_name || 'Kullanıcı';
               return [...prev, {
                 id: m.id, author: myDisplay, avatar: myDisplay.charAt(0).toUpperCase(),

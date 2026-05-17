@@ -19,7 +19,7 @@ import UserProfileCard from './UserProfileCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import NotificationSettingsPopover from './NotificationSettingsPopover';
-import { executeBotCommand, checkAfkMention } from '@/utils/botCommands';
+import { executeBotCommand, checkAfkMention, checkBotCooldown, resetBotCooldown } from '@/utils/botCommands';
 import { pickFiles } from '@/lib/fileHelper';
 import { supabase } from '@/integrations/supabase/client';
 import ReportMessageModal from './ReportMessageModal';
@@ -408,6 +408,15 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
 
     // Bot command handling
     if (input.trim().startsWith('/') && serverId && channelId && user) {
+      const cmdName = input.trim().split(/\s+/)[0].toLowerCase().replace('/', '');
+
+      // ── Cooldown check (5 seconds per command per channel per user) ──────
+      const cooldown = checkBotCooldown(user.id, channelId, cmdName);
+      if (!cooldown.allowed) {
+        toast.error(`⏳ Komut bekleme süresi: ${cooldown.remainingSeconds} saniye kaldı.`);
+        return;
+      }
+
       const ctx = {
         serverId,
         channelId,
@@ -417,16 +426,20 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
       };
       const response = await executeBotCommand(input.trim(), ctx);
       if (response) {
-        // Clear AFK on any command except /afk itself (which sets it)
-        const cmdName = input.trim().split(/\s+/)[0].toLowerCase().replace('/', '');
+        // If the command failed at execution level, reset cooldown so user can retry
+        // (cooldown only counts on successful commands)
         if (cmdName !== 'afk') {
           await supabase.from('profiles').update({ is_afk: false, afk_reason: '' } as any).eq('id', user.id);
         }
-        
-        // First send the user's command as a normal message
+
+        // 1. Send user's command as a normal message first, then wait for it
+        //    so the DB timestamp of the user message is earlier than the bot response.
         onSendMessage(input.trim());
-        
-        // Insert bot response as a real message in DB (for other users via realtime)
+        // Small delay ensures the user-message INSERT reaches the DB before the bot INSERT,
+        // preserving chronological ordering for all connected clients.
+        await new Promise(r => setTimeout(r, 200));
+
+        // 2. Insert bot response into DB (for other users via realtime)
         const { error: botInsertError } = await (supabase as any).rpc('send_bot_response', {
           p_channel_id: channelId,
           p_server_id: serverId,
@@ -435,7 +448,6 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
         });
         if (botInsertError) {
           console.error('[Bot] send_bot_response RPC failed:', botInsertError);
-          // Fallback: direct insert
           await supabase.from('messages').insert({
             channel_id: channelId,
             user_id: user.id,
@@ -447,14 +459,17 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
           } as any);
         }
 
-        // Directly notify parent to add bot message to state immediately (reliable for current user)
+        // 3. Show bot message immediately for the current user (no need to wait for realtime)
         onBotMessage?.(response.content, response.botName, response.botId, response.botAvatarUrl);
-        
+
         setInput('');
         setPendingFiles([]);
         setReplyingTo(null);
         onTypingStop?.();
         return;
+      } else {
+        // Unknown command — reset cooldown so normal message sends don't consume it
+        resetBotCooldown(user.id, channelId, cmdName);
       }
     }
 

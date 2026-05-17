@@ -1,5 +1,31 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// ─── Per-user bot command cooldown (client-side, 5 seconds) ───────────────────
+// Key: "userId:channelId:commandName"
+const _cooldownMap = new Map<string, number>();
+const COOLDOWN_MS = 5000;
+
+export function checkBotCooldown(userId: string, channelId: string, command: string): {
+  allowed: boolean;
+  remainingSeconds: number;
+} {
+  const key = `${userId}:${channelId}:${command}`;
+  const now = Date.now();
+  const last = _cooldownMap.get(key) ?? 0;
+  const elapsed = now - last;
+
+  if (last > 0 && elapsed < COOLDOWN_MS) {
+    return { allowed: false, remainingSeconds: Math.ceil((COOLDOWN_MS - elapsed) / 1000) };
+  }
+  _cooldownMap.set(key, now);
+  return { allowed: true, remainingSeconds: 0 };
+}
+
+export function resetBotCooldown(userId: string, channelId: string, command: string) {
+  _cooldownMap.delete(`${userId}:${channelId}:${command}`);
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface BotResponse {
   content: string;
   isEmbed?: boolean;
