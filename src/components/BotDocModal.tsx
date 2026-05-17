@@ -275,7 +275,7 @@ const BotDocModal = ({ open, onClose }: BotDocModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-xl p-0 overflow-hidden flex flex-col" style={{ height: 'min(90vh, 720px)' }}>
         {/* Header */}
         <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border shrink-0">
           <DialogHeader>
@@ -310,11 +310,11 @@ const BotDocModal = ({ open, onClose }: BotDocModalProps) => {
         </div>
 
         {/* Content */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-5">
             {CONTENT[activeTab]}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Footer */}
         <div className="px-5 py-3 border-t border-border bg-secondary/10 shrink-0 flex items-center justify-between">
