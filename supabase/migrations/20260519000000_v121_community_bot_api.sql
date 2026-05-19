@@ -42,7 +42,6 @@ CREATE OR REPLACE FUNCTION get_community_servers(
 RETURNS TABLE (
   id uuid,
   name text,
-  description text,
   community_description text,
   community_category text,
   icon_url text,
@@ -53,7 +52,6 @@ LANGUAGE sql STABLE SECURITY DEFINER AS $$
   SELECT
     s.id,
     s.name,
-    s.description,
     s.community_description,
     s.community_category,
     s.icon_url,

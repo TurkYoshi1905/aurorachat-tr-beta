@@ -220,7 +220,7 @@ const Communities = () => {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2 mb-3 min-h-[2.5rem]">
-                      {server.community_description || server.description || 'Açıklama yok'}
+                      {server.community_description || 'Açıklama yok'}
                     </p>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
