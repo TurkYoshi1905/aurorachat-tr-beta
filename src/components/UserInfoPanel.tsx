@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Headphones, HeadphoneOff, Settings, Circle, Moon, MinusCircle, EyeOff } from 'lucide-react';
+import { Mic, MicOff, Headphones, HeadphoneOff, Settings, Circle, Moon, CircleMinus, EyeOff } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,7 +35,7 @@ const UserInfoPanel = ({ currentUserStatus = 'offline', onStatusChange }: UserIn
   const statusOptions: { value: DbMember['status']; label: string; icon: React.ReactNode; desc: string }[] = [
     { value: 'online', label: t('status.online'), icon: <Circle className="w-3 h-3 text-status-online fill-status-online" />, desc: '' },
     { value: 'idle', label: t('status.idle'), icon: <Moon className="w-3 h-3 text-status-idle fill-status-idle" />, desc: '' },
-    { value: 'dnd', label: t('status.dnd'), icon: <MinusCircle className="w-3 h-3 text-status-dnd fill-status-dnd" />, desc: t('status.dndDesc') },
+    { value: 'dnd', label: t('status.dnd'), icon: <CircleMinus className="w-3 h-3 text-red-500 fill-red-500" />, desc: t('status.dndDesc') },
     { value: 'offline', label: t('status.invisible'), icon: <EyeOff className="w-3 h-3 text-muted-foreground" />, desc: t('status.invisibleDesc') },
   ];
 
@@ -83,6 +83,10 @@ const UserInfoPanel = ({ currentUserStatus = 'offline', onStatusChange }: UserIn
                 {currentUserStatus === 'idle' ? (
                   <div className="absolute -bottom-0.5 -right-0.5 w-[14px] h-[14px] rounded-full bg-[hsl(var(--server-bg))] flex items-center justify-center">
                     <Moon className="w-2.5 h-2.5 text-status-idle fill-status-idle" />
+                  </div>
+                ) : currentUserStatus === 'dnd' ? (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-[14px] h-[14px] rounded-full bg-[hsl(var(--server-bg))] flex items-center justify-center">
+                    <CircleMinus className="w-3 h-3 text-red-500 fill-red-500" />
                   </div>
                 ) : (
                   <div className={`absolute -bottom-0.5 -right-0.5 w-[14px] h-[14px] rounded-full border-[2.5px] border-[hsl(var(--server-bg))] ${statusColors[currentUserStatus]}`} />

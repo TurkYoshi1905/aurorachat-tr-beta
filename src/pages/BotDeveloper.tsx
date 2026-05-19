@@ -40,7 +40,7 @@ interface ServerRecord {
   icon_url: string | null;
 }
 
-type BotTab = 'info' | 'token' | 'servers' | 'code' | 'commands';
+type BotTab = 'info' | 'token' | 'servers' | 'code' | 'commands' | 'api';
 
 const BOT_TABS: { id: BotTab; label: string; Icon: typeof Bot }[] = [
   { id: 'info', label: 'Genel', Icon: Bot },
@@ -48,6 +48,7 @@ const BOT_TABS: { id: BotTab; label: string; Icon: typeof Bot }[] = [
   { id: 'servers', label: 'Sunucular', Icon: Server },
   { id: 'code', label: 'Kod', Icon: Code2 },
   { id: 'commands', label: 'Komutlar', Icon: Terminal },
+  { id: 'api', label: 'API Docs', Icon: BookOpen },
 ];
 
 const BotDeveloper = () => {
@@ -89,9 +90,10 @@ const BotDeveloper = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const [editingCmd, setEditingCmd] = useState<BotCommand | null>(null);
-  const [editCmdData, setEditCmdData] = useState({ description: '', response: '' });
+  const [editCmdData, setEditCmdData] = useState({ trigger: '/', name: '', description: '', response: '' });
   const [savingEditCmd, setSavingEditCmd] = useState(false);
   const [showDocModal, setShowDocModal] = useState(false);
+  const [varSearch, setVarSearch] = useState('');
 
   const loadBots = async () => {
     if (!user) return;
@@ -301,7 +303,7 @@ const BotDeveloper = () => {
 
   const startEditCmd = (cmd: BotCommand) => {
     setEditingCmd(cmd);
-    setEditCmdData({ description: cmd.description, response: cmd.response });
+    setEditCmdData({ trigger: cmd.trigger, name: cmd.name, description: cmd.description, response: cmd.response });
   };
 
   const saveEditCmd = async () => {
@@ -309,7 +311,7 @@ const BotDeveloper = () => {
     setSavingEditCmd(true);
     try {
       const updated = botCommands.map(c =>
-        c.id === editingCmd.id ? { ...c, description: editCmdData.description, response: editCmdData.response } : c
+        c.id === editingCmd.id ? { ...c, trigger: editCmdData.trigger, name: editCmdData.name, description: editCmdData.description, response: editCmdData.response } : c
       );
       const { error } = await (supabase as any).from('bots').update({ commands: updated }).eq('id', selectedBot.id);
       if (error) { toast.error('Kaydedilemedi'); return; }
@@ -334,10 +336,26 @@ const BotDeveloper = () => {
   };
 
   const VARIABLES = [
-    { label: '{user}', desc: 'Görünen ad' },
-    { label: '{username}', desc: 'Kullanıcı adı' },
-    { label: '{memberCount}', desc: 'Üye sayısı' },
-    { label: '{serverName}', desc: 'Sunucu adı' },
+    // Genel
+    { label: '{user}', desc: 'Kullanıcının görünen adı (ör. Ahmet)', category: 'Genel' },
+    { label: '{username}', desc: 'Kullanıcının kullanıcı adı (ör. ahmet42)', category: 'Genel' },
+    { label: '{userId}', desc: 'Kullanıcının benzersiz sistem kimliği (UUID)', category: 'Genel' },
+    { label: '{time}', desc: 'Şu anki saat — SS:dd formatında (ör. 14:30)', category: 'Genel' },
+    { label: '{date}', desc: 'Bugünün tarihi — GG.AA.YYYY formatında (ör. 19.05.2026)', category: 'Genel' },
+    // Sunucu Yönetimi
+    { label: '{serverName}', desc: 'Sunucunun tam adı', category: 'Sunucu' },
+    { label: '{memberCount}', desc: 'Sunucudaki toplam kayıtlı üye sayısı', category: 'Sunucu' },
+    { label: '{onlineCount}', desc: 'Şu anda çevrimiçi olan üye sayısı', category: 'Sunucu' },
+    { label: '{channelName}', desc: 'Komutun yazıldığı kanalın adı', category: 'Sunucu' },
+    { label: '{serverId}', desc: 'Sunucunun benzersiz kimliği (UUID)', category: 'Sunucu' },
+    // Eğlence
+    { label: '{randomNumber}', desc: 'Rastgele bir tam sayı (1 ile 100 arasında)', category: 'Eğlence' },
+    { label: '{randomEmoji}', desc: 'Listeden rastgele seçilen bir emoji', category: 'Eğlence' },
+    { label: '{roll}', desc: 'Zar at — 1 ile 6 arasında rastgele sayı döner', category: 'Eğlence' },
+    { label: '{coinflip}', desc: 'Yazı/Tura — "Yazı" veya "Tura" döner', category: 'Eğlence' },
+    // Bot Bilgisi
+    { label: '{botName}', desc: 'Bu botun görünen adı', category: 'Bot' },
+    { label: '{botUsername}', desc: 'Bu botun kullanıcı adı', category: 'Bot' },
   ];
 
   const startEditInfo = () => {
@@ -620,25 +638,47 @@ const BotDeveloper = () => {
               </Button>
             </div>
 
-            {/* Variable legend — click to copy */}
-            <div className="rounded-lg bg-secondary/30 border border-border/50 px-3 py-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Kullanılabilir Değişkenler <span className="normal-case font-normal">(tıkla → kopyala)</span></p>
-              <div className="flex flex-wrap gap-1.5">
-                {VARIABLES.map(v => (
-                  <button
-                    key={v.label}
-                    type="button"
-                    title={v.desc}
-                    onClick={() => {
-                      navigator.clipboard.writeText(v.label);
-                      toast.success(`${v.label} kopyalandı`);
-                    }}
-                    className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer"
-                  >
-                    {v.label}
-                  </button>
-                ))}
+            {/* Variable documentation panel */}
+            <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Değişkenler <span className="normal-case font-normal">(tıkla → kopyala)</span></p>
+                <div className="relative">
+                  <input
+                    value={varSearch}
+                    onChange={e => setVarSearch(e.target.value)}
+                    placeholder="Ara..."
+                    className="h-6 w-32 text-[11px] bg-background border border-border rounded px-2 pl-5 outline-none focus:ring-1 focus:ring-primary/40"
+                  />
+                  <svg className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
               </div>
+              {(['Genel', 'Sunucu', 'Eğlence', 'Bot'] as const).map(cat => {
+                const filtered = VARIABLES.filter(v => v.category === cat && (
+                  !varSearch || v.label.includes(varSearch) || v.desc.toLowerCase().includes(varSearch.toLowerCase())
+                ));
+                if (filtered.length === 0) return null;
+                return (
+                  <div key={cat}>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">{cat}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {filtered.map(v => (
+                        <button
+                          key={v.label}
+                          type="button"
+                          title={v.desc}
+                          onClick={() => { navigator.clipboard.writeText(v.label); toast.success(`${v.label} kopyalandı`); }}
+                          className="group relative text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 hover:bg-primary/25 transition-colors cursor-pointer"
+                        >
+                          {v.label}
+                          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-popover border border-border text-foreground text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 max-w-[200px] normal-case font-sans">
+                            {v.desc}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {showAddCommand && (
@@ -735,9 +775,32 @@ const BotDeveloper = () => {
                   <div key={cmd.id} className="rounded-lg border border-border/50 bg-secondary/20 overflow-hidden">
                     {editingCmd?.id === cmd.id ? (
                       <div className="p-3 space-y-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-mono font-bold text-primary">{cmd.trigger}{cmd.name}</span>
-                          <span className="text-[10px] text-muted-foreground">düzenleniyor</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">Komut Düzenle</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Trigger</label>
+                            <select
+                              value={editCmdData.trigger}
+                              onChange={e => setEditCmdData(p => ({ ...p, trigger: e.target.value }))}
+                              className="w-full bg-input border border-input rounded-lg px-2 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary/50"
+                            >
+                              <option value="/">/</option>
+                              <option value="!">!</option>
+                              <option value=".">.</option>
+                              <option value="$">$</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Komut Adı *</label>
+                            <Input
+                              value={editCmdData.name}
+                              onChange={e => setEditCmdData(p => ({ ...p, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
+                              placeholder="komut_adi"
+                              className="bg-input h-8 text-xs"
+                            />
+                          </div>
                         </div>
                         <Input
                           value={editCmdData.description}
@@ -807,6 +870,98 @@ const BotDeveloper = () => {
                 ))}
               </div>
             )}
+          </div>
+        );
+
+      case 'api':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-bold text-foreground">AuroraChat Bot API</h3>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-semibold border border-emerald-500/30">v1</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Botunuzu harici sistemlerle entegre etmek için AuroraChat REST API'sini kullanabilirsiniz.
+              Her istek <code className="bg-secondary px-1 rounded font-mono">Authorization: Bot YOUR_TOKEN</code> başlığı içermelidir.
+            </p>
+
+            {/* Base URL */}
+            <div className="rounded-lg bg-secondary/40 border border-border/50 p-3">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Base URL</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs font-mono text-emerald-300 bg-[#1a1b2e] px-2 py-1.5 rounded border border-border">
+                  https://ktittqaubkaylprxnoya.supabase.co/functions/v1/bot-api
+                </code>
+                <button
+                  onClick={() => { navigator.clipboard.writeText('https://ktittqaubkaylprxnoya.supabase.co/functions/v1/bot-api'); toast.success('URL kopyalandı'); }}
+                  className="text-muted-foreground hover:text-foreground shrink-0 p-1"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* GET /me endpoint */}
+            <div className="rounded-lg border border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 bg-secondary/30 border-b border-border">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono">GET</span>
+                <code className="text-xs font-mono text-foreground">/me</code>
+                <span className="text-xs text-muted-foreground ml-auto">Bot bilgilerini getir</span>
+              </div>
+              <div className="p-3 space-y-3">
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">İstek Örneği</p>
+                  <pre className="bg-[#1a1b2e] text-emerald-300 text-[11px] font-mono rounded-lg p-3 overflow-x-auto leading-relaxed border border-border/50">{`GET /me HTTP/1.1
+Host: ktittqaubkaylprxnoya.supabase.co/functions/v1/bot-api
+Authorization: Bot ${selectedBot?.token ? selectedBot.token.slice(0, 12) + '...' : 'YOUR_BOT_TOKEN'}`}</pre>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Başarılı Yanıt <span className="text-emerald-400">200 OK</span></p>
+                  <pre className="bg-[#1a1b2e] text-emerald-300 text-[11px] font-mono rounded-lg p-3 overflow-x-auto leading-relaxed border border-border/50">{`{
+  "bot_id": "uuid",
+  "bot_name": "BotAdı",
+  "bot_username": "bot_kullanici",
+  "is_public": true,
+  "avatar_url": "https://...",
+  "commands": [...],
+  "server_count": 3
+}`}</pre>
+                </div>
+                <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
+                  <p className="text-[11px] text-yellow-400">⚠ Token'ı güvende tut. Yetkisiz erişimde <strong>Token Yenile</strong> butonunu kullan.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Authentication */}
+            <div className="rounded-lg border border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 bg-secondary/30 border-b border-border">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-mono">AUTH</span>
+                <code className="text-xs font-mono text-foreground">Authorization</code>
+              </div>
+              <div className="p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">Her API isteğinde bu başlığı ekle:</p>
+                <pre className="bg-[#1a1b2e] text-blue-300 text-[11px] font-mono rounded-lg p-3 border border-border/50">{`Authorization: Bot YOUR_BOT_TOKEN`}</pre>
+                <p className="text-xs text-muted-foreground">Token'ını <strong className="text-foreground">Token</strong> sekmesinden kopyalayabilirsin.</p>
+              </div>
+            </div>
+
+            {/* Error codes */}
+            <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Hata Kodları</p>
+              {[
+                { code: '401', color: 'text-red-400', desc: 'Geçersiz veya eksik token' },
+                { code: '404', color: 'text-orange-400', desc: 'Bot bulunamadı' },
+                { code: '405', color: 'text-yellow-400', desc: 'Desteklenmeyen HTTP metodu' },
+                { code: '500', color: 'text-red-500', desc: 'Sunucu hatası' },
+              ].map(e => (
+                <div key={e.code} className="flex items-center gap-3 text-xs">
+                  <code className={`font-mono font-bold ${e.color} w-8`}>{e.code}</code>
+                  <span className="text-muted-foreground">{e.desc}</span>
+                </div>
+              ))}
+            </div>
           </div>
         );
 

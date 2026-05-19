@@ -10,7 +10,6 @@ import { Search, Users, Compass, ArrowLeft, Hash, ChevronRight, Loader2, Globe }
 interface CommunityServer {
   id: string;
   name: string;
-  description: string | null;
   community_description: string | null;
   community_category: string | null;
   icon_url: string | null;
@@ -53,13 +52,13 @@ const Communities = () => {
         // Fallback: direct query if RPC not yet applied
         const q = supabase
           .from('servers')
-          .select('id, name, description, community_description, community_category, icon_url, created_at')
+          .select('id, name, community_description, community_category, icon, created_at')
           .eq('is_community' as any, true)
           .order('created_at', { ascending: false })
           .limit(30);
         if (search) (q as any).ilike('name', `%${search}%`);
         const { data: fallback } = await q;
-        setServers((fallback || []).map((s: any) => ({ ...s, member_count: 0 })));
+        setServers((fallback || []).map((s: any) => ({ ...s, icon_url: s.icon, member_count: 0 })));
       } else {
         setServers(data || []);
       }
@@ -131,20 +130,6 @@ const Communities = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Hero */}
-        <div className="relative rounded-2xl overflow-hidden border border-border bg-card">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/8 to-transparent" />
-          <div className="relative px-6 py-8 text-center space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto">
-              <Globe className="w-7 h-7 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground">Topluluklara Katıl</h2>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-              AuroraChat'teki herkese açık sunucuları keşfet. İlgi alanlarına göre topluluklar bul ve anında katıl.
-            </p>
-          </div>
-        </div>
-
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -197,9 +182,7 @@ const Communities = () => {
                   className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/30 transition-colors group"
                 >
                   {/* Card header */}
-                  <div className="relative h-16 bg-gradient-to-br from-primary/30 via-primary/15 to-transparent">
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-cyan-500/10" />
-                  </div>
+                  <div className="relative h-16 bg-secondary/60" />
                   <div className="px-4 pb-4">
                     <div className="flex items-end gap-3 -mt-6 mb-3">
                       <div className="w-12 h-12 rounded-xl border-2 border-background bg-secondary flex items-center justify-center shrink-0 overflow-hidden shadow-lg">

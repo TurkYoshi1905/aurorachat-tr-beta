@@ -54,7 +54,7 @@ LANGUAGE sql STABLE SECURITY DEFINER AS $$
     s.name,
     s.community_description,
     s.community_category,
-    s.icon_url,
+    s.icon AS icon_url,
     COUNT(sm.id) AS member_count,
     s.created_at
   FROM servers s
