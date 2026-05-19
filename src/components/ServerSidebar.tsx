@@ -6,7 +6,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useTranslation } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, LogIn } from 'lucide-react';
+import { Plus, LogIn, Compass } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { saveServerOrder, loadServerOrder } from '@/lib/serverOrderStore';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor,
@@ -74,6 +75,7 @@ const SortableServer = ({ server, isActive, onClick }: SortableServerProps) => {
 const ServerSidebar = ({ activeServer, onServerChange, servers, onServerCreated }: ServerSidebarProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [order, setOrder] = useState<string[]>([]);
@@ -199,6 +201,21 @@ const ServerSidebar = ({ activeServer, onServerChange, servers, onServerCreated 
         </div>
 
         <div className="w-8 h-[2px] bg-border rounded-full shrink-0" />
+
+        {/* Discover Communities button */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              data-testid="button-explore-communities"
+              className="w-12 h-12 flex items-center justify-center rounded-[24px] hover:rounded-[16px] transition-all duration-200 touch-manipulation bg-secondary text-cyan-400 hover:bg-cyan-500 hover:text-white"
+              onClick={() => navigate('/communities')}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            >
+              <Compass className="w-5 h-5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right"><p>Keşfet</p></TooltipContent>
+        </Tooltip>
 
         {/* Add / Join buttons */}
         <Tooltip>

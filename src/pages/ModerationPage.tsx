@@ -110,7 +110,7 @@ const ModerationPage = () => {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [banReasons, setBanReasons] = useState<Record<string, string>>({});
 
-  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, users: 0, admins: 0, banned: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, users: 0, admins: 0, banned: 0, online: 0 });
 
   const [bannedIps, setBannedIps] = useState<any[]>([]);
   const [loadingIps, setLoadingIps] = useState(false);
@@ -197,7 +197,16 @@ const ModerationPage = () => {
         .select('*', { count: 'exact', head: true }).eq('active', true);
       if (!error) banned = count || 0;
     } catch (_) {}
-    setStats({ total: total || 0, pending: pending || 0, approved: approved || 0, rejected: rejected || 0, users: users || 0, admins, banned });
+    let online = 0;
+    try {
+      const since = new Date(Date.now() - ACTIVE_PRESENCE_WINDOW_MS).toISOString();
+      const { count, error } = await (supabase.from('profiles') as any)
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['online', 'idle', 'dnd'])
+        .gte('last_seen', since);
+      if (!error) online = count || 0;
+    } catch (_) {}
+    setStats({ total: total || 0, pending: pending || 0, approved: approved || 0, rejected: rejected || 0, users: users || 0, admins, banned, online });
   }, []);
 
   useEffect(() => {
@@ -1381,6 +1390,7 @@ const ModerationPage = () => {
                 <StatCard icon={Users} label="Toplam Kullanıcı" value={stats.users} color="text-blue-400" bg="bg-blue-500/10" />
                 <StatCard icon={Shield} label="Moderatörler" value={stats.admins} color="text-violet-400" bg="bg-violet-500/10" />
                 <StatCard icon={UserX} label="Banlı Hesap" value={stats.banned} color="text-red-400" bg="bg-red-500/10" />
+                <StatCard icon={Radio} label="Çevrimiçi" value={stats.online} color="text-emerald-400" bg="bg-emerald-500/10" trend="Son 2 dakika" />
               </div>
 
               {/* Resolution chart */}

@@ -620,14 +620,23 @@ const BotDeveloper = () => {
               </Button>
             </div>
 
-            {/* Variable legend */}
+            {/* Variable legend — click to copy */}
             <div className="rounded-lg bg-secondary/30 border border-border/50 px-3 py-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Kullanılabilir Değişkenler</p>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Kullanılabilir Değişkenler <span className="normal-case font-normal">(tıkla → kopyala)</span></p>
               <div className="flex flex-wrap gap-1.5">
                 {VARIABLES.map(v => (
-                  <span key={v.label} className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20" title={v.desc}>
+                  <button
+                    key={v.label}
+                    type="button"
+                    title={v.desc}
+                    onClick={() => {
+                      navigator.clipboard.writeText(v.label);
+                      toast.success(`${v.label} kopyalandı`);
+                    }}
+                    className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer"
+                  >
                     {v.label}
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>

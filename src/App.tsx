@@ -27,6 +27,7 @@ import SpotifyCallback from "./pages/SpotifyCallback";
 import ModerationPage from "./pages/ModerationPage";
 import Landing from "./pages/Landing";
 import BotDeveloper from "./pages/BotDeveloper";
+import Communities from "./pages/Communities";
 import Announcements from "./pages/Announcements";
 import AnnouncementDetail from "./pages/AnnouncementDetail";
 import ProfileCompletionModal from "@/components/ProfileCompletionModal";
@@ -166,6 +167,7 @@ const App = () => (
                 <Route path="/bot-developer" element={<ProtectedRoute><BotDeveloper /></ProtectedRoute>} />
                 <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
                 <Route path="/announcements/:id" element={<ProtectedRoute><AnnouncementDetail /></ProtectedRoute>} />
+                <Route path="/communities" element={<Communities />} />
                 <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

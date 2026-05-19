@@ -147,6 +147,12 @@ const ServerSettings = () => {
   const [wordFilterInput, setWordFilterInput] = useState('');
   const [wordFilterExemptRoleIds, setWordFilterExemptRoleIds] = useState<string[]>([]);
   const [exemptRoleSearch, setExemptRoleSearch] = useState('');
+  // Community / public discovery
+  const [isCommunity, setIsCommunity] = useState(false);
+  const [communityDescription, setCommunityDescription] = useState('');
+  const [communityCategory, setCommunityCategory] = useState('');
+  const [savingCommunity, setSavingCommunity] = useState(false);
+
   // User's own permissions in this server
   const [userPermissions, setUserPermissions] = useState<Record<string, boolean>>({});
 
@@ -419,6 +425,9 @@ const ServerSettings = () => {
         setLeaveChannelId((data as any).leave_channel_id || '');
         setWordFilter((data as any).word_filter || []);
         setWordFilterExemptRoleIds((data as any).word_filter_exempt_role_ids || []);
+        setIsCommunity((data as any).is_community || false);
+        setCommunityDescription((data as any).community_description || '');
+        setCommunityCategory((data as any).community_category || '');
       }
       else navigate('/');
     };
@@ -1221,6 +1230,77 @@ const ServerSettings = () => {
                   )}
                 </div>
               )}
+            {/* Community / Public Discovery */}
+            {canManageServer && (
+              <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" /></svg>
+                  <p className="text-sm font-semibold text-foreground">Topluluğumu Herkese Aç</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Sunucunu Keşfet sayfasında listele — herkes görebilir ve katılabilir</p>
+                  </div>
+                  <Switch checked={isCommunity} onCheckedChange={async (v) => {
+                    setIsCommunity(v);
+                    if (serverId) {
+                      const { error } = await supabase.from('servers').update({ is_community: v } as any).eq('id', serverId);
+                      if (error) { toast.error('Topluluk ayarı kaydedilemedi'); setIsCommunity(!v); }
+                      else toast.success(v ? 'Sunucu Keşfet sayfasında yayınlandı' : 'Sunucu Keşfet sayfasından kaldırıldı');
+                    }
+                  }} />
+                </div>
+                {isCommunity && (
+                  <div className="space-y-2 pt-1 border-t border-border/50">
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground font-medium">Topluluk Açıklaması</label>
+                      <textarea
+                        value={communityDescription}
+                        onChange={e => setCommunityDescription(e.target.value)}
+                        placeholder="Sunucunu kısaca tanıt — yeni üyeler görecek"
+                        rows={2}
+                        className="w-full text-sm bg-input border border-border rounded px-3 py-2 text-foreground resize-none outline-none focus:ring-1 focus:ring-primary/40"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground font-medium">Kategori</label>
+                      <select
+                        value={communityCategory}
+                        onChange={e => setCommunityCategory(e.target.value)}
+                        className="w-full text-sm bg-input border border-border rounded px-2 py-1.5 text-foreground"
+                      >
+                        <option value="">Seçin...</option>
+                        <option value="gaming">Oyun</option>
+                        <option value="tech">Teknoloji</option>
+                        <option value="music">Müzik</option>
+                        <option value="art">Sanat</option>
+                        <option value="sports">Spor</option>
+                        <option value="science">Bilim</option>
+                        <option value="education">Eğitim</option>
+                        <option value="other">Diğer</option>
+                      </select>
+                    </div>
+                    <Button
+                      size="sm"
+                      disabled={savingCommunity}
+                      onClick={async () => {
+                        if (!serverId) return;
+                        setSavingCommunity(true);
+                        const { error } = await supabase.from('servers').update({
+                          community_description: communityDescription || null,
+                          community_category: communityCategory || null,
+                        } as any).eq('id', serverId);
+                        setSavingCommunity(false);
+                        if (error) toast.error('Kaydedilemedi');
+                        else toast.success('Topluluk bilgileri güncellendi');
+                      }}
+                    >
+                      {savingCommunity ? 'Kaydediliyor...' : 'Kaydet'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
             </div>
           )}
 

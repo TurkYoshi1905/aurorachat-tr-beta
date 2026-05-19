@@ -16,6 +16,37 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.1',
+    date: '19 Mayıs 2026',
+    summary: 'Topluluklar/Keşfet sayfası ve pusula butonu, mobilden mesaj kopyalama, arkaplan/boşta durum senkronizasyonu, Bot Geliştirici Stüdyo yeniden tasarımı, Ayarlar\'da PDF veri dışa aktarımı, davet sayfası yenileme, moderasyon çevrimiçi istatistiği ve erişim kontrolü düzeltmesi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Topluluklar/Keşfet sayfası eklendi (/communities): Kamuya açık sunucuları arama, kategoriye göre filtreleme ve doğrudan katılım.',
+          'Sunucu kenar çubuğuna Pusula (Compass) butonu eklendi — tek tıkla Topluluklar sayfasına erişim.',
+          'Mobilden mesaj kopyalama: Uzun basma menüsüne "Mesajı Kopyala" seçeneği eklendi. Masaüstünde hover menüsüne de kopyalama butonu eklendi.',
+          'Ayarlar Gizlilik sekmesine "Tüm Verilerimi İndir" (PDF) butonu eklendi — profil, bağlantılar ve gizlilik ayarlarını içeren PDF raporunu indir.',
+          'Sunucu Ayarları\'na "Topluluğumu Herkese Aç" anahtarı eklendi — sunucuyu Keşfet sayfasında görünür kılar.',
+          'Bot Geliştirici Stüdyo yeniden tasarlandı: değişken ara/kopyala, komut ismi düzenleme ve GET /api/v1/bot/me API uç noktası dokümantasyonu.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri & İyileştirmeler',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Arkaplan/boşta durum senkronizasyonu: Sekme gizlendiğinde durum "boşta", geri döndüğünde "çevrimiçi" olarak otomatik güncelleniyor.',
+          'Moderasyon paneli çevrimiçi kullanıcı istatistik kartı eklendi.',
+          'Moderasyon paneli erişim kontrolü düzeltildi: Mod rolü atanmış kullanıcılar Ayarlar\'dan Moderasyon bağlantısını görebiliyor.',
+          'Davet sayfası görsel iyileştirmeleri.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.0',
     date: '16 Mayıs 2026',
     summary: 'Durum senkronizasyon düzeltmesi, Rahatsız Etme ikonu, Premium kart hizalama, Bot Dokümantasyon modalı, gelişmiş davet sayfası ve moderasyon 42501 izin hatası çözümü.',

@@ -1533,6 +1533,13 @@ const Settings = () => {
 
   const FOUNDER_EMAIL = 'asfurkan140@gmail.com';
   const isAppAdmin = !!(profile as any)?.is_app_admin || user?.email === FOUNDER_EMAIL;
+  const [myModRole, setMyModRole] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any).from('mod_role_assignments').select('mod_role').eq('user_id', user.id).maybeSingle().then(({ data }: any) => {
+      setMyModRole(data?.mod_role || null);
+    });
+  }, [user]);
 
   const tabs = [
     { id: 'account', label: t('settings.account'), icon: User },
@@ -1926,7 +1933,7 @@ const Settings = () => {
               ))}
             </>
           )}
-          {isAppAdmin && (
+          {(isAppAdmin || myModRole) && (
             <>
               <div className="border-t border-border my-3 mx-4" />
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-4 mb-1">MODERASYON</p>
@@ -1981,7 +1988,7 @@ const Settings = () => {
                 <span className="truncate">{tab.label}</span>
               </button>
             ))}
-            {isAppAdmin && (
+            {(isAppAdmin || myModRole) && (
               <>
                 <div className="border-t border-border my-2" />
                 <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground px-2 mb-1">MODERASYON</p>
@@ -2163,6 +2170,28 @@ const Settings = () => {
               </div>
 
               <TwoFactorSection />
+
+              {/* Data Export */}
+              <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Verilerimi İndir</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Profil bilgilerini ve gizlilik ayarlarını PDF olarak indir</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const now = new Date();
+                    const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    const html = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>AuroraChat Veri Raporu</title><style>body{font-family:system-ui,sans-serif;max-width:700px;margin:40px auto;color:#111;line-height:1.6}h1{color:#7c3aed;border-bottom:2px solid #7c3aed;padding-bottom:8px}h2{color:#4b5563;font-size:1rem;margin-top:24px}table{width:100%;border-collapse:collapse;margin:8px 0}td{padding:6px 10px;border:1px solid #e5e7eb;font-size:0.9rem}td:first-child{font-weight:600;color:#374151;background:#f9fafb;width:40%}.footer{margin-top:32px;font-size:0.75rem;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:12px}@media print{body{margin:20px}}</style></head><body><h1>AuroraChat Veri Raporu</h1><p style="color:#6b7280;font-size:0.85rem">Oluşturulma tarihi: ${dateStr}</p><h2>Profil Bilgileri</h2><table><tr><td>Görünen Ad</td><td>${profile?.display_name || '-'}</td></tr><tr><td>Kullanıcı Adı</td><td>${profile?.username || '-'}</td></tr><tr><td>E-posta</td><td>${user?.email || '-'}</td></tr><tr><td>Hesap Oluşturma</td><td>${profile?.created_at ? new Date(profile.created_at).toLocaleDateString('tr-TR') : '-'}</td></tr><tr><td>Son Aktiflik</td><td>${(profile as any)?.last_seen ? new Date((profile as any).last_seen).toLocaleDateString('tr-TR') : '-'}</td></tr></table><h2>Gizlilik Ayarları</h2><table><tr><td>Direkt Mesaj</td><td>${privacyAllowDM ? 'Açık' : 'Kapalı'}</td></tr><tr><td>Arkadaşlık İsteği</td><td>${privacyFriendRequests === 'everyone' ? 'Herkes' : privacyFriendRequests === 'friends' ? 'Arkadaşlar' : 'Kimse'}</td></tr><tr><td>Cinsiyet Görünürlüğü</td><td>${privacyGenderVisibility === 'everyone' ? 'Herkes' : privacyGenderVisibility === 'friends' ? 'Arkadaşlar' : 'Kimse'}</td></tr><tr><td>Doğum Tarihi Görünürlüğü</td><td>${privacyBirthDateVisibility === 'everyone' ? 'Herkes' : privacyBirthDateVisibility === 'friends' ? 'Arkadaşlar' : 'Kimse'}</td></tr></table><div class="footer">Bu rapor AuroraChat platformu tarafından oluşturulmuştur. Tüm veriler Supabase veritabanında şifreli olarak saklanmaktadır.</div></body></html>`;
+                    const win = window.open('', '_blank');
+                    if (win) { win.document.write(html); win.document.close(); win.focus(); setTimeout(() => win.print(), 500); }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-sm font-medium hover:bg-primary/20 transition-colors w-full"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  Tüm Verilerimi İndir (PDF)
+                </button>
+              </div>
+
               <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-3">
                 <button onClick={() => navigate('/privacy')} className="flex items-center gap-2 text-sm text-primary hover:underline w-full text-left">
                   <ExternalLink className="w-3.5 h-3.5 shrink-0" />
@@ -2601,9 +2630,9 @@ const Settings = () => {
                     <h3 className="text-2xl font-bold tracking-tight text-foreground">AuroraChat</h3>
                     <div className="flex items-center justify-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold">
-                        <Sparkles className="w-3 h-3" /> v1.2.0
+                        <Sparkles className="w-3 h-3" /> v1.2.1
                       </span>
-                      <span className="text-xs text-muted-foreground">16 Mayıs 2026</span>
+                      <span className="text-xs text-muted-foreground">19 Mayıs 2026</span>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">

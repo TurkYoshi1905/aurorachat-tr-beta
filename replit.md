@@ -64,9 +64,10 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260506000000_v113_announcements_system.sql` — announcements + comments tables, server order_index column, RLS, realtime, helper RPCs
 - `20260506100000_v114_bot_member_commands_fix.sql` — bots.commands NOT NULL fix, server_bots SELECT policy, get_server_members_full EXCEPTION block, get_server_bot_commands RPC
 
-## Current Version: v1.2.0 (16 Mayıs 2026)
+## Current Version: v1.2.1 (19 Mayıs 2026)
 
 ### Features by version
+- **v1.2.1**: Communities/Keşfet sayfası + compass butonu (ServerSidebar), mesaj kopyalama (masaüstü hover + mobil long-press), idle/background durum senkronizasyonu (usePresenceKeeper), Bot Developer değişken kopyalama (tıkla→kopyala), PDF veri dışa aktarma (Settings gizlilik), Moderation çevrimiçi sayısı istatistiği, ServerSettings topluluk toggle (is_community, açıklama, kategori), Settings modpanel erişimi (myModRole), sürüm v1.2.1
 - **v1.1.5**: Aurora Guard güvenlik katmanı (IP Ban, Rate Limit 6/s, 30-dk cooldown, XSS sanitize), Bot Profil Modalı (BotProfileModal.tsx), komut değişken sistemi ({user}/{username}/{memberCount}/{serverName}), komut düzenleme, moderasyon rol hiyerarşisi (Yetkili/Admin/Moderatör/Deneme), Güvenlik sekmesi modpanelde, mic chevron görünürlük fix, announcement comment RLS 42501 fix, SEO meta güncelleme
 - **v1.1.4**: Bot üye listesi düzeltmesi (fallback + RPC EXCEPTION), custom bot komutları slash popup'ta görünüyor, bots.commands NULL bug fix, server_bots SELECT politikası güçlendirildi
 - **v1.1.3**: Announcements system (admin publish, rich text, image, comments/replies), GroupDM presence (Supabase Presence), recall fix, resizable voice room, server order persistence fix, server_bot_roles 42P01 fix
@@ -77,6 +78,7 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 ## SQL Migrations (chronological, continued)
 - `20260508000000_v115_aurora_guard_security.sql` — banned_ips, rate_limit_cooldowns, mod_role_assignments, announcement_comments RLS fix, lift_user_cooldown RPC
 - `20260510000000_v116_updates.sql` — gender_visibility/birth_date_visibility columns, server_members.order_index, profiles RLS (admin update), mod_role_assignments RLS, banned_ips RLS, user_login_ips table
+- `20260519000000_v121_community_bot_api.sql` — servers.is_community/community_description/community_category, bot_api_tokens, get_community_servers RPC, validate_bot_token RPC
 
 ## New files (v1.1.5)
 - `src/utils/rateLimiter.ts` — in-memory rate limiter (6 req/s, 30-min cooldown)

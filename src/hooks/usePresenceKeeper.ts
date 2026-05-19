@@ -3,19 +3,18 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const usePresenceKeeper = (userId: string | undefined) => {
   const lastWriteRef = useRef<number>(0);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isIdleRef = useRef(false);
 
   useEffect(() => {
     if (!userId) return;
 
     const getStatus = () => localStorage.getItem(`aurorachat_status_${userId}`) || 'online';
 
-    const WRITE_COOLDOWN_MS = 5 * 60 * 1000; // 5 min — matches Index.tsx heartbeat interval
+    const WRITE_COOLDOWN_MS = 5 * 60 * 1000; // 5 min
+    const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 min of inactivity → idle
 
-    const markOnlineDB = () => {
-      const now = Date.now();
-      if (now - lastWriteRef.current < WRITE_COOLDOWN_MS) return;
-      lastWriteRef.current = now;
-      const status = getStatus() === 'offline' ? 'online' : getStatus();
+    const writeStatus = (status: string) => {
       supabase
         .from('profiles')
         .update({ status: status as any, last_seen: new Date().toISOString() } as any)
@@ -23,15 +22,43 @@ export const usePresenceKeeper = (userId: string | undefined) => {
         .then(() => {});
     };
 
-    const markOfflineDB = () => {
-      supabase
-        .from('profiles')
-        .update({ status: 'offline' as any } as any)
-        .eq('id', userId)
-        .then(() => {});
+    const markOnlineDB = () => {
+      const now = Date.now();
+      if (now - lastWriteRef.current < WRITE_COOLDOWN_MS) return;
+      lastWriteRef.current = now;
+      const s = getStatus();
+      const effectiveStatus = s === 'offline' ? 'online' : s;
+      writeStatus(effectiveStatus);
     };
 
-    // Supabase Presence channel — tracks online members without DB writes
+    const markOfflineDB = () => {
+      writeStatus('offline');
+    };
+
+    const markIdleDB = () => {
+      const s = getStatus();
+      // Only go idle if the user is currently 'online' (not DND, not already offline)
+      if (s === 'online') {
+        isIdleRef.current = true;
+        writeStatus('idle');
+      }
+    };
+
+    const resetIdle = () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      // If we were idle, restore to online
+      if (isIdleRef.current) {
+        const s = getStatus();
+        if (s === 'online') {
+          isIdleRef.current = false;
+          lastWriteRef.current = 0;
+          markOnlineDB();
+        }
+      }
+      idleTimerRef.current = setTimeout(markIdleDB, IDLE_TIMEOUT_MS);
+    };
+
+    // Supabase Presence channel
     const ch = supabase.channel('presence-room', { config: { presence: { key: userId } } });
     ch.subscribe(async (s) => {
       if (s === 'SUBSCRIBED') {
@@ -41,30 +68,50 @@ export const usePresenceKeeper = (userId: string | undefined) => {
       }
     });
 
-    // NOTE: The periodic heartbeat interval has been REMOVED here.
-    // Index.tsx already runs a 5-minute setInterval that updates last_seen.
-    // Having two intervals writing to the same column doubles DB writes for no benefit.
-    // This hook now only handles: initial online mark, beforeunload offline mark,
-    // and visibility-change events (re-mark online when tab becomes visible again).
-
     const handleBeforeUnload = () => markOfflineDB();
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        lastWriteRef.current = 0; // reset so next online mark writes immediately
-      } else {
+        // Tab went to background → mark idle
         lastWriteRef.current = 0;
+        const s = getStatus();
+        if (s === 'online') {
+          isIdleRef.current = true;
+          writeStatus('idle');
+        }
+        if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      } else {
+        // Tab came back → restore online
+        lastWriteRef.current = 0;
+        if (isIdleRef.current) {
+          isIdleRef.current = false;
+          const s = getStatus();
+          if (s === 'online') writeStatus('online');
+        }
         markOnlineDB();
+        resetIdle();
       }
     };
 
+    const handleActivity = () => resetIdle();
+
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('mousemove', handleActivity, { passive: true });
+    document.addEventListener('keydown', handleActivity, { passive: true });
+    document.addEventListener('touchstart', handleActivity, { passive: true });
+
+    // Start idle timer
+    resetIdle();
 
     return () => {
       supabase.removeChannel(ch);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('mousemove', handleActivity);
+      document.removeEventListener('keydown', handleActivity);
+      document.removeEventListener('touchstart', handleActivity);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
   }, [userId]);
 };

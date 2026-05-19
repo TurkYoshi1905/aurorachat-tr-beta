@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Bug, Shield, Bot, Globe, Crown, CircleMinus, Lock } from 'lucide-react';
+import { Sparkles, Wrench, Bug, Shield, Compass, Copy, FileDown, Globe, Crown, CircleMinus, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.0';
+const RELEASE_VERSION = '1.2.1';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,67 +18,67 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: CircleMinus,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'Rahatsız Etme ikonu güncellendi: Tüm üye listelerinde ve profil kartlarında kırmızı CircleMinus ikonu kullanılıyor.',
-    badge: 'İyileştirme',
+    icon: Compass,
+    iconBg: 'bg-cyan-500/15',
+    iconColor: 'text-cyan-400',
+    label: 'Topluluklar/Keşfet sayfası eklendi: Kamuya açık sunucuları ara, kategoriye göre filtrele ve doğrudan katıl.',
+    badge: 'Yeni',
+  },
+  {
+    icon: Copy,
+    iconBg: 'bg-primary/15',
+    iconColor: 'text-primary',
+    label: 'Mobilden mesaj kopyalama: Uzun basma menüsüne ve masaüstü hover menüsüne "Mesajı Kopyala" seçeneği eklendi.',
+    badge: 'Yeni',
+  },
+  {
+    icon: FileDown,
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Gizlilik sekmesine "Tüm Verilerimi İndir" PDF butonu eklendi — profil ve gizlilik ayarlarını içeren rapor.',
+    badge: 'Yeni',
   },
   {
     icon: Globe,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Durum senkronizasyon hatası giderildi: DND → Çevrimiçi geçişinde üye listesi ve profil kartı anlık güncelleniyor.',
+    label: 'Arkaplan/boşta durum senkronizasyonu: Sekme gizlendiğinde "boşta", geri döndüğünde "çevrimiçi" otomatik güncelleniyor.',
+    badge: 'İyileştirme',
+  },
+  {
+    icon: CircleMinus,
+    iconBg: 'bg-orange-500/15',
+    iconColor: 'text-orange-400',
+    label: 'Moderasyon paneli çevrimiçi kullanıcı istatistiği eklendi ve mod rolü erişim kontrolü düzeltildi.',
     badge: 'Düzeltme',
   },
   {
     icon: Crown,
     iconBg: 'bg-accent/15',
     iconColor: 'text-accent',
-    label: 'Premium kart hizalaması düzeltildi: Basic AI ve Premium AI butonları her zaman kartların en altında aynı hizada görünüyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Bot,
-    iconBg: 'bg-primary/15',
-    iconColor: 'text-primary',
-    label: 'Bot Geliştirici Merkezi\'ne Dokümantasyon modalı eklendi: API kullanımı, komut değişkenleri ve örnek botlar.',
+    label: 'Sunucu Ayarları\'na "Topluluğumu Herkese Aç" anahtarı eklendi — sunucuyu Keşfet sayfasında görünür kılar.',
     badge: 'Yeni',
   },
   {
-    icon: Sparkles,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Sunucu davet sayfası yeniden tasarlandı: "[Sunucu Adı] Sunucusuna Katıl" başlığı ve şık hesap oluştur yönlendirmesi.',
+    icon: Shield,
+    iconBg: 'bg-blue-500/15',
+    iconColor: 'text-blue-400',
+    label: 'Bot Geliştirici Stüdyo yeniden tasarlandı: değişken ara/kopyala, komut ismi düzenleme, GET /api/v1/bot/me dokümantasyonu.',
     badge: 'İyileştirme',
   },
   {
     icon: Lock,
-    iconBg: 'bg-orange-500/15',
-    iconColor: 'text-orange-400',
-    label: 'Moderasyon 42501 izin hatası giderildi: Mod rolü atamalarında "permission denied for table users" artık yaşanmıyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Shield,
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    label: 'Veritabanı optimizasyonları: auth.users erişim izinleri, mod_role_assignments indeks düzeltmeleri.',
+    iconBg: 'bg-red-500/15',
+    iconColor: 'text-red-400',
+    label: 'SQL migration v1.2.1: servers.is_community, bot_api_tokens tablosu, get_community_servers RPC eklendi.',
     badge: 'Teknik',
   },
   {
     icon: Wrench,
-    iconBg: 'bg-blue-500/15',
-    iconColor: 'text-blue-400',
-    label: 'Supabase optimizasyon devamı (v1.1.9): Presence kanalı sızıntısı, durum debounce, indeks düzeltmeleri.',
-    badge: 'Teknik',
-  },
-  {
-    icon: Bug,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'SQL migration düzeltmeleri: assigned_to_user_id → assigned_by, creator_id → owner_id (bots), status → is_approved (plugins).',
-    badge: 'Düzeltme',
+    iconBg: 'bg-secondary',
+    iconColor: 'text-muted-foreground',
+    label: 'Davet sayfası görsel iyileştirmeleri ve versiyon numarası v1.2.1\'e güncellendi.',
+    badge: 'İyileştirme',
   },
 ];
 

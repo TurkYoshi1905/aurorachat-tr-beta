@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { DbMessage, DbReaction, DbMember } from '@/types/chat';
-import { Hash, Users, Pin, Search, SmilePlus, PlusCircle, Gift, ImagePlus, Send, ArrowLeft, Trash2, Pencil, Check, X, Lock, SendHorizontal, Reply, CornerDownRight, MessageSquare, Clock, Bell, Flag } from 'lucide-react';
+import { Hash, Users, Pin, Search, SmilePlus, PlusCircle, Gift, ImagePlus, Send, ArrowLeft, Trash2, Pencil, Check, X, Lock, SendHorizontal, Reply, CornerDownRight, MessageSquare, Clock, Bell, Flag, Copy } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { renderMessageContent, type ServerEmoji } from '@/utils/messageRenderer';
@@ -796,6 +796,10 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
               </div>
               {editingId !== msg.id && !isMobileDevice && (
                 <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-all">
+                  {/* Copy button */}
+                  <button onClick={() => { navigator.clipboard.writeText(msg.content || '').then(() => { /* silent */ }); }} className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-all" title="Mesajı Kopyala">
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
                   {/* Reply button */}
                   <button onClick={() => { setReplyingTo(msg); inputRef.current?.focus(); }} className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-all" title={t('chat.reply')}>
                     <Reply className="w-3.5 h-3.5" />
@@ -895,6 +899,20 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                 )}
               </div>
             )}
+            <button
+              onClick={() => {
+                if (longPressMsg) {
+                  navigator.clipboard.writeText(longPressMsg.content || '').then(() => {
+                    import('sonner').then(({ toast }) => toast.success('Mesaj kopyalandı'));
+                  });
+                }
+                setLongPressMsg(null);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-foreground hover:bg-secondary transition-colors"
+            >
+              <Copy className="w-5 h-5 text-muted-foreground" />
+              Mesajı Kopyala
+            </button>
             <button onClick={() => { if (longPressMsg) { setReplyingTo(longPressMsg); inputRef.current?.focus(); } setLongPressMsg(null); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-foreground hover:bg-secondary transition-colors">
               <Reply className="w-5 h-5 text-muted-foreground" />
               {t('chat.reply')}
