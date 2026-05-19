@@ -40,7 +40,7 @@ interface ServerRecord {
   icon_url: string | null;
 }
 
-type BotTab = 'info' | 'token' | 'servers' | 'code' | 'commands' | 'api';
+type BotTab = 'info' | 'token' | 'servers' | 'code' | 'commands' | 'variables' | 'api';
 
 const BOT_TABS: { id: BotTab; label: string; Icon: typeof Bot }[] = [
   { id: 'info', label: 'Genel', Icon: Bot },
@@ -48,7 +48,8 @@ const BOT_TABS: { id: BotTab; label: string; Icon: typeof Bot }[] = [
   { id: 'servers', label: 'Sunucular', Icon: Server },
   { id: 'code', label: 'Kod', Icon: Code2 },
   { id: 'commands', label: 'Komutlar', Icon: Terminal },
-  { id: 'api', label: 'API Docs', Icon: BookOpen },
+  { id: 'variables', label: 'Değişkenler', Icon: BookOpen },
+  { id: 'api', label: 'API Docs', Icon: Code2 },
 ];
 
 const BotDeveloper = () => {
@@ -638,49 +639,6 @@ const BotDeveloper = () => {
               </Button>
             </div>
 
-            {/* Variable documentation panel */}
-            <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Değişkenler <span className="normal-case font-normal">(tıkla → kopyala)</span></p>
-                <div className="relative">
-                  <input
-                    value={varSearch}
-                    onChange={e => setVarSearch(e.target.value)}
-                    placeholder="Ara..."
-                    className="h-6 w-32 text-[11px] bg-background border border-border rounded px-2 pl-5 outline-none focus:ring-1 focus:ring-primary/40"
-                  />
-                  <svg className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-              </div>
-              {(['Genel', 'Sunucu', 'Eğlence', 'Bot'] as const).map(cat => {
-                const filtered = VARIABLES.filter(v => v.category === cat && (
-                  !varSearch || v.label.includes(varSearch) || v.desc.toLowerCase().includes(varSearch.toLowerCase())
-                ));
-                if (filtered.length === 0) return null;
-                return (
-                  <div key={cat}>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">{cat}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {filtered.map(v => (
-                        <button
-                          key={v.label}
-                          type="button"
-                          title={v.desc}
-                          onClick={() => { navigator.clipboard.writeText(v.label); toast.success(`${v.label} kopyalandı`); }}
-                          className="group relative text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 hover:bg-primary/25 transition-colors cursor-pointer"
-                        >
-                          {v.label}
-                          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-popover border border-border text-foreground text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap z-50 max-w-[200px] normal-case font-sans">
-                            {v.desc}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
             {showAddCommand && (
               <div className="rounded-xl border border-border bg-secondary/20 p-4 space-y-3">
                 <div className="flex items-center justify-between">
@@ -723,22 +681,7 @@ const BotDeveloper = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-semibold text-muted-foreground uppercase">Yanıt *</label>
-                    <div className="flex gap-1">
-                      {VARIABLES.map(v => (
-                        <button
-                          key={v.label}
-                          type="button"
-                          title={v.desc}
-                          onClick={() => insertVariable(v.label, responseTextareaRef, setter => setNewCmd(p => ({ ...p, response: setter(p.response) })))}
-                          className="text-[9px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 hover:bg-primary/20 transition-colors"
-                        >
-                          {v.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase">Yanıt *</label>
                   <textarea
                     ref={responseTextareaRef}
                     value={newCmd.response}
@@ -747,6 +690,7 @@ const BotDeveloper = () => {
                     placeholder="Bot bu komutu aldığında ne yanıtlayacak? {user} ile kullanıcı adını ekleyebilirsin."
                     className="w-full bg-input border border-input rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
                   />
+                  <p className="text-[10px] text-muted-foreground">Değişken kullanmak için <button type="button" onClick={() => setBotTab('variables')} className="text-primary hover:underline">Değişkenler</button> sekmesine bak.</p>
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" size="sm" onClick={() => setShowAddCommand(false)}>İptal</Button>
@@ -809,22 +753,7 @@ const BotDeveloper = () => {
                           className="bg-input h-8 text-xs"
                         />
                         <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[10px] font-semibold text-muted-foreground uppercase">Yanıt</label>
-                            <div className="flex gap-1">
-                              {VARIABLES.map(v => (
-                                <button
-                                  key={v.label}
-                                  type="button"
-                                  title={v.desc}
-                                  onClick={() => insertVariable(v.label, editResponseTextareaRef, setter => setEditCmdData(p => ({ ...p, response: setter(p.response) })))}
-                                  className="text-[9px] font-mono bg-primary/10 text-primary px-1 py-0.5 rounded border border-primary/20 hover:bg-primary/20 transition-colors"
-                                >
-                                  {v.label}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                          <label className="text-[10px] font-semibold text-muted-foreground uppercase">Yanıt</label>
                           <textarea
                             ref={editResponseTextareaRef}
                             value={editCmdData.response}
@@ -868,6 +797,80 @@ const BotDeveloper = () => {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'variables':
+        return (
+          <div className="space-y-4">
+            {/* Header + search */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-foreground">Komut Değişkenleri</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Bot yanıtlarında kullanabileceğin dinamik değerler. Tıklayarak kopyala.</p>
+              </div>
+            </div>
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input
+                value={varSearch}
+                onChange={e => setVarSearch(e.target.value)}
+                placeholder="Değişken ara... (ör. kullanıcı, sunucu, rastgele)"
+                className="w-full h-9 text-sm bg-input border border-border rounded-lg px-3 pl-9 outline-none focus:ring-1 focus:ring-primary/40 text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+
+            {/* Variable cards grouped by category */}
+            {(['Genel', 'Sunucu', 'Eğlence', 'Bot'] as const).map(cat => {
+              const catColors: Record<string, string> = {
+                Genel: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                Sunucu: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+                Eğlence: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+                Bot: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+              };
+              const filtered = VARIABLES.filter(v => v.category === cat && (
+                !varSearch ||
+                v.label.toLowerCase().includes(varSearch.toLowerCase()) ||
+                v.desc.toLowerCase().includes(varSearch.toLowerCase())
+              ));
+              if (filtered.length === 0) return null;
+              return (
+                <div key={cat} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${catColors[cat]}`}>{cat}</span>
+                    <div className="flex-1 h-px bg-border/50" />
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {filtered.map(v => (
+                      <button
+                        key={v.label}
+                        type="button"
+                        onClick={() => { navigator.clipboard.writeText(v.label); toast.success(`${v.label} kopyalandı`); }}
+                        className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/30 transition-all text-left group"
+                      >
+                        <code className="shrink-0 text-xs font-mono bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20 group-hover:bg-primary/20 transition-colors mt-0.5">
+                          {v.label}
+                        </code>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-foreground leading-relaxed">{v.desc}</p>
+                        </div>
+                        <Copy className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary shrink-0 mt-1 transition-colors" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {varSearch && VARIABLES.filter(v =>
+              v.label.toLowerCase().includes(varSearch.toLowerCase()) ||
+              v.desc.toLowerCase().includes(varSearch.toLowerCase())
+            ).length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">"{varSearch}" için sonuç bulunamadı</p>
               </div>
             )}
           </div>

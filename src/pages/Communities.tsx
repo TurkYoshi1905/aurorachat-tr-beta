@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Search, Users, Compass, ArrowLeft, Hash, ChevronRight, Loader2, Globe } from 'lucide-react';
+import { Search, Users, Compass, ArrowLeft, Hash, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface CommunityServer {
   id: string;
@@ -179,53 +179,53 @@ const Communities = () => {
               return (
                 <div
                   key={server.id}
-                  className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/30 transition-colors group"
+                  className="rounded-xl border border-border bg-card p-4 hover:border-primary/40 hover:shadow-md transition-all group flex flex-col gap-3"
                 >
-                  {/* Card header */}
-                  <div className="relative h-16 bg-secondary/60" />
-                  <div className="px-4 pb-4">
-                    <div className="flex items-end gap-3 -mt-6 mb-3">
-                      <div className="w-12 h-12 rounded-xl border-2 border-background bg-secondary flex items-center justify-center shrink-0 overflow-hidden shadow-lg">
-                        {server.icon_url ? (
-                          <img src={server.icon_url} alt={server.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-lg font-bold text-foreground">{server.name.charAt(0).toUpperCase()}</span>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 pb-1">
-                        <p className="font-semibold text-foreground text-sm truncate">{server.name}</p>
-                        {server.community_category && (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                            <Hash className="w-2.5 h-2.5" />
-                            {CATEGORIES.find(c => c.id === server.community_category)?.label || server.community_category}
-                          </span>
-                        )}
-                      </div>
+                  {/* Top row: icon + name + category */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
+                      {server.icon_url ? (
+                        <img src={server.icon_url} alt={server.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-lg font-bold text-foreground">{server.name.charAt(0).toUpperCase()}</span>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3 min-h-[2.5rem]">
-                      {server.community_description || 'Açıklama yok'}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Users className="w-3.5 h-3.5" />
-                        <span>{server.member_count.toLocaleString('tr-TR')} üye</span>
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-foreground text-sm truncate leading-tight">{server.name}</p>
+                      {server.community_category && (
+                        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium mt-0.5">
+                          <Hash className="w-2.5 h-2.5" />
+                          {CATEGORIES.find(c => c.id === server.community_category)?.label || server.community_category}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed flex-1">
+                    {server.community_description || 'Açıklama eklenmemiş.'}
+                  </p>
+
+                  {/* Bottom row: members + action */}
+                  <div className="flex items-center justify-between pt-1 border-t border-border/40">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Users className="w-3.5 h-3.5" />
+                      <span>{server.member_count.toLocaleString('tr-TR')} üye</span>
+                    </div>
+                    {isJoined ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Katıldın!
+                      </span>
+                    ) : (
                       <Button
                         size="sm"
-                        variant={isJoined ? 'outline' : 'default'}
-                        className="h-7 px-3 text-xs gap-1"
+                        className="h-7 px-3 text-xs"
                         onClick={() => handleJoin(server)}
                         disabled={isJoining}
                       >
-                        {isJoining ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : isJoined ? (
-                          <>Giriş Yap <ChevronRight className="w-3 h-3" /></>
-                        ) : (
-                          'Katıl'
-                        )}
+                        {isJoining ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Katıl'}
                       </Button>
-                    </div>
+                    )}
                   </div>
                 </div>
               );
