@@ -19,10 +19,11 @@ CREATE TABLE IF NOT EXISTS bot_api_tokens (
 
 ALTER TABLE bot_api_tokens ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "Bot owner can manage tokens"
+DROP POLICY IF EXISTS "Bot owner can manage tokens" ON bot_api_tokens;
+CREATE POLICY "Bot owner can manage tokens"
   ON bot_api_tokens FOR ALL
   USING (
-    bot_id IN (SELECT id FROM bots WHERE creator_id = auth.uid())
+    bot_id IN (SELECT id FROM bots WHERE owner_id = auth.uid())
   );
 
 -- 4. RLS policy for servers: allow reading community servers without auth
