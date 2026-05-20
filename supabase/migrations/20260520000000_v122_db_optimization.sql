@@ -2,8 +2,6 @@
 -- v1.2.2 — Veritabanı Optimizasyonu
 -- Connection pool tükenmesi, sorgu zaman aşımları ve
 -- bağlantı sızıntılarına karşı kapsamlı düzeltmeler.
--- NOT: CONCURRENTLY kaldırıldı — SQL Editor transaction bloğu
---      içinde çalışır, CONCURRENTLY buna izin vermez.
 -- ============================================================
 
 -- ─────────────────────────────────────────────
@@ -44,9 +42,6 @@ CREATE INDEX IF NOT EXISTS idx_messages_channel_id
 CREATE INDEX IF NOT EXISTS idx_messages_user_id
   ON public.messages (user_id);
 
-CREATE INDEX IF NOT EXISTS idx_messages_channel_inserted
-  ON public.messages (channel_id, inserted_at);
-
 
 -- ─────────────────────────────────────────────
 -- 4. SERVER_MEMBERS İNDEKSLERİ
@@ -84,36 +79,24 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id
 
 
 -- ─────────────────────────────────────────────
--- 7. REACTIONS İNDEKSLERİ
+-- 7. MESSAGE_REACTIONS İNDEKSLERİ
+-- (tablo adı: message_reactions — reactions değil)
 -- ─────────────────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_reactions_message_id
-  ON public.reactions (message_id);
+CREATE INDEX IF NOT EXISTS idx_message_reactions_message_id
+  ON public.message_reactions (message_id);
 
-CREATE INDEX IF NOT EXISTS idx_reactions_user_message
-  ON public.reactions (user_id, message_id);
+CREATE INDEX IF NOT EXISTS idx_message_reactions_user_message
+  ON public.message_reactions (user_id, message_id);
 
 
 -- ─────────────────────────────────────────────
 -- 8. VOICE_CHANNEL_MEMBERS İNDEKSLERİ
--- Tablo yoksa sessizce atla
 -- ─────────────────────────────────────────────
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.tables
-    WHERE table_schema = 'public' AND table_name = 'voice_channel_members'
-  ) THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_voice_channel_members_channel_id') THEN
-      CREATE INDEX idx_voice_channel_members_channel_id
-        ON public.voice_channel_members (channel_id);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_voice_channel_members_user_id') THEN
-      CREATE INDEX idx_voice_channel_members_user_id
-        ON public.voice_channel_members (user_id);
-    END IF;
-  END IF;
-END;
-$$;
+CREATE INDEX IF NOT EXISTS idx_voice_channel_members_channel_id
+  ON public.voice_channel_members (channel_id);
+
+CREATE INDEX IF NOT EXISTS idx_voice_channel_members_user_id
+  ON public.voice_channel_members (user_id);
 
 
 -- ─────────────────────────────────────────────
@@ -127,22 +110,14 @@ CREATE INDEX IF NOT EXISTS idx_profiles_last_seen
 
 
 -- ─────────────────────────────────────────────
--- 10. MESSAGE_THREADS İNDEKSLERİ
--- Tablo yoksa sessizce atla
+-- 10. THREADS & THREAD_MESSAGES İNDEKSLERİ
+-- (message_threads değil — threads + thread_messages)
 -- ─────────────────────────────────────────────
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.tables
-    WHERE table_schema = 'public' AND table_name = 'message_threads'
-  ) THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_message_threads_message_id') THEN
-      CREATE INDEX idx_message_threads_message_id
-        ON public.message_threads (message_id);
-    END IF;
-  END IF;
-END;
-$$;
+CREATE INDEX IF NOT EXISTS idx_threads_message_id
+  ON public.threads (message_id);
+
+CREATE INDEX IF NOT EXISTS idx_thread_messages_thread_id
+  ON public.thread_messages (thread_id);
 
 
 -- ─────────────────────────────────────────────
@@ -167,36 +142,32 @@ CREATE INDEX IF NOT EXISTS idx_server_bots_bot_id
 
 -- ─────────────────────────────────────────────
 -- 13. ANNOUNCEMENTS İNDEKSLERİ
--- Tablo yoksa sessizce atla
 -- ─────────────────────────────────────────────
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.tables
-    WHERE table_schema = 'public' AND table_name = 'announcements'
-  ) THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_announcements_created_at') THEN
-      CREATE INDEX idx_announcements_created_at
-        ON public.announcements (created_at DESC);
-    END IF;
-  END IF;
+CREATE INDEX IF NOT EXISTS idx_announcements_created_at
+  ON public.announcements (created_at DESC);
 
-  IF EXISTS (
-    SELECT 1 FROM information_schema.tables
-    WHERE table_schema = 'public' AND table_name = 'announcement_comments'
-  ) THEN
-    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_announcement_comments_announcement_id') THEN
-      CREATE INDEX idx_announcement_comments_announcement_id
-        ON public.announcement_comments (announcement_id);
-    END IF;
-  END IF;
-END;
-$$;
+CREATE INDEX IF NOT EXISTS idx_announcement_comments_announcement_id
+  ON public.announcement_comments (announcement_id);
 
 
 -- ─────────────────────────────────────────────
--- 14. BAĞLANTI HAVUZUNU TEMIZLE
--- Uzun süre idle kalan bağlantıları kapat
+-- 14. DM & GROUP DM İNDEKSLERİ
+-- ─────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_direct_messages_conversation_id
+  ON public.direct_messages (conversation_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_group_dm_messages_group_id
+  ON public.group_dm_messages (group_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_group_dm_members_group_id
+  ON public.group_dm_members (group_id);
+
+CREATE INDEX IF NOT EXISTS idx_group_dm_members_user_id
+  ON public.group_dm_members (user_id);
+
+
+-- ─────────────────────────────────────────────
+-- 15. BAĞLANTI HAVUZUNU TEMIZLE
 -- ─────────────────────────────────────────────
 DO $$
 DECLARE
@@ -216,13 +187,20 @@ $$;
 
 
 -- ─────────────────────────────────────────────
--- 15. VACUUM + ANALYZE — sorgu planlayıcısını güncelle
+-- 16. ANALYZE — sorgu planlayıcısını güncelle
 -- ─────────────────────────────────────────────
 ANALYZE public.messages;
 ANALYZE public.server_members;
 ANALYZE public.server_member_roles;
 ANALYZE public.notifications;
-ANALYZE public.reactions;
+ANALYZE public.message_reactions;
 ANALYZE public.profiles;
 ANALYZE public.channels;
 ANALYZE public.server_bots;
+ANALYZE public.voice_channel_members;
+ANALYZE public.threads;
+ANALYZE public.thread_messages;
+ANALYZE public.direct_messages;
+ANALYZE public.group_dm_messages;
+ANALYZE public.announcements;
+ANALYZE public.announcement_comments;
