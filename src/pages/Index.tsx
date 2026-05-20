@@ -101,6 +101,12 @@ const Index = () => {
   // Deduplication: tracks message IDs that already triggered a notification
   const shownNotifIds = useRef<Set<string>>(new Set());
 
+  // Refs for stable fetch functions — prevents realtime channels from being
+  // recreated every time useCallback deps change (e.g. activeServer switch).
+  const fetchServersRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const fetchMembersRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const fetchPermsRef = useRef<() => Promise<void>>(() => Promise.resolve());
+
   // Mobile tab state
   const [mobileTab, setMobileTab] = useState<MobileTab>('chat');
 
@@ -508,6 +514,8 @@ const Index = () => {
     }
   }, [user?.id]);
 
+  useEffect(() => { fetchServersRef.current = fetchServers; }, [fetchServers]);
+
   // Fetch initial unread notification count
   useEffect(() => {
     if (!user) return;
@@ -636,6 +644,7 @@ const Index = () => {
     setMembers(mapped);
   }, [activeServer]);
 
+  useEffect(() => { fetchMembersRef.current = fetchMembers; }, [fetchMembers]);
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
   // Fetch current user's permissions — cached per (server, user) for 5 minutes
@@ -667,16 +676,16 @@ const Index = () => {
     if (!activeServer || activeServer === 'home') return;
     // Debounced invalidate+refetch — avoids burst of identical fetches when multiple role events fire together
     const debouncedMembersRefresh = debounce(() => {
-      appCache.invalidate(`members:${activeServer}`);
-      fetchMembers();
+      appCache.invalidate(`members:${activeServerRef.current}`);
+      fetchMembersRef.current();
     }, 400);
     const debouncedServersRefresh = debounce(() => {
       appCache.invalidate(`servers:`);
-      fetchServers();
+      fetchServersRef.current();
     }, 400);
     const debouncedPermsRefresh = debounce(() => {
-      appCache.invalidate(`perms:${activeServer}:`);
-      fetchPerms();
+      appCache.invalidate(`perms:${activeServerRef.current}:`);
+      fetchPermsRef.current();
     }, 400);
 
     const ch = supabase
@@ -713,7 +722,7 @@ const Index = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [activeServer, fetchMembers, fetchPerms, fetchServers]);
+  }, [activeServer]);
 
   // Fetch server emojis — cached per server for 5 minutes
   useEffect(() => {
@@ -730,6 +739,7 @@ const Index = () => {
       });
   }, [activeServer]);
 
+  useEffect(() => { fetchPermsRef.current = fetchPerms; }, [fetchPerms]);
   useEffect(() => { fetchPerms(); }, [fetchPerms]);
 
   // Fetch messages
@@ -1051,8 +1061,8 @@ const Index = () => {
   // Realtime channels/servers – all table listeners on a SINGLE channel to minimise concurrent subscriptions
   useEffect(() => {
     // Debounced so burst realtime events (e.g. bulk channel edits) only trigger one refetch
-    const invalidateAndFetchServers = debounce(() => { appCache.invalidate('servers:'); fetchServers(); }, 800);
-    const invalidateAndFetchMembers = debounce(() => { appCache.invalidate(`members:${activeServerRef.current}`); fetchMembers(); }, 800);
+    const invalidateAndFetchServers = debounce(() => { appCache.invalidate('servers:'); fetchServersRef.current(); }, 800);
+    const invalidateAndFetchMembers = debounce(() => { appCache.invalidate(`members:${activeServerRef.current}`); fetchMembersRef.current(); }, 800);
     const globalRealtime = supabase
       .channel('global-app-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'channels' }, () => { invalidateAndFetchServers(); })
@@ -1061,7 +1071,7 @@ const Index = () => {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'server_members' }, async (payload) => {
         invalidateAndFetchMembers();
         appCache.invalidate('servers:');
-        await fetchServers();
+        await fetchServersRef.current();
         const inserted = (payload.new as any);
         if (inserted?.user_id && user && inserted.user_id === user.id && inserted.server_id) {
           const newServerId = inserted.server_id;
@@ -1138,7 +1148,7 @@ const Index = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(globalRealtime); };
-  }, [fetchServers, fetchMembers]);
+  }, []);
 
   // Presence
   useEffect(() => {
