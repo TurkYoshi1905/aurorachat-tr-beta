@@ -34,6 +34,8 @@ import ProfileCompletionModal from "@/components/ProfileCompletionModal";
 import EmailVerificationModal from "@/components/EmailVerificationModal";
 import AccountBanModal from "@/components/AccountBanModal";
 import SupabaseStatusBanner from "@/components/SupabaseStatusBanner";
+import SupabaseMaintenancePage from "@/components/SupabaseMaintenancePage";
+import { useSupabaseHealth } from "@/hooks/useSupabaseHealth";
 import { I18nProvider } from "@/components/I18nProvider";
 import { initNotificationPermission } from "@/lib/tauriNotifications";
 
@@ -56,9 +58,7 @@ const GlobalAuthModals = () => {
 };
 
 const NotificationBootstrap = () => {
-  useEffect(() => {
-    initNotificationPermission();
-  }, []);
+  useEffect(() => { initNotificationPermission(); }, []);
   return null;
 };
 
@@ -89,8 +89,7 @@ const LoadingScreen = () => {
         <div className="flex flex-col items-center gap-3 mt-4 max-w-sm">
           <p className="text-sm text-foreground/90 font-semibold">Sunucuya bağlanılamıyor</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            AuroraChat veritabanı şu an yanıt vermiyor. Bu genellikle Supabase tarafında geçici
-            bir sorundur. Birkaç dakika sonra tekrar dene veya status sayfasını kontrol et.
+            AuroraChat veritabanı şu an yanıt vermiyor. Birkaç dakika sonra tekrar dene.
           </p>
           <div className="flex items-center gap-2 mt-1">
             <button
@@ -133,6 +132,59 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const AppShell = () => {
+  const health = useSupabaseHealth();
+
+  return (
+    <>
+      <NotificationBootstrap />
+
+      {/* Full-page maintenance overlay (after 2+ consecutive failures) */}
+      {health.showFullPage && (
+        <SupabaseMaintenancePage
+          status={health.status}
+          retrying={health.retrying}
+          countdown={health.countdown}
+          failCount={health.failCount}
+          onRetry={health.retry}
+        />
+      )}
+
+      {/* Slim banner for 1st failure + recovery notification */}
+      {!health.showFullPage && <SupabaseStatusBanner />}
+
+      <GlobalAuthModals />
+
+      <Routes>
+        <Route path="/welcome" element={<PublicRoute><Landing /></PublicRoute>} />
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/verified" element={<EmailVerified />} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/server-settings/:serverId" element={<ProtectedRoute><ServerSettings /></ProtectedRoute>} />
+        <Route path="/invite/:code" element={<InvitePage />} />
+        <Route path="/changelog" element={<Changelog />} />
+        <Route path="/changelog/:id" element={<ChangelogDetail />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/rules" element={<Rules />} />
+        <Route path="/voice-join" element={<ProtectedRoute><VoiceJoin /></ProtectedRoute>} />
+        <Route path="/voice-remote" element={<VoiceRemote />} />
+        <Route path="/spotify-callback" element={<ProtectedRoute><SpotifyCallback /></ProtectedRoute>} />
+        <Route path="/moderation" element={<ProtectedRoute><ModerationPage /></ProtectedRoute>} />
+        <Route path="/bot-developer" element={<ProtectedRoute><BotDeveloper /></ProtectedRoute>} />
+        <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
+        <Route path="/announcements/:id" element={<ProtectedRoute><AnnouncementDetail /></ProtectedRoute>} />
+        <Route path="/communities" element={<Communities />} />
+        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -142,35 +194,7 @@ const App = () => (
         <AuthProvider>
           <VoiceProvider>
             <I18nProvider>
-              <NotificationBootstrap />
-              <SupabaseStatusBanner />
-              <GlobalAuthModals />
-              <Routes>
-                <Route path="/welcome" element={<PublicRoute><Landing /></PublicRoute>} />
-                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/verified" element={<EmailVerified />} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/server-settings/:serverId" element={<ProtectedRoute><ServerSettings /></ProtectedRoute>} />
-                <Route path="/invite/:code" element={<InvitePage />} />
-                <Route path="/changelog" element={<Changelog />} />
-                <Route path="/changelog/:id" element={<ChangelogDetail />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/rules" element={<Rules />} />
-                <Route path="/voice-join" element={<ProtectedRoute><VoiceJoin /></ProtectedRoute>} />
-                <Route path="/voice-remote" element={<VoiceRemote />} />
-                <Route path="/spotify-callback" element={<ProtectedRoute><SpotifyCallback /></ProtectedRoute>} />
-                <Route path="/moderation" element={<ProtectedRoute><ModerationPage /></ProtectedRoute>} />
-                <Route path="/bot-developer" element={<ProtectedRoute><BotDeveloper /></ProtectedRoute>} />
-                <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
-                <Route path="/announcements/:id" element={<ProtectedRoute><AnnouncementDetail /></ProtectedRoute>} />
-                <Route path="/communities" element={<Communities />} />
-                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <AppShell />
             </I18nProvider>
           </VoiceProvider>
         </AuthProvider>

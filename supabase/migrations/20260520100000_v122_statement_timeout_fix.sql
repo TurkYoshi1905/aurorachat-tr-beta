@@ -63,15 +63,14 @@ CREATE INDEX IF NOT EXISTS idx_bot_api_tokens_token
 CREATE INDEX IF NOT EXISTS idx_bot_api_tokens_bot
   ON public.bot_api_tokens(bot_id);
 
--- messages: partial index for non-deleted messages (most queries skip deleted)
+-- messages: composite index for channel history pagination
+-- (deleted_at column does not exist; plain composite is sufficient)
 CREATE INDEX IF NOT EXISTS idx_messages_channel_active
-  ON public.messages(channel_id, inserted_at DESC)
-  WHERE deleted_at IS NULL;
+  ON public.messages(channel_id, inserted_at DESC);
 
 -- direct_messages: same pattern
 CREATE INDEX IF NOT EXISTS idx_dm_conversation_active
-  ON public.direct_messages(conversation_id, inserted_at DESC)
-  WHERE deleted_at IS NULL;
+  ON public.direct_messages(conversation_id, inserted_at DESC);
 
 
 -- ─────────────────────────────────────────────────────────────
