@@ -8,9 +8,9 @@ const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as stri
 export type HealthStatus = 'checking' | 'online' | 'offline' | 'recovering';
 
 const CHECK_INTERVAL_OK_MS   = 60_000;
-const CHECK_INTERVAL_FAIL_MS = 15_000;
-const REQUEST_TIMEOUT_MS     = 7_000;
-const FULL_PAGE_THRESHOLD    = 2;
+const CHECK_INTERVAL_FAIL_MS = 12_000;
+const REQUEST_TIMEOUT_MS     = 5_000;   // fail fast — 5s max per ping
+const FULL_PAGE_THRESHOLD    = 1;       // show full page on FIRST failure
 
 const ping = async (signal: AbortSignal): Promise<boolean> => {
   try {

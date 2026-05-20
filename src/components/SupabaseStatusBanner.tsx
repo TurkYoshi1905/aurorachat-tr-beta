@@ -1,20 +1,14 @@
-import { CheckCircle2, AlertTriangle, RefreshCw, X } from 'lucide-react';
-import { useSupabaseHealth } from '@/hooks/useSupabaseHealth';
+import { CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import type { HealthStatus } from '@/hooks/useSupabaseHealth';
 
-export { useSupabaseHealth };
+interface Props {
+  status: HealthStatus;
+  retrying: boolean;
+  countdown: number;
+  retry: () => void;
+}
 
-const SupabaseStatusBanner = () => {
-  const { status, retrying, justRecovered, countdown, showFullPage, retry } = useSupabaseHealth();
-
-  // Full-page is handled by SupabaseMaintenancePage in App.tsx
-  // Banner shows only on first failure or recovery
-  const showBanner =
-    (status === 'offline' && !showFullPage) ||
-    (status === 'recovering') ||
-    justRecovered;
-
-  if (!showBanner) return null;
-
+const SupabaseStatusBanner = ({ status, retrying, countdown, retry }: Props) => {
   const isOffline = status === 'offline';
 
   return (

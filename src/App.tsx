@@ -64,50 +64,21 @@ const NotificationBootstrap = () => {
 
 const LoadingScreen = () => {
   const [slow, setSlow] = useState(false);
-  const [stuck, setStuck] = useState(false);
   useEffect(() => {
-    const t1 = setTimeout(() => setSlow(true), 5000);
-    const t2 = setTimeout(() => setStuck(true), 12000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t = setTimeout(() => setSlow(true), 5000);
+    return () => clearTimeout(t);
   }, []);
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-background gap-4 px-6 text-center">
       <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
       <p className="text-muted-foreground text-sm">Yükleniyor...</p>
-      {slow && !stuck && (
-        <div className="flex flex-col items-center gap-2 mt-2">
-          <p className="text-xs text-muted-foreground/60">Bağlantı yavaş görünüyor.</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="text-xs text-primary underline underline-offset-2 hover:opacity-80 transition-opacity"
-          >
-            Yeniden Yükle
-          </button>
-        </div>
-      )}
-      {stuck && (
-        <div className="flex flex-col items-center gap-3 mt-4 max-w-sm">
-          <p className="text-sm text-foreground/90 font-semibold">Sunucuya bağlanılamıyor</p>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            AuroraChat veritabanı şu an yanıt vermiyor. Birkaç dakika sonra tekrar dene.
-          </p>
-          <div className="flex items-center gap-2 mt-1">
-            <button
-              onClick={() => window.location.reload()}
-              className="text-xs font-semibold px-3 py-1.5 rounded-md bg-primary/15 text-primary hover:bg-primary/25 transition-colors"
-            >
-              Yeniden Dene
-            </button>
-            <a
-              href="https://status.supabase.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
-            >
-              status.supabase.com
-            </a>
-          </div>
-        </div>
+      {slow && (
+        <button
+          onClick={() => window.location.reload()}
+          className="text-xs text-primary underline underline-offset-2 hover:opacity-80 transition-opacity mt-1"
+        >
+          Yeniden Yükle
+        </button>
       )}
     </div>
   );
@@ -133,16 +104,41 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppShell = () => {
+  // Single health hook instance — no duplicate ping timers
   const health = useSupabaseHealth();
+
+  // If still 'checking' after 6 s, treat as offline to prevent frozen blank screen
+  // (happens when PostgREST is doing a slow schema-reload ~14s)
+  const [checkingTooLong, setCheckingTooLong] = useState(false);
+  useEffect(() => {
+    if (health.status !== 'checking') {
+      setCheckingTooLong(false);
+      return;
+    }
+    const t = setTimeout(() => setCheckingTooLong(true), 6000);
+    return () => clearTimeout(t);
+  }, [health.status]);
+
+  const showMaintenance =
+    health.showFullPage ||
+    (health.status === 'checking' && checkingTooLong);
+
+  // When recovering, auto-reload after a short delay
+  useEffect(() => {
+    if (health.status === 'recovering') {
+      const t = setTimeout(() => window.location.reload(), 3500);
+      return () => clearTimeout(t);
+    }
+  }, [health.status]);
 
   return (
     <>
       <NotificationBootstrap />
 
-      {/* Full-page maintenance overlay (after 2+ consecutive failures) */}
-      {health.showFullPage && (
+      {/* Full-page maintenance: shown on FIRST failure or slow initial check */}
+      {showMaintenance && (
         <SupabaseMaintenancePage
-          status={health.status}
+          status={health.status === 'checking' ? 'offline' : health.status}
           retrying={health.retrying}
           countdown={health.countdown}
           failCount={health.failCount}
@@ -150,8 +146,15 @@ const AppShell = () => {
         />
       )}
 
-      {/* Slim banner for 1st failure + recovery notification */}
-      {!health.showFullPage && <SupabaseStatusBanner />}
+      {/* Slim banner: only for recovery notification (full page already handles offline) */}
+      {!showMaintenance && health.status === 'recovering' && (
+        <SupabaseStatusBanner
+          status={health.status}
+          retrying={health.retrying}
+          countdown={health.countdown}
+          retry={health.retry}
+        />
+      )}
 
       <GlobalAuthModals />
 
