@@ -456,20 +456,11 @@ const DMDashboard = ({ onOpenDM, onStartCall, currentUserStatus = 'online', onSt
     return () => { supabase.removeChannel(ch); };
   }, [user, fetchDMHistory]);
 
-  // Real-time: profiles status changes → update status indicators instantly
-  useEffect(() => {
-    if (!user) return;
-    const ch = supabase
-      .channel('dm-profiles-status-realtime')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, (payload) => {
-        const updated = payload.new as any;
-        if (updated?.id && updated?.status !== undefined) {
-          setOnlineStatuses(prev => ({ ...prev, [updated.id]: updated.status || 'offline' }));
-        }
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [user]);
+  // Status izleme: presence channel (Index.tsx presenceStatuses prop'u) birincil kaynak.
+  // Ayrı bir global profiles subscription açmak tüm kullanıcıların profil güncellemelerini
+  // her aboneye iletir — yüksek yük ve statement timeout'a yol açar.
+  // presenceStatuses.size > 0 iken onlineStatuses zaten kullanılmaz (getStatus mantığı).
+  // Bu yüzden bu abonelik tamamen kaldırıldı.
 
   // Helper: get real-time status for a user — presence channel is the ground truth.
   // When presence is initialized (size > 0), users not in presence map are definitely offline.

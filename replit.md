@@ -64,7 +64,7 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260506000000_v113_announcements_system.sql` — announcements + comments tables, server order_index column, RLS, realtime, helper RPCs
 - `20260506100000_v114_bot_member_commands_fix.sql` — bots.commands NOT NULL fix, server_bots SELECT policy, get_server_members_full EXCEPTION block, get_server_bot_commands RPC
 
-## Current Version: v1.2.2 (20 Mayıs 2026)
+## Current Version: v1.2.3 (20 Mayıs 2026)
 
 ### Features by version
 - **v1.2.1**: Communities/Keşfet sayfası + compass butonu (ServerSidebar), mesaj kopyalama (masaüstü hover + mobil long-press), idle/background durum senkronizasyonu (usePresenceKeeper), Bot Developer değişken kopyalama (tıkla→kopyala), PDF veri dışa aktarma (Settings gizlilik), Moderation çevrimiçi sayısı istatistiği, ServerSettings topluluk toggle (is_community, açıklama, kategori), Settings modpanel erişimi (myModRole), sürüm v1.2.1
