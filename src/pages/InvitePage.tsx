@@ -183,30 +183,36 @@ const InvitePage = () => {
       <div className="w-full max-w-sm">
         {/* Main invite card */}
         <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-2xl">
-          {/* Gradient header */}
-          <div className="h-32 bg-gradient-to-br from-primary/30 via-violet-500/20 to-blue-500/10 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/30 to-transparent" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/20 to-transparent" />
+          {/* Header: server icon as blurred background or dark gradient */}
+          <div className="h-28 relative overflow-hidden bg-gradient-to-br from-card via-secondary/60 to-card">
+            {server?.icon_url && (
+              <img
+                src={server.icon_url}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover opacity-20 scale-110 blur-md"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-card/80" />
             <div className="absolute top-3 left-3">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80 bg-primary/15 backdrop-blur-sm px-2.5 py-1 rounded-full border border-primary/20">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/15 backdrop-blur-sm px-2.5 py-1 rounded-full border border-primary/25">
                 {t('invite.serverInvite')}
               </span>
             </div>
             <div className="absolute top-3 right-3">
-              <div className="w-7 h-7 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                <Sparkles className="w-3.5 h-3.5 text-white/70" />
+              <div className="w-7 h-7 rounded-full bg-background/30 backdrop-blur-sm flex items-center justify-center border border-border/40">
+                <Sparkles className="w-3.5 h-3.5 text-primary/70" />
               </div>
             </div>
           </div>
 
-          <div className="px-6 pb-6 -mt-14 space-y-5">
+          <div className="px-6 pb-6 -mt-12 space-y-5">
             {/* Server icon */}
             <div className="flex justify-center">
-              <div className="w-20 h-20 rounded-2xl border-4 border-card shadow-xl overflow-hidden bg-secondary flex items-center justify-center ring-2 ring-primary/20">
+              <div className="w-24 h-24 rounded-2xl border-4 border-card shadow-2xl overflow-hidden bg-secondary flex items-center justify-center ring-2 ring-primary/30">
                 {server?.icon_url ? (
                   <img src={server.icon_url} alt={server?.name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl font-black text-foreground">{server?.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
+                  <span className="text-4xl font-black text-foreground">{server?.name?.charAt(0)?.toUpperCase() ?? '?'}</span>
                 )}
               </div>
             </div>

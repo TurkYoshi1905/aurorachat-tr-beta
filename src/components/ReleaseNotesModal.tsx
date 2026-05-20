@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Bug, Shield, Compass, Copy, FileDown, Globe, Crown, CircleMinus, Lock } from 'lucide-react';
+import { Sparkles, Wrench, Bug, Shield, Star, Search, MessageSquare, Puzzle, Image, Smartphone } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.1';
+const RELEASE_VERSION = '1.2.2';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,67 +18,60 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Compass,
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    label: 'Topluluklar/Keşfet sayfası eklendi: Kamuya açık sunucuları ara, kategoriye göre filtrele ve doğrudan katıl.',
-    badge: 'Yeni',
-  },
-  {
-    icon: Copy,
+    icon: Puzzle,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Mobilden mesaj kopyalama: Uzun basma menüsüne ve masaüstü hover menüsüne "Mesajı Kopyala" seçeneği eklendi.',
-    badge: 'Yeni',
-  },
-  {
-    icon: FileDown,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Gizlilik sekmesine "Tüm Verilerimi İndir" PDF butonu eklendi — profil ve gizlilik ayarlarını içeren rapor.',
-    badge: 'Yeni',
-  },
-  {
-    icon: Globe,
-    iconBg: 'bg-emerald-500/15',
-    iconColor: 'text-emerald-400',
-    label: 'Arkaplan/boşta durum senkronizasyonu: Sekme gizlendiğinde "boşta", geri döndüğünde "çevrimiçi" otomatik güncelleniyor.',
-    badge: 'İyileştirme',
-  },
-  {
-    icon: CircleMinus,
-    iconBg: 'bg-orange-500/15',
-    iconColor: 'text-orange-400',
-    label: 'Moderasyon paneli çevrimiçi kullanıcı istatistiği eklendi ve mod rolü erişim kontrolü düzeltildi.',
+    label: 'Bot komut değişkenleri tam işlevsel: {coinflip}, {date}, {time}, {onlineCount}, {roll}, {randomEmoji} ve daha fazlası artık gerçek verilerle çalışıyor.',
     badge: 'Düzeltme',
   },
   {
-    icon: Crown,
-    iconBg: 'bg-accent/15',
-    iconColor: 'text-accent',
-    label: 'Sunucu Ayarları\'na "Topluluğumu Herkese Aç" anahtarı eklendi — sunucuyu Keşfet sayfasında görünür kılar.',
+    icon: Star,
+    iconBg: 'bg-yellow-500/15',
+    iconColor: 'text-yellow-400',
+    label: 'Eklenti Mağazası marketplace yeniden tasarlandı: 3 sütunlu premium grid, detay sayfası, 5 yıldız derecelendirme sistemi.',
     badge: 'Yeni',
   },
   {
-    icon: Shield,
+    icon: MessageSquare,
+    iconBg: 'bg-cyan-500/15',
+    iconColor: 'text-cyan-400',
+    label: 'Eklenti yorum sistemi: her eklentiye yorum ekle, kendi yorumunu düzenle veya sil. Tam CRUD desteği.',
+    badge: 'Yeni',
+  },
+  {
+    icon: Search,
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Eklenti mağazasına akıllı arama barı eklendi — eklenti adı veya açıklamasına göre anlık filtreleme.',
+    badge: 'Yeni',
+  },
+  {
+    icon: Image,
+    iconBg: 'bg-emerald-500/15',
+    iconColor: 'text-emerald-400',
+    label: 'Bot profil fotoğrafı senkronizasyon hatası düzeltildi: avatar güncellenince tüm modallarda anında yansıyor.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Sparkles,
+    iconBg: 'bg-orange-500/15',
+    iconColor: 'text-orange-400',
+    label: 'Davet sayfası görsel onarımı: gereksiz mavi alan kaldırıldı, sunucu logosu artık doğru ve büyük görüntüleniyor.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Smartphone,
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
-    label: 'Bot Geliştirici Stüdyo yeniden tasarlandı: değişken ara/kopyala, komut ismi düzenleme, GET /api/v1/bot/me dokümantasyonu.',
-    badge: 'İyileştirme',
+    label: 'Mobil API Docs taşma düzeltmesi: URL metinleri mobil ekranda taşmadan alt satıra geçiyor.',
+    badge: 'Düzeltme',
   },
   {
-    icon: Lock,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'SQL migration v1.2.1: servers.is_community, bot_api_tokens tablosu, get_community_servers RPC eklendi.',
-    badge: 'Teknik',
-  },
-  {
-    icon: Wrench,
+    icon: Shield,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'Davet sayfası görsel iyileştirmeleri ve versiyon numarası v1.2.1\'e güncellendi.',
-    badge: 'İyileştirme',
+    label: 'SQL migration v1.2.2: plugin_ratings, plugin_reviews tabloları + RLS politikaları + get_plugin_avg_rating RPC eklendi.',
+    badge: 'Teknik',
   },
 ];
 
@@ -126,10 +119,7 @@ const ReleaseNotesModal = () => {
         <ScrollArea className="max-h-[420px]">
           <div className="space-y-1.5 p-4">
             {features.map((f, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors"
-              >
+              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${f.iconBg}`}>
                   <f.icon className={`w-4 h-4 ${f.iconColor}`} />
                 </div>

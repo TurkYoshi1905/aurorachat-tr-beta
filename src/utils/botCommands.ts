@@ -293,7 +293,7 @@ export async function executeBotCommand(
           const botIds = serverBots.map((sb: any) => sb.bot_id);
           const { data: bots } = await (supabase as any)
             .from('bots')
-            .select('id, name, commands')
+            .select('id, name, username, commands')
             .in('id', botIds);
 
           if (bots) {
@@ -318,11 +318,34 @@ export async function executeBotCommand(
                   .single();
                 const memberCount = memberCountRes.count ?? 0;
                 const serverName = (serverDataRes.data as any)?.name ?? '';
+                  const now = new Date();
+                const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '.');
+                const [channelRes, onlineRes] = await Promise.all([
+                  supabase.from('channels').select('name').eq('id', ctx.channelId).single(),
+                  supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'online'),
+                ]);
+                const channelName = (channelRes.data as any)?.name ?? '';
+                const onlineCount = onlineRes.count ?? 0;
+                const randomEmojis = ['😀','😂','🥰','😎','🤔','🎉','🔥','⭐','🌟','💫','🎮','🎵','🌈','🦄','🐱','🍕','🎯','🏆','💎','🚀'];
+                const randomEmoji = randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
                 const rendered = match.response
                   .replace(/\{user\}/g, callerMember?.name || 'Kullanıcı')
                   .replace(/\{username\}/g, callerMember?.name?.toLowerCase().replace(/\s+/g, '_') || 'kullanici')
+                  .replace(/\{userId\}/g, ctx.userId)
                   .replace(/\{memberCount\}/g, String(memberCount))
-                  .replace(/\{serverName\}/g, serverName);
+                  .replace(/\{onlineCount\}/g, String(onlineCount))
+                  .replace(/\{serverName\}/g, serverName)
+                  .replace(/\{serverId\}/g, ctx.serverId)
+                  .replace(/\{channelName\}/g, channelName)
+                  .replace(/\{time\}/g, timeStr)
+                  .replace(/\{date\}/g, dateStr)
+                  .replace(/\{randomNumber\}/g, String(Math.floor(Math.random() * 100) + 1))
+                  .replace(/\{randomEmoji\}/g, randomEmoji)
+                  .replace(/\{roll\}/g, String(Math.floor(Math.random() * 6) + 1))
+                  .replace(/\{coinflip\}/g, Math.random() < 0.5 ? 'Yazı' : 'Tura')
+                  .replace(/\{botName\}/g, bot.name || '')
+                  .replace(/\{botUsername\}/g, (bot as any).username || '');
                 const { data: botProfile } = await (supabase as any).from('bots').select('avatar_url').eq('id', bot.id).maybeSingle();
                 return { content: rendered, botName: bot.name, botId: bot.id, botAvatarUrl: botProfile?.avatar_url || undefined };
               }

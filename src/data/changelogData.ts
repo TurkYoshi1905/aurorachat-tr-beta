@@ -16,6 +16,34 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.2',
+    date: '20 Mayıs 2026',
+    summary: 'Bot değişkenleri tam işlevsellik (coinflip, date, onlineCount, roll, randomEmoji vb.), Eklenti Mağazası marketplace yeniden tasarımı (3 sütun grid, arama, detay sayfası, yıldızlama ve yorum sistemi), bot avatar senkronizasyon düzeltmesi, davet sayfası görsel onarımı ve mobil API dokümantasyon taşma düzeltmesi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Bot komut değişkenleri tam çalışır hale getirildi: {coinflip}, {date}, {time}, {onlineCount}, {channelName}, {serverId}, {userId}, {randomNumber}, {randomEmoji}, {roll}, {botName}, {botUsername} artık gerçek verilerle render ediliyor.',
+          'Eklenti Mağazası tamamen yeniden tasarlandı: 3 sütunlu premium grid layout, eklenti adı/açıklamasına göre akıllı arama barı.',
+          'Eklenti Detay Sayfası: Her eklenti kartına tıklayınca detay modalı açılıyor — Yükle/Kaldır butonu, 5 yıldız derecelendirme, yorum ekleme/düzenleme/silme.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri & İyileştirmeler',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Bot profil fotoğrafı yükleme düzeltildi: avatar güncellendikten sonra tüm modallarda anlık olarak görüntüleniyor (cache-bust timestamp eklendi).',
+          'Davet sayfası görsel düzeltmesi: gereksiz mavi arka plan kaldırıldı, sunucu logosu artık doğru görüntüleniyor ve karttaki ikon boyutu büyütüldü.',
+          'Mobil API Docs taşma düzeltmesi: endpoint URL metinleri break-all ile mobilde alt satıra güvenle geçiyor.',
+          'SQL migration v1.2.2: plugin_ratings, plugin_reviews tabloları + RLS politikaları + get_plugin_avg_rating RPC.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.1',
     date: '19 Mayıs 2026',
     summary: 'Topluluklar/Keşfet sayfası ve pusula butonu, mobilden mesaj kopyalama, arkaplan/boşta durum senkronizasyonu, Bot Geliştirici Stüdyo yeniden tasarımı, Ayarlar\'da PDF veri dışa aktarımı, davet sayfası yenileme, moderasyon çevrimiçi istatistiği ve erişim kontrolü düzeltmesi.',

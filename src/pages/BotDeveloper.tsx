@@ -387,7 +387,7 @@ const BotDeveloper = () => {
         const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, editAvatarFile, { upsert: true });
         if (!uploadErr) {
           const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-          avatarUrl = urlData.publicUrl;
+          avatarUrl = urlData.publicUrl + '?v=' + Date.now();
         }
       }
       const updates: any = {
@@ -398,7 +398,8 @@ const BotDeveloper = () => {
       };
       const { error } = await (supabase as any).from('bots').update(updates).eq('id', selectedBot.id);
       if (error) { toast.error('Kaydedilemedi: ' + error.message); return; }
-      setSelectedBot({ ...selectedBot, ...updates });
+      const updatedBot = { ...selectedBot, ...updates };
+      setSelectedBot(updatedBot);
       setBots(prev => prev.map(b => b.id === selectedBot.id ? { ...b, ...updates } : b));
       setEditMode(false);
       setEditAvatarFile(null);
@@ -893,7 +894,7 @@ const BotDeveloper = () => {
             <div className="rounded-lg bg-secondary/40 border border-border/50 p-3">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Base URL</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-xs font-mono text-emerald-300 bg-[#1a1b2e] px-2 py-1.5 rounded border border-border">
+                <code className="flex-1 text-xs font-mono text-emerald-300 bg-[#1a1b2e] px-2 py-1.5 rounded border border-border break-all">
                   https://ktittqaubkaylprxnoya.supabase.co/functions/v1/bot-api
                 </code>
                 <button
@@ -915,9 +916,7 @@ const BotDeveloper = () => {
               <div className="p-3 space-y-3">
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">İstek Örneği</p>
-                  <pre className="bg-[#1a1b2e] text-emerald-300 text-[11px] font-mono rounded-lg p-3 overflow-x-auto leading-relaxed border border-border/50">{`GET /me HTTP/1.1
-Host: ktittqaubkaylprxnoya.supabase.co/functions/v1/bot-api
-Authorization: Bot ${selectedBot?.token ? selectedBot.token.slice(0, 12) + '...' : 'YOUR_BOT_TOKEN'}`}</pre>
+                  <pre className="bg-[#1a1b2e] text-emerald-300 text-[11px] font-mono rounded-lg p-3 overflow-x-auto leading-relaxed border border-border/50 break-words whitespace-pre-wrap">{`GET /me HTTP/1.1\nHost: ktittqaubkaylprxnoya.supabase.co/\n  functions/v1/bot-api\nAuthorization: Bot ${selectedBot?.token ? selectedBot.token.slice(0, 12) + '...' : 'YOUR_BOT_TOKEN'}`}</pre>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Başarılı Yanıt <span className="text-emerald-400">200 OK</span></p>

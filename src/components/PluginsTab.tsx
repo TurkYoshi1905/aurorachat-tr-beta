@@ -9,8 +9,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Puzzle, Plus, Download, Trash2, Check, Loader2, Code2,
   Package, ChevronDown, ChevronUp, ShieldCheck, X, Clock,
-  BookOpen, Pencil, Save, User2, Sparkles, ExternalLink,
+  BookOpen, Pencil, Save, User2, Sparkles, Search, Star,
 } from 'lucide-react';
+import PluginDetailModal from '@/components/PluginDetailModal';
 
 interface Plugin {
   id: string;
@@ -40,7 +41,7 @@ const DOC_SECTIONS = [
   },
   {
     title: 'JS Eklentisi',
-    example: `// Aurora eklenti API\'si
+    example: `// Aurora eklenti API'si
 console.log('[MyPlugin] Aktif!');
 document.title = 'AuroraChat - Özel';`,
     content: 'JavaScript ile sayfa davranışını genişletebilirsin. Eklenti yüklendiğinde çalışır.',
@@ -119,53 +120,28 @@ const EditPluginModal = ({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Ad *</label>
-                <Input
-                  value={form.name}
-                  onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                  className="bg-input"
-                />
+                <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="bg-input" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Versiyon</label>
-                <Input
-                  value={form.version}
-                  onChange={e => setForm(p => ({ ...p, version: e.target.value }))}
-                  placeholder="1.0.0"
-                  className="bg-input"
-                />
+                <Input value={form.version} onChange={e => setForm(p => ({ ...p, version: e.target.value }))} placeholder="1.0.0" className="bg-input" />
               </div>
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Açıklama</label>
-              <Input
-                value={form.description}
-                onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                className="bg-input"
-              />
+              <Input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="bg-input" />
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <Code2 className="w-3.5 h-3.5" /> CSS Kodu
               </label>
-              <textarea
-                value={form.css_code}
-                onChange={e => setForm(p => ({ ...p, css_code: e.target.value }))}
-                rows={7}
-                placeholder=":root { --background: 0 0% 5%; }"
-                className="w-full bg-input border border-input rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
-              />
+              <textarea value={form.css_code} onChange={e => setForm(p => ({ ...p, css_code: e.target.value }))} rows={7} placeholder=":root { --background: 0 0% 5%; }" className="w-full bg-input border border-input rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none" />
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                 <Code2 className="w-3.5 h-3.5" /> JavaScript Kodu
               </label>
-              <textarea
-                value={form.js_code}
-                onChange={e => setForm(p => ({ ...p, js_code: e.target.value }))}
-                rows={7}
-                placeholder="// console.log('Eklenti aktif!');"
-                className="w-full bg-input border border-input rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
-              />
+              <textarea value={form.js_code} onChange={e => setForm(p => ({ ...p, js_code: e.target.value }))} rows={7} placeholder="// console.log('Eklenti aktif!');" className="w-full bg-input border border-input rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none" />
             </div>
           </div>
         </ScrollArea>
@@ -220,98 +196,93 @@ const DocsModal = ({ open, onClose }: { open: boolean; onClose: () => void }) =>
   </Dialog>
 );
 
-const StorePluginCard = ({
-  plugin, installed, onInstall, onRemove, installing,
+/* ─── Store Grid Card ───────────────────────────────────────── */
+const StoreGridCard = ({
+  plugin,
+  installed,
+  onCardClick,
+  onInstall,
+  onRemove,
+  installing,
 }: {
   plugin: Plugin;
   installed: boolean;
+  onCardClick: (p: Plugin) => void;
   onInstall: (p: Plugin) => void;
   onRemove: (p: Plugin) => void;
   installing: boolean;
-}) => {
-  const [showCode, setShowCode] = useState(false);
-  return (
-    <div className={`rounded-xl border bg-card transition-all hover:border-primary/30 ${installed ? 'border-primary/25 shadow-sm shadow-primary/5' : 'border-border'}`}>
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/10 flex items-center justify-center shrink-0 border border-primary/20">
-            <Puzzle className="w-5 h-5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-foreground">{plugin.name}</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">v{plugin.version}</span>
-              {installed && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold flex items-center gap-0.5">
-                  <Check className="w-2.5 h-2.5" /> Aktif
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{plugin.description}</p>
-            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <Download className="w-3 h-3" /> {plugin.install_count}
-              </span>
-              {(plugin.creator_display_name || plugin.creator_username) && (
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                  <User2 className="w-3 h-3" />
-                  {plugin.creator_display_name && (
-                    <span className="text-foreground/70 font-medium">{plugin.creator_display_name}</span>
-                  )}
-                  {plugin.creator_display_name && plugin.creator_username && (
-                    <span className="text-muted-foreground/60 ml-0.5">@{plugin.creator_username}</span>
-                  )}
-                  {!plugin.creator_display_name && plugin.creator_username && (
-                    <span>@{plugin.creator_username}</span>
-                  )}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={() => setShowCode(p => !p)}
-              className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-secondary transition-colors flex items-center gap-1"
-            >
-              <Code2 className="w-3 h-3" />
-              {showCode ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
-            <Button
-              size="sm"
-              variant={installed ? 'destructive' : 'default'}
-              className="text-xs h-7 px-2.5"
-              disabled={installing}
-              onClick={() => installed ? onRemove(plugin) : onInstall(plugin)}
-            >
-              {installing
-                ? <Loader2 className="w-3 h-3 animate-spin" />
-                : installed
-                  ? <><Trash2 className="w-3 h-3 mr-1" />Kaldır</>
-                  : <><Download className="w-3 h-3 mr-1" />Yükle</>}
-            </Button>
-          </div>
-        </div>
-      </div>
-      {showCode && (
-        <div className="px-4 pb-4 space-y-2 border-t border-border/40 pt-3 bg-secondary/5">
-          {plugin.css_code && (
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground mb-1 flex items-center gap-1"><Code2 className="w-3 h-3" /> CSS</p>
-              <pre className="bg-secondary/50 rounded-lg p-3 text-xs font-mono overflow-x-auto text-foreground whitespace-pre-wrap break-all">{plugin.css_code}</pre>
-            </div>
-          )}
-          {plugin.js_code && (
-            <div>
-              <p className="text-[11px] font-semibold text-muted-foreground mb-1 flex items-center gap-1"><Code2 className="w-3 h-3" /> JavaScript</p>
-              <pre className="bg-secondary/50 rounded-lg p-3 text-xs font-mono overflow-x-auto text-foreground whitespace-pre-wrap break-all">{plugin.js_code}</pre>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+}) => (
+  <div
+    className={`group relative rounded-2xl border bg-card flex flex-col overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 ${
+      installed ? 'border-primary/30 shadow-sm shadow-primary/8' : 'border-border hover:border-primary/25'
+    }`}
+    onClick={() => onCardClick(plugin)}
+  >
+    {/* Top accent */}
+    <div className="h-1.5 w-full bg-gradient-to-r from-primary/60 via-violet-500/40 to-cyan-500/30" />
 
+    <div className="p-4 flex flex-col flex-1 gap-3">
+      {/* Icon + status */}
+      <div className="flex items-start justify-between">
+        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/10 flex items-center justify-center border border-primary/15">
+          <Puzzle className="w-5 h-5 text-primary" />
+        </div>
+        {installed && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold flex items-center gap-0.5 border border-primary/20">
+            <Check className="w-2.5 h-2.5" /> Aktif
+          </span>
+        )}
+      </div>
+
+      {/* Name + version */}
+      <div className="space-y-0.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">{plugin.name}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-secondary/80 text-muted-foreground shrink-0">v{plugin.version}</span>
+        </div>
+        <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{plugin.description}</p>
+      </div>
+
+      {/* Footer meta */}
+      <div className="mt-auto space-y-2.5">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Download className="w-3 h-3" /> {plugin.install_count}
+          </span>
+          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <Star className="w-3 h-3" /> —
+          </span>
+        </div>
+        {(plugin.creator_display_name || plugin.creator_username) && (
+          <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1 truncate">
+            <User2 className="w-3 h-3 shrink-0" />
+            <span className="truncate">
+              {plugin.creator_display_name && <span className="text-foreground/60 font-medium">{plugin.creator_display_name}</span>}
+              {plugin.creator_username && <span className="ml-0.5">@{plugin.creator_username}</span>}
+            </span>
+          </p>
+        )}
+
+        {/* Action button */}
+        <Button
+          size="sm"
+          variant={installed ? 'destructive' : 'default'}
+          className="w-full text-xs h-8"
+          disabled={installing}
+          onClick={(e) => { e.stopPropagation(); installed ? onRemove(plugin) : onInstall(plugin); }}
+        >
+          {installing
+            ? <Loader2 className="w-3 h-3 animate-spin" />
+            : installed
+              ? <><Trash2 className="w-3 h-3 mr-1.5" />Kaldır</>
+              : <><Download className="w-3 h-3 mr-1.5" />Yükle</>}
+        </Button>
+      </div>
+    </div>
+  </div>
+);
+
+/* ─── Admin Plugin Card (unchanged) ─────────────────────────── */
 const AdminPluginCard = ({
   plugin, onApprove, onReject, approving,
 }: {
@@ -342,10 +313,7 @@ const AdminPluginCard = ({
           <p className="text-xs text-muted-foreground mt-0.5">{plugin.description || 'Açıklama yok'}</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={() => setShowCode(p => !p)}
-            className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-secondary transition-colors flex items-center gap-1"
-          >
+          <button onClick={() => setShowCode(p => !p)} className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-secondary transition-colors flex items-center gap-1">
             <Code2 className="w-3 h-3" />
             {showCode ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
@@ -377,6 +345,7 @@ const AdminPluginCard = ({
   );
 };
 
+/* ─── Main PluginsTab ──────────────────────────────────────── */
 const PluginsTab = () => {
   const { user, profile } = useAuth();
   const isAdmin = !!profile?.is_app_admin;
@@ -390,8 +359,11 @@ const PluginsTab = () => {
   const [approving, setApproving] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'store' | 'mine' | 'create' | 'admin'>('store');
 
+  const [searchQuery, setSearchQuery] = useState('');
   const [editPlugin, setEditPlugin] = useState<Plugin | null>(null);
   const [showDocs, setShowDocs] = useState(false);
+  const [detailPlugin, setDetailPlugin] = useState<Plugin | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
 
   const [form, setForm] = useState({ name: '', description: '', css_code: '', js_code: '', version: '1.0.0' });
   const [creating, setCreating] = useState(false);
@@ -525,6 +497,17 @@ const PluginsTab = () => {
     setApproving(null);
   };
 
+  const openDetail = (plugin: Plugin) => {
+    setDetailPlugin(plugin);
+    setShowDetail(true);
+  };
+
+  const filteredStore = storePlugins.filter(p => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return p.name.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q);
+  });
+
   const tabs = [
     { id: 'store', label: 'Mağaza', icon: Package },
     { id: 'mine', label: 'Eklentilerim', icon: Puzzle },
@@ -559,7 +542,7 @@ const PluginsTab = () => {
         <div className="ml-auto flex items-center gap-2">
           {installedIds.length > 0 && (
             <span className="text-xs text-muted-foreground bg-secondary px-2.5 py-1 rounded-full border border-border">
-              {installedIds.length} aktif eklenti
+              {installedIds.length} aktif
             </span>
           )}
           <button
@@ -572,33 +555,62 @@ const PluginsTab = () => {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-16">
           <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
         </div>
       ) : activeView === 'store' ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Eklenti ara... (ad veya açıklama)"
+              className="pl-9 bg-secondary/40 border-border"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Header */}
           <div className="flex items-center gap-2 px-1">
             <Package className="w-4 h-4 text-primary" />
-            <p className="text-sm font-semibold text-foreground">Tüm Eklentiler</p>
-            <span className="text-xs text-muted-foreground">({storePlugins.length})</span>
+            <p className="text-sm font-semibold text-foreground">
+              {searchQuery ? `Arama Sonuçları` : 'Tüm Eklentiler'}
+            </p>
+            <span className="text-xs text-muted-foreground">({filteredStore.length})</span>
           </div>
-          {storePlugins.length === 0 ? (
-            <div className="text-center py-12">
-              <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-              <p className="text-sm text-muted-foreground">Mağazada henüz eklenti yok</p>
-              <button onClick={() => setActiveView('create')} className="text-xs text-primary hover:underline mt-1">İlk eklentiyi oluştur</button>
+
+          {filteredStore.length === 0 ? (
+            <div className="text-center py-16">
+              <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium text-foreground">
+                {searchQuery ? `"${searchQuery}" için sonuç bulunamadı` : 'Mağazada henüz eklenti yok'}
+              </p>
+              {!searchQuery && (
+                <button onClick={() => setActiveView('create')} className="text-xs text-primary hover:underline mt-1">
+                  İlk eklentiyi oluştur
+                </button>
+              )}
             </div>
           ) : (
-            storePlugins.map(plugin => (
-              <StorePluginCard
-                key={plugin.id}
-                plugin={plugin}
-                installed={installedIds.includes(plugin.id)}
-                onInstall={installPlugin}
-                onRemove={removePlugin}
-                installing={installing === plugin.id}
-              />
-            ))
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {filteredStore.map(plugin => (
+                <StoreGridCard
+                  key={plugin.id}
+                  plugin={plugin}
+                  installed={installedIds.includes(plugin.id)}
+                  onCardClick={openDetail}
+                  onInstall={installPlugin}
+                  onRemove={removePlugin}
+                  installing={installing === plugin.id}
+                />
+              ))}
+            </div>
           )}
         </div>
       ) : activeView === 'mine' ? (
@@ -609,7 +621,6 @@ const PluginsTab = () => {
             <span className="text-xs text-muted-foreground">({myPlugins.length} oluşturulan)</span>
           </div>
 
-          {/* Installed from store (not mine) */}
           {installedIds.filter(id => !myPlugins.find(p => p.id === id)).length > 0 && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
               <p className="text-xs font-semibold text-primary mb-2 flex items-center gap-1.5">
@@ -662,18 +673,10 @@ const PluginsTab = () => {
                       <p className="text-[11px] text-muted-foreground mt-0.5">{plugin.install_count} kurulum · v{plugin.version}</p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={() => setEditPlugin(plugin)}
-                        className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                        title="Düzenle"
-                      >
+                      <button onClick={() => setEditPlugin(plugin)} className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors" title="Düzenle">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => deleteMyPlugin(plugin)}
-                        className="p-2 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors"
-                        title="Sil"
-                      >
+                      <button onClick={() => deleteMyPlugin(plugin)} className="p-2 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors" title="Sil">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -707,15 +710,13 @@ const PluginsTab = () => {
           )}
         </div>
       ) : (
+        /* Create view */
         <div className="rounded-xl border border-emerald-500/15 bg-card p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <Plus className="w-4 h-4 text-emerald-400" /> Yeni Eklenti Oluştur
             </h3>
-            <button
-              onClick={() => setShowDocs(true)}
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-            >
+            <button onClick={() => setShowDocs(true)} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
               <BookOpen className="w-3.5 h-3.5" /> Yardım
             </button>
           </div>
@@ -737,25 +738,13 @@ const PluginsTab = () => {
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
               <Code2 className="w-3.5 h-3.5" /> CSS Kodu
             </label>
-            <textarea
-              value={form.css_code}
-              onChange={e => setForm(p => ({ ...p, css_code: e.target.value }))}
-              rows={6}
-              placeholder=":root { --background: 0 0% 5%; }"
-              className="w-full bg-input border border-input rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
-            />
+            <textarea value={form.css_code} onChange={e => setForm(p => ({ ...p, css_code: e.target.value }))} rows={6} placeholder=":root { --background: 0 0% 5%; }" className="w-full bg-input border border-input rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none" />
           </div>
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
               <Code2 className="w-3.5 h-3.5" /> JavaScript Kodu
             </label>
-            <textarea
-              value={form.js_code}
-              onChange={e => setForm(p => ({ ...p, js_code: e.target.value }))}
-              rows={6}
-              placeholder="// console.log('Eklenti aktif!');"
-              className="w-full bg-input border border-input rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none"
-            />
+            <textarea value={form.js_code} onChange={e => setForm(p => ({ ...p, js_code: e.target.value }))} rows={6} placeholder="// console.log('Eklenti aktif!');" className="w-full bg-input border border-input rounded-lg px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground resize-none" />
           </div>
           <p className="text-xs text-muted-foreground bg-secondary/50 rounded-lg p-3 flex items-start gap-2">
             <Sparkles className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
@@ -771,13 +760,17 @@ const PluginsTab = () => {
         </div>
       )}
 
-      <EditPluginModal
-        plugin={editPlugin}
-        open={!!editPlugin}
-        onClose={() => setEditPlugin(null)}
-        onSaved={loadData}
-      />
+      <EditPluginModal plugin={editPlugin} open={!!editPlugin} onClose={() => setEditPlugin(null)} onSaved={loadData} />
       <DocsModal open={showDocs} onClose={() => setShowDocs(false)} />
+      <PluginDetailModal
+        plugin={detailPlugin}
+        open={showDetail}
+        onClose={() => setShowDetail(false)}
+        installed={detailPlugin ? installedIds.includes(detailPlugin.id) : false}
+        onInstall={installPlugin}
+        onRemove={removePlugin}
+        installing={detailPlugin ? installing === detailPlugin.id : false}
+      />
     </div>
   );
 };
