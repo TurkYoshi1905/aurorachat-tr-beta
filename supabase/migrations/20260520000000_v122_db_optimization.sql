@@ -2,11 +2,12 @@
 -- v1.2.2 — Veritabanı Optimizasyonu
 -- Connection pool tükenmesi, sorgu zaman aşımları ve
 -- bağlantı sızıntılarına karşı kapsamlı düzeltmeler.
+-- NOT: CONCURRENTLY kaldırıldı — SQL Editor transaction bloğu
+--      içinde çalışır, CONCURRENTLY buna izin vermez.
 -- ============================================================
 
 -- ─────────────────────────────────────────────
 -- 1. UZUN SÜREN AKTİF SORGULARI SONLANDIR
--- (Göç çalışmadan önce köprüyü temizle)
 -- ─────────────────────────────────────────────
 DO $$
 DECLARE
@@ -28,7 +29,6 @@ $$;
 
 -- ─────────────────────────────────────────────
 -- 2. STATEMENT TIMEOUT — uzun sorguları kes
--- (Supabase pooler üzerinden oturum başına)
 -- ─────────────────────────────────────────────
 ALTER DATABASE postgres SET statement_timeout = '15s';
 ALTER DATABASE postgres SET idle_in_transaction_session_timeout = '30s';
@@ -37,15 +37,14 @@ ALTER DATABASE postgres SET lock_timeout = '10s';
 
 -- ─────────────────────────────────────────────
 -- 3. MESSAGES TABLOSU İNDEKSLERİ
--- En çok sorgulanan tablo; channel_id + tarih
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_channel_id
+CREATE INDEX IF NOT EXISTS idx_messages_channel_id
   ON public.messages (channel_id, inserted_at DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_user_id
+CREATE INDEX IF NOT EXISTS idx_messages_user_id
   ON public.messages (user_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_channel_inserted
+CREATE INDEX IF NOT EXISTS idx_messages_channel_inserted
   ON public.messages (channel_id, inserted_at);
 
 
@@ -53,131 +52,151 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_channel_inserted
 -- 4. SERVER_MEMBERS İNDEKSLERİ
 -- RLS her satırda server_members'ı sorgular
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_server_members_user_id
+CREATE INDEX IF NOT EXISTS idx_server_members_user_id
   ON public.server_members (user_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_server_members_server_id
+CREATE INDEX IF NOT EXISTS idx_server_members_server_id
   ON public.server_members (server_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_server_members_server_user
+CREATE INDEX IF NOT EXISTS idx_server_members_server_user
   ON public.server_members (server_id, user_id);
 
 
 -- ─────────────────────────────────────────────
 -- 5. SERVER_MEMBER_ROLES İNDEKSLERİ
--- Üye rol sorguları için kritik
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_server_member_roles_member_id
+CREATE INDEX IF NOT EXISTS idx_server_member_roles_member_id
   ON public.server_member_roles (member_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_server_member_roles_role_id
+CREATE INDEX IF NOT EXISTS idx_server_member_roles_role_id
   ON public.server_member_roles (role_id);
 
 
 -- ─────────────────────────────────────────────
 -- 6. NOTIFICATIONS İNDEKSLERİ
--- Kullanıcı başına okunmamış bildirim sayısı
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_user_unread
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread
   ON public.notifications (user_id, read)
   WHERE read = false;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_user_id
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id
   ON public.notifications (user_id, created_at DESC);
 
 
 -- ─────────────────────────────────────────────
 -- 7. REACTIONS İNDEKSLERİ
--- Her mesaj için reaksiyon listesi
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reactions_message_id
+CREATE INDEX IF NOT EXISTS idx_reactions_message_id
   ON public.reactions (message_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reactions_user_message
+CREATE INDEX IF NOT EXISTS idx_reactions_user_message
   ON public.reactions (user_id, message_id);
 
 
 -- ─────────────────────────────────────────────
 -- 8. VOICE_CHANNEL_MEMBERS İNDEKSLERİ
--- Sesli kanal üye sorguları
+-- Tablo yoksa sessizce atla
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_voice_channel_members_channel_id
-  ON public.voice_channel_members (channel_id)
-  WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'voice_channel_members');
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_voice_channel_members_user_id
-  ON public.voice_channel_members (user_id)
-  WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'voice_channel_members');
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'voice_channel_members'
+  ) THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_voice_channel_members_channel_id') THEN
+      CREATE INDEX idx_voice_channel_members_channel_id
+        ON public.voice_channel_members (channel_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_voice_channel_members_user_id') THEN
+      CREATE INDEX idx_voice_channel_members_user_id
+        ON public.voice_channel_members (user_id);
+    END IF;
+  END IF;
+END;
+$$;
 
 
 -- ─────────────────────────────────────────────
 -- 9. PROFILES İNDEKSLERİ
--- Durum sorgulama ve son görülme
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_profiles_status
+CREATE INDEX IF NOT EXISTS idx_profiles_status
   ON public.profiles (status);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_profiles_last_seen
+CREATE INDEX IF NOT EXISTS idx_profiles_last_seen
   ON public.profiles (last_seen DESC);
 
 
 -- ─────────────────────────────────────────────
 -- 10. MESSAGE_THREADS İNDEKSLERİ
+-- Tablo yoksa sessizce atla
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_message_threads_message_id
-  ON public.message_threads (message_id)
-  WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'message_threads');
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'message_threads'
+  ) THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_message_threads_message_id') THEN
+      CREATE INDEX idx_message_threads_message_id
+        ON public.message_threads (message_id);
+    END IF;
+  END IF;
+END;
+$$;
 
 
 -- ─────────────────────────────────────────────
 -- 11. CHANNELS İNDEKSLERİ
--- Sunucu bazlı kanal listesi
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_channels_server_id
+CREATE INDEX IF NOT EXISTS idx_channels_server_id
   ON public.channels (server_id, position);
+
+CREATE INDEX IF NOT EXISTS idx_channels_id_server_id
+  ON public.channels (id, server_id);
 
 
 -- ─────────────────────────────────────────────
 -- 12. SERVER_BOTS İNDEKSLERİ
--- Bot üye listesi sorguları
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_server_bots_server_id
+CREATE INDEX IF NOT EXISTS idx_server_bots_server_id
   ON public.server_bots (server_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_server_bots_bot_id
+CREATE INDEX IF NOT EXISTS idx_server_bots_bot_id
   ON public.server_bots (bot_id);
 
 
 -- ─────────────────────────────────────────────
 -- 13. ANNOUNCEMENTS İNDEKSLERİ
+-- Tablo yoksa sessizce atla
 -- ─────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_announcements_created_at
-  ON public.announcements (created_at DESC)
-  WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'announcements');
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'announcements'
+  ) THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_announcements_created_at') THEN
+      CREATE INDEX idx_announcements_created_at
+        ON public.announcements (created_at DESC);
+    END IF;
+  END IF;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_announcement_comments_announcement_id
-  ON public.announcement_comments (announcement_id)
-  WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'announcement_comments');
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'announcement_comments'
+  ) THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_announcement_comments_announcement_id') THEN
+      CREATE INDEX idx_announcement_comments_announcement_id
+        ON public.announcement_comments (announcement_id);
+    END IF;
+  END IF;
+END;
+$$;
 
 
 -- ─────────────────────────────────────────────
--- 14. RLS POLİTİKA OPTİMİZASYONU
--- Recursive (döngüsel) RLS sorguları connection
--- havuzunu tüketir. messages tablosunda SELECT
--- politikası server_members'ı kontrol ediyorsa,
--- bu kontrolü index üzerinden hızlandır.
--- ─────────────────────────────────────────────
-
--- messages RLS: Kullanıcı bu kanalın sunucusuna üye mi?
--- server_members(server_id, user_id) bileşik indexi zaten eklendi (adım 4).
--- Ek: channels(id, server_id) — RLS join için
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_channels_id_server_id
-  ON public.channels (id, server_id);
-
-
--- ─────────────────────────────────────────────
--- 15. BAĞLANTI HAVUZUNU TEMIZLE
--- İşlem başı idle bağlantıları kapat
+-- 14. BAĞLANTI HAVUZUNU TEMIZLE
+-- Uzun süre idle kalan bağlantıları kapat
 -- ─────────────────────────────────────────────
 DO $$
 DECLARE
@@ -197,7 +216,7 @@ $$;
 
 
 -- ─────────────────────────────────────────────
--- 16. VACUUM + ANALYZE — tablo istatistiklerini güncelle
+-- 15. VACUUM + ANALYZE — sorgu planlayıcısını güncelle
 -- ─────────────────────────────────────────────
 ANALYZE public.messages;
 ANALYZE public.server_members;
