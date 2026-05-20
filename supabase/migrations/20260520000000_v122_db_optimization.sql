@@ -154,10 +154,10 @@ CREATE INDEX IF NOT EXISTS idx_announcement_comments_announcement_id
 -- 14. DM & GROUP DM İNDEKSLERİ
 -- ─────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_direct_messages_conversation_id
-  ON public.direct_messages (conversation_id, created_at DESC);
+  ON public.direct_messages (conversation_id, inserted_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_group_dm_messages_group_id
-  ON public.group_dm_messages (group_id, created_at DESC);
+  ON public.group_dm_messages (group_id, inserted_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_group_dm_members_group_id
   ON public.group_dm_members (group_id);
