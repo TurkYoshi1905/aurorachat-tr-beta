@@ -173,13 +173,21 @@ CREATE POLICY "members_can_insert_messages_v3"
 
 -- ─────────────────────────────────────────────────────────────
 -- 5. MAKE is_dm_participant SECURITY DEFINER
---    Prevents per-row auth context switches during RLS evaluation
---    Must DROP first — PostgreSQL forbids renaming parameters via
---    CREATE OR REPLACE (ERROR 42P13).
+--    Prevents per-row auth context switches during RLS evaluation.
+--    Two RLS policies on direct_messages depend on this function,
+--    so we must CASCADE-drop them, recreate the function, then
+--    recreate the policies.
 -- ─────────────────────────────────────────────────────────────
+
+-- Drop dependent policies first (they reference the function)
+DROP POLICY IF EXISTS "DMs viewable by conversation participants" ON public.direct_messages;
+DROP POLICY IF EXISTS "Users can send DMs"                        ON public.direct_messages;
+
+-- Drop function (no dependents remain)
 DROP FUNCTION IF EXISTS public.is_dm_participant(uuid, uuid);
 
-CREATE OR REPLACE FUNCTION public.is_dm_participant(p_user_id uuid, p_conv_id uuid)
+-- Recreate function as SECURITY DEFINER (faster: no per-row auth ctx switch)
+CREATE FUNCTION public.is_dm_participant(p_user_id uuid, p_conv_id uuid)
 RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = public
@@ -190,6 +198,18 @@ AS $$
       AND (user1_id = p_user_id OR user2_id = p_user_id)
   );
 $$;
+
+-- Recreate the two dependent RLS policies
+CREATE POLICY "DMs viewable by conversation participants"
+  ON public.direct_messages FOR SELECT TO authenticated
+  USING (public.is_dm_participant(auth.uid(), conversation_id));
+
+CREATE POLICY "Users can send DMs"
+  ON public.direct_messages FOR INSERT TO authenticated
+  WITH CHECK (
+    sender_id = auth.uid()
+    AND public.is_dm_participant(auth.uid(), conversation_id)
+  );
 
 
 -- ─────────────────────────────────────────────────────────────
