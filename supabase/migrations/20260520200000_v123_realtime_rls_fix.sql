@@ -174,7 +174,11 @@ CREATE POLICY "members_can_insert_messages_v3"
 -- ─────────────────────────────────────────────────────────────
 -- 5. MAKE is_dm_participant SECURITY DEFINER
 --    Prevents per-row auth context switches during RLS evaluation
+--    Must DROP first — PostgreSQL forbids renaming parameters via
+--    CREATE OR REPLACE (ERROR 42P13).
 -- ─────────────────────────────────────────────────────────────
+DROP FUNCTION IF EXISTS public.is_dm_participant(uuid, uuid);
+
 CREATE OR REPLACE FUNCTION public.is_dm_participant(p_user_id uuid, p_conv_id uuid)
 RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER
