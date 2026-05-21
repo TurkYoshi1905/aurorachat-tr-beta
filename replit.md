@@ -64,7 +64,7 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260506000000_v113_announcements_system.sql` — announcements + comments tables, server order_index column, RLS, realtime, helper RPCs
 - `20260506100000_v114_bot_member_commands_fix.sql` — bots.commands NOT NULL fix, server_bots SELECT policy, get_server_members_full EXCEPTION block, get_server_bot_commands RPC
 
-## Current Version: v1.2.3 (20 Mayıs 2026)
+## Current Version: v1.2.4 (21 Mayıs 2026)
 
 ### Features by version
 - **v1.2.1**: Communities/Keşfet sayfası + compass butonu (ServerSidebar), mesaj kopyalama (masaüstü hover + mobil long-press), idle/background durum senkronizasyonu (usePresenceKeeper), Bot Developer değişken kopyalama (tıkla→kopyala), PDF veri dışa aktarma (Settings gizlilik), Moderation çevrimiçi sayısı istatistiği, ServerSettings topluluk toggle (is_community, açıklama, kategori), Settings modpanel erişimi (myModRole), sürüm v1.2.1
@@ -81,6 +81,8 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260519000000_v121_community_bot_api.sql` — servers.is_community/community_description/community_category, bot_api_tokens, get_community_servers RPC, validate_bot_token RPC
 - `20260520000000_v122_bot_variables_extension_store.sql` — plugin_ratings + plugin_reviews tabloları, RLS, realtime, get_plugin_avg_rating RPC
 - `20260520100000_v122_statement_timeout_fix.sql` — **57014 timeout tamamen giderildi**: profiles.status index, pg_trgm GIN index (community search), get_landing_stats approximate counts, get_server_members_full N+1→LATERAL JOIN, get_community_servers timeout guard, get_server_online_count timeout guard, validate_bot_token JOIN optimizasyonu, get_user_servers_full tek-pass sorgu, plugin_ratings/reviews/bot_api_tokens indexleri
+- `20260520200000_v123_realtime_rls_fix.sql` — global 15s statement_timeout kaldırıldı, messages REPLICA IDENTITY DEFAULT, messages.server_id kolonu+trigger+backfill, members_can_read_messages_v5 RLS (tek JOIN), is_dm_participant SECURITY DEFINER (politikalar drop+recreate), ek indexler
+- `20260521000000_v124_reset_stale_statuses.sql` — pg_cron uzantısı, reset_stale_online_statuses() fonksiyonu (8dk+ last_seen → offline), cron job her 5dk, idx_profiles_last_seen_status partial index
 
 ## New files (v1.1.5)
 - `src/utils/rateLimiter.ts` — in-memory rate limiter (6 req/s, 30-min cooldown)
