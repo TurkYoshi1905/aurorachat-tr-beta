@@ -107,6 +107,8 @@ const MemberRow = ({
                 effectiveStatus === 'offline' ? 'opacity-40' : ''
               } ${!member.roleColor ? 'text-[#b5bac1] group-hover:text-[#dbdee1]' : ''} ${hasGradient ? 'role-gradient-text' : ''}`}
               style={member.roleColor ? nameStyle : undefined}
+              onMouseEnter={hasGradient ? (e) => e.currentTarget.classList.add('role-gradient-playing') : undefined}
+              onMouseLeave={hasGradient ? (e) => e.currentTarget.classList.remove('role-gradient-playing') : undefined}
             >
               {member.name}
             </p>

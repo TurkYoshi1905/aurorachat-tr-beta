@@ -139,12 +139,12 @@
 .role-gradient-text {
   background-size: 200% auto !important;
   background-position: 200% center;
-  animation: roleGradientShimmer 1.8s linear infinite;
-  animation-play-state: paused;
+  /* Animasyon yok — hover'da JS ile .role-gradient-playing eklenir,
+     çıkınca kaldırılır → background-position 200% center'a döner (sıfırlanır) */
 }
 
-.role-gradient-text:hover {
-  animation-play-state: running;
+.role-gradient-text.role-gradient-playing {
+  animation: roleGradientShimmer 1.8s linear infinite;
 }
 
 @keyframes rgb-border {

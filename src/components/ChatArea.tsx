@@ -723,6 +723,8 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                           className={`font-medium text-sm hover:underline ${msg.isBot ? 'text-primary' : (!member?.roleColor ? 'text-foreground' : '')} ${hasGradient && !msg.isBot ? 'role-gradient-text' : ''}`}
                           style={!msg.isBot ? authorStyle : {}}
                           onClick={() => { const fmt = msg.author.includes(' ') ? `@[${msg.author}] ` : `@${msg.author} `; setInput(prev => prev ? `${prev} ${fmt}` : fmt); inputRef.current?.focus(); }}
+                          onMouseEnter={hasGradient && !msg.isBot ? (e) => e.currentTarget.classList.add('role-gradient-playing') : undefined}
+                          onMouseLeave={hasGradient && !msg.isBot ? (e) => e.currentTarget.classList.remove('role-gradient-playing') : undefined}
                         >
                           {msg.author}
                         </button>
