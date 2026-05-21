@@ -137,10 +137,14 @@ CREATE POLICY "members_can_read_messages_v5"
   );
 
 -- Also update INSERT policy to use server_id
+-- NOTE: "Authenticated users can send messages" (created in the very first migration,
+--       20260315165411) was NEVER dropped by v077 — it has been silently active alongside
+--       members_can_insert_messages_v2 this whole time. Drop it here too.
 DO $$
 BEGIN
-  DROP POLICY IF EXISTS "members_can_insert_messages_v2" ON public.messages;
-  DROP POLICY IF EXISTS "members_can_insert_messages_v3" ON public.messages;
+  DROP POLICY IF EXISTS "Authenticated users can send messages" ON public.messages;
+  DROP POLICY IF EXISTS "members_can_insert_messages_v2"       ON public.messages;
+  DROP POLICY IF EXISTS "members_can_insert_messages_v3"       ON public.messages;
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
