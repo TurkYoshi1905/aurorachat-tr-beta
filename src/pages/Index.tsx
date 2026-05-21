@@ -594,7 +594,7 @@ const Index = () => {
         return {
           id: m.user_id, name: displayName, username: (p as any)?.username || '',
           avatar: displayName.charAt(0).toUpperCase(), avatarUrl: (p as any)?.avatar_url || null,
-          status: (presenceStatusRef.current.get(m.user_id) as DbMember['status']) || (m.user_id === userRef.current ? myStatusRef.current : ((p as any)?.status as DbMember['status']) || 'offline'),
+          status: (presenceStatusRef.current.get(m.user_id) as DbMember['status']) || (m.user_id === userRef.current ? myStatusRef.current : 'offline'),
           platform: presencePlatformGlobalRef.current.get(m.user_id),
           lastSeen: (p as any)?.last_seen || undefined,
           role: topRole?.name, roleColor: topRole?.color, rolePosition: topRole?.position,
@@ -630,7 +630,7 @@ const Index = () => {
         avatar: displayName.charAt(0).toUpperCase(),
         avatarUrl: m.avatar_url || null,
         isBot,
-        status: isBot ? 'online' : ((presenceStatusRef.current.get(m.user_id) as DbMember['status']) || (m.user_id === userRef.current ? myStatusRef.current : (m.status as DbMember['status']) || 'offline')),
+        status: isBot ? 'online' : ((presenceStatusRef.current.get(m.user_id) as DbMember['status']) || (m.user_id === userRef.current ? myStatusRef.current : 'offline')),
         platform: isBot ? undefined : presencePlatformGlobalRef.current.get(m.user_id),
         lastSeen: isBot ? undefined : (m.last_seen || undefined),
         role: topRole?.name,
