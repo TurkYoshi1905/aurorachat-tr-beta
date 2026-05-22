@@ -1041,7 +1041,7 @@ const ModerationPage = () => {
                     const statusMeta = getStatusMeta(u.status);
                     const lastActivity = u.active_session_last_seen || u.last_seen;
                     return (
-                    <div key={u.id} className={`self-start rounded-2xl border bg-card overflow-hidden transition-all hover:border-primary/40 ${u.is_banned ? 'border-destructive/40 shadow-[0_0_0_1px_rgba(239,68,68,0.08)]' : 'border-border'}`}>
+                    <div key={u.id} className={`self-start rounded-2xl border bg-card overflow-hidden transition-all hover:border-primary/40 ${expandedUser === u.id ? 'md:col-span-3' : ''} ${u.is_banned ? 'border-destructive/40 shadow-[0_0_0_1px_rgba(239,68,68,0.08)]' : 'border-border'}`}>
                       <div className="flex items-center gap-3 p-3.5">
                         <div className="relative w-11 h-11 rounded-full bg-secondary flex items-center justify-center shrink-0 overflow-hidden border border-border/50">
                           {u.avatar_url ? (

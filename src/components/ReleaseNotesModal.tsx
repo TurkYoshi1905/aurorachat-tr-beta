@@ -107,7 +107,7 @@ const ReleaseNotesModal = () => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-md p-0 overflow-hidden">
+      <DialogContent className="max-w-md w-[calc(100%-1.5rem)] p-0 overflow-hidden flex flex-col max-h-[90dvh]">
         <div className="relative px-6 pt-6 pb-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2.5 text-base">
@@ -123,7 +123,7 @@ const ReleaseNotesModal = () => {
           <p className="text-xs text-muted-foreground mt-2">Bu sürümdeki yeni özellikler ve iyileştirmeler</p>
         </div>
 
-        <ScrollArea className="max-h-[420px]">
+        <ScrollArea className="max-h-[420px] sm:max-h-[420px] flex-1 min-h-0">
           <div className="space-y-1.5 p-4">
             {features.map((f, i) => (
               <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors">

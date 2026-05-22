@@ -24,6 +24,8 @@ import { pickFiles } from '@/lib/fileHelper';
 import { supabase } from '@/integrations/supabase/client';
 import ReportMessageModal from './ReportMessageModal';
 import DeleteMessageConfirmModal from './DeleteMessageConfirmModal';
+import CooldownBlockModal from './CooldownBlockModal';
+import { useCooldown } from '@/hooks/useCooldown';
 
 const EMOJI_LIST = ['👍', '❤️', '😂', '😮', '😢', '😡', '🎉', '🔥', '👀', '💯', '✅', '❌', '🤔', '👏', '💪', '🙏', '😎', '🥳', '💀', '😭', '🫡', '👎', '💜', '🧡'];
 
@@ -406,6 +408,12 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
   const handleSend = async () => {
     if (!input.trim() && pendingFiles.length === 0) return;
 
+    // Cooldown enforcement — block messages (text, images, emoji) while on cooldown
+    if (isOnCooldown) {
+      setShowCooldownBlock(true);
+      return;
+    }
+
     // Bot command handling
     if (input.trim().startsWith('/') && serverId && channelId && user) {
       const cmdName = input.trim().split(/\s+/)[0].toLowerCase().replace('/', '');
@@ -519,6 +527,9 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
 
   const [reportMsg, setReportMsg] = useState<DbMessage | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ id: string; preview: string } | null>(null);
+
+  const { isOnCooldown, activeCooldown: userCooldown } = useCooldown();
+  const [showCooldownBlock, setShowCooldownBlock] = useState(false);
 
   // v1.0.3: Mesaj silmeden önce onay modali. Shift basılıysa atla (bypass).
   const requestDeleteMessage = useCallback((msg: DbMessage, e?: React.MouseEvent | { shiftKey?: boolean }) => {
@@ -1102,7 +1113,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
               {canAttachFiles && (
                 <button onClick={handlePickFiles} className="hover:text-foreground transition-colors"><ImagePlus className="w-5 h-5" /></button>
               )}
-              <GifPicker onGifSelect={(url: string) => { onSendMessage(url); }}><button className="hover:text-foreground transition-colors text-xs font-bold">GIF</button></GifPicker>
+              <GifPicker onGifSelect={(url: string) => { if (isOnCooldown) { setShowCooldownBlock(true); return; } onSendMessage(url); }}><button className="hover:text-foreground transition-colors text-xs font-bold">GIF</button></GifPicker>
               <EmojiPicker onEmojiSelect={(emoji) => setInput(prev => prev + emoji)} serverEmojis={serverEmojis} />
               {(input.trim() || pendingFiles.length > 0) && (<button onClick={handleSend} className="text-primary hover:text-primary/80 transition-colors"><Send className="w-5 h-5" /></button>)}
             </div>
@@ -1110,6 +1121,14 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
         )}
         </div>
       </div>
+
+      <CooldownBlockModal
+        open={showCooldownBlock}
+        onClose={() => setShowCooldownBlock(false)}
+        action="message"
+        reason={userCooldown?.reason ?? null}
+        cooldownUntil={userCooldown?.cooldown_until ?? null}
+      />
     </div>
   );
 };

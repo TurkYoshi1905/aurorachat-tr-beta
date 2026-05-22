@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import CooldownBlockModal from './CooldownBlockModal';
+import { useCooldown } from '@/hooks/useCooldown';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,6 +88,9 @@ const CreateServerDialog = ({ open, onOpenChange, onServerCreated }: CreateServe
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { isOnCooldown, activeCooldown: userCooldown } = useCooldown();
+  const [showCooldownBlock, setShowCooldownBlock] = useState(false);
+
   const handleClose = (v: boolean) => {
     if (!v) {
       setStep('template');
@@ -117,6 +122,12 @@ const CreateServerDialog = ({ open, onOpenChange, onServerCreated }: CreateServe
 
   const handleCreate = async () => {
     if (!name.trim() || !user || !selectedTemplate) return;
+
+    if (isOnCooldown) {
+      setShowCooldownBlock(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -292,6 +303,14 @@ const CreateServerDialog = ({ open, onOpenChange, onServerCreated }: CreateServe
           </>
         )}
       </DialogContent>
+
+      <CooldownBlockModal
+        open={showCooldownBlock}
+        onClose={() => setShowCooldownBlock(false)}
+        action="server"
+        reason={userCooldown?.reason ?? null}
+        cooldownUntil={userCooldown?.cooldown_until ?? null}
+      />
     </Dialog>
   );
 };

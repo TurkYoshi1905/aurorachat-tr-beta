@@ -76,6 +76,11 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - **v1.1.1**: GroupDM status realtime, manage_bots permission, bot code/commands DB, server_bots RLS
 - **v1.1.0**: Bot & Developer system, Plugin marketplace, screenshare freeze fix, mention regex fix
 
+## Cooldown Enforcement (v1.2.3+)
+- `src/hooks/useCooldown.ts` — queries `user_cooldowns` (manual) + `rate_limit_cooldowns` (auto), realtime subscription
+- `src/components/CooldownBlockModal.tsx` — shown when cooldown user tries to send message or create server; displays reason + countdown
+- Integrated in `ChatArea.tsx` (handleSend + GIF picker) and `CreateServerDialog.tsx` (handleCreate)
+
 ## SQL Migrations (chronological, continued)
 - `20260508000000_v115_aurora_guard_security.sql` — banned_ips, rate_limit_cooldowns, mod_role_assignments, announcement_comments RLS fix, lift_user_cooldown RPC
 - `20260510000000_v116_updates.sql` — gender_visibility/birth_date_visibility columns, server_members.order_index, profiles RLS (admin update), mod_role_assignments RLS, banned_ips RLS, user_login_ips table
