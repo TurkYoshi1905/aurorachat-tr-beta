@@ -640,8 +640,34 @@ const Index = () => {
         roleGradientEnd: topRole?.permissions?.['gradient_end_color'] || undefined,
       };
     });
-    appCache.set(cacheKey, mapped, 60_000);
-    setMembers(mapped);
+
+    // Also fetch bots from server_bots and merge them (get_server_members_full only returns human members)
+    try {
+      const { data: sbRows } = await (supabase as any)
+        .from('server_bots')
+        .select('id, bot_id, bots(id, name, username, avatar_url, description)')
+        .eq('server_id', activeServer);
+      const botMembers: DbMember[] = ((sbRows || []) as any[]).map((sb: any) => {
+        const b = sb.bots;
+        if (!b) return null;
+        const displayName = b.name || b.username || 'Bot';
+        return {
+          id: b.id,
+          name: displayName,
+          username: b.username || '',
+          avatar: displayName.charAt(0).toUpperCase(),
+          avatarUrl: b.avatar_url || null,
+          status: 'online' as const,
+          isBot: true,
+        };
+      }).filter(Boolean) as DbMember[];
+      const combined = [...mapped, ...botMembers];
+      appCache.set(cacheKey, combined, 60_000);
+      setMembers(combined);
+    } catch {
+      appCache.set(cacheKey, mapped, 60_000);
+      setMembers(mapped);
+    }
   }, [activeServer]);
 
   useEffect(() => { fetchMembersRef.current = fetchMembers; }, [fetchMembers]);

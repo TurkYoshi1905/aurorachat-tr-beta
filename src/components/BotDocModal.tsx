@@ -3,8 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  BookOpen, Code2, Terminal, Zap, Variable, Copy, Check,
-  ChevronRight, Bot, Server, MessageSquare, Shield, Lightbulb,
+  BookOpen, Code2, Variable, Zap, Copy, Check,
+  ChevronRight, Bot, Server, Shield, Lightbulb, MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -13,14 +13,13 @@ interface BotDocModalProps {
   onClose: () => void;
 }
 
-type DocTab = 'start' | 'api' | 'commands' | 'variables' | 'examples';
+type DocTab = 'start' | 'api' | 'variables' | 'examples';
 
 const TABS: { id: DocTab; label: string; icon: typeof BookOpen }[] = [
-  { id: 'start',     label: 'Başlarken',    icon: BookOpen },
-  { id: 'api',       label: 'API',          icon: Code2 },
-  { id: 'commands',  label: 'Komutlar',     icon: Terminal },
-  { id: 'variables', label: 'Değişkenler',  icon: Variable },
-  { id: 'examples',  label: 'Örnekler',     icon: Lightbulb },
+  { id: 'start',     label: 'Başlarken',   icon: BookOpen },
+  { id: 'api',       label: 'API',         icon: Code2 },
+  { id: 'variables', label: 'Değişkenler', icon: Variable },
+  { id: 'examples',  label: 'Örnekler',   icon: Lightbulb },
 ];
 
 const CodeBlock = ({ code, language = 'json' }: { code: string; language?: string }) => {
@@ -60,9 +59,14 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
-const Badge = ({ children, color = 'primary' }: { children: React.ReactNode; color?: string }) => (
-  <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-${color}/15 text-${color} border border-${color}/25`}>
-    {children}
+const MultilineText = ({ text }: { text: string }) => (
+  <span>
+    {text.split('\n').map((line, i, arr) => (
+      <span key={i}>
+        {line}
+        {i < arr.length - 1 && <br />}
+      </span>
+    ))}
   </span>
 );
 
@@ -84,7 +88,7 @@ const StartContent = () => (
         <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">2</span><span>Bot adı, kullanıcı adı ve açıklamasını gir. İsteğe bağlı avatar yükle.</span></li>
         <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">3</span><span><strong className="text-foreground">Token</strong> sekmesinden bot tokenını kopyala — bu tokenı gizli tut.</span></li>
         <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">4</span><span><strong className="text-foreground">Sunucular</strong> sekmesinden botunu sunucularına ekle.</span></li>
-        <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">5</span><span><strong className="text-foreground">Komutlar</strong> sekmesinden özel slash komutları tanımla.</span></li>
+        <li className="flex gap-2"><span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">5</span><span><strong className="text-foreground">Komutlar</strong> sekmesinden özel slash komutları tanımla ve değişken kullan.</span></li>
       </ol>
     </Section>
 
@@ -93,11 +97,11 @@ const StartContent = () => (
         <p>Bot oluşturduktan sonra aşağıdaki sekmelere erişebilirsin:</p>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { icon: Bot,         label: 'Genel',       desc: 'Ad, açıklama, avatar' },
-            { icon: Shield,      label: 'Token',       desc: 'Gizli bot tokenı' },
-            { icon: Server,      label: 'Sunucular',   desc: 'Sunuculara ekle/çıkar' },
-            { icon: Code2,       label: 'Kod',         desc: 'Bot mantığı (gelecek)' },
-            { icon: Terminal,    label: 'Komutlar',    desc: 'Slash komut tanımları' },
+            { icon: Bot,           label: 'Genel',       desc: 'Ad, açıklama, avatar' },
+            { icon: Shield,        label: 'Token',       desc: 'Gizli bot tokenı' },
+            { icon: Server,        label: 'Sunucular',   desc: 'Sunuculara ekle/çıkar' },
+            { icon: Code2,         label: 'Kod',         desc: 'Bot mantığı (gelecek)' },
+            { icon: Variable,      label: 'Değişkenler', desc: 'Dinamik yanıt değişkenleri' },
             { icon: MessageSquare, label: 'Herkese Açık', desc: 'Bot keşif mağazası' },
           ].map(({ icon: Icon, label, desc }) => (
             <div key={label} className="rounded-lg bg-secondary/40 p-2.5 flex gap-2">
@@ -152,66 +156,82 @@ const ApiContent = () => (
   </div>
 );
 
-const CommandsContent = () => (
-  <div className="space-y-6 text-sm">
-    <Section title="Slash Komut Sistemi">
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        Botuna özel slash komutları ekleyerek kullanıcıların <code className="text-primary bg-primary/10 px-1 rounded">/komut_adı</code> yazmasıyla tetiklenecek yanıtlar tanımlayabilirsin.
-      </p>
-    </Section>
+interface VarRow {
+  var: string;
+  desc: string;
+  example: string;
+  category: string;
+}
 
-    <Section title="Komut Alanları">
-      <div className="space-y-2">
-        {[
-          { field: 'Tetikleyici (/)',  desc: 'Slash işareti otomatik eklenir. Örn: yardim → /yardim',      example: 'yardim' },
-          { field: 'Ad',               desc: 'Komutun görünen adı (slash popup\'ta görünür)',              example: 'Yardım Komutu' },
-          { field: 'Açıklama',         desc: 'Komutun ne yaptığını açıklar',                              example: 'Botla ilgili yardım bilgisi gösterir' },
-          { field: 'Yanıt',            desc: 'Komut tetiklendiğinde gönderilecek mesaj (değişken destekli)', example: 'Merhaba {user}! Nasıl yardımcı olabilirim?' },
-        ].map(({ field, desc, example }) => (
-          <div key={field} className="rounded-lg border border-border/50 bg-secondary/20 p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <code className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{field}</code>
-            </div>
-            <p className="text-[11px] text-muted-foreground">{desc}</p>
-            <p className="text-[10px] text-foreground/60 mt-1">Örn: <em className="text-foreground/80">{example}</em></p>
-          </div>
-        ))}
+const ALL_VARIABLES: VarRow[] = [
+  { var: '{user}',         desc: 'Komutu kullanan kullanıcının görünen adı (mention stilinde)',   example: '@AhmetYılmaz',     category: 'Genel' },
+  { var: '{username}',     desc: 'Kullanıcı adı (@ işareti olmadan)',                            example: 'ahmetyilmaz',      category: 'Genel' },
+  { var: '{userId}',       desc: 'Kullanıcının benzersiz sistem kimliği (UUID)',                  example: 'a1b2c3d4-...',     category: 'Genel' },
+  { var: '{time}',         desc: 'Şu anki saat — SS:dd formatında',                             example: '14:30',            category: 'Genel' },
+  { var: '{date}',         desc: 'Bugünün tarihi — GG.AA.YYYY formatında',                      example: '22.05.2026',       category: 'Genel' },
+  { var: '{dayOfWeek}',    desc: 'Haftanın günü (Türkçe)',                                       example: 'Cuma',             category: 'Genel' },
+  { var: '{greeting}',     desc: 'Saate göre otomatik selamlama',                               example: 'İyi akşamlar',     category: 'Genel' },
+
+  { var: '{serverName}',   desc: 'Sunucunun tam adı',                                           example: 'AuroraChat Beta',  category: 'Sunucu' },
+  { var: '{memberCount}',  desc: 'Sunucudaki toplam kayıtlı üye sayısı',                        example: '142',              category: 'Sunucu' },
+  { var: '{onlineCount}',  desc: 'Şu anda çevrimiçi olan üye sayısı',                           example: '37',               category: 'Sunucu' },
+  { var: '{channelName}',  desc: 'Komutun yazıldığı kanalın adı',                               example: 'genel',            category: 'Sunucu' },
+  { var: '{serverId}',     desc: 'Sunucunun benzersiz kimliği (UUID)',                           example: 'f1e2d3c4-...',     category: 'Sunucu' },
+  { var: '{serverAge}',    desc: 'Sunucunun kurulduğundan bu yana geçen gün sayısı',             example: '120 gün',          category: 'Sunucu' },
+
+  { var: '{randomNumber}', desc: 'Rastgele bir tam sayı (1 ile 100 arasında)',                  example: '42',               category: 'Eğlence' },
+  { var: '{randomEmoji}',  desc: 'Listeden rastgele seçilen bir emoji',                         example: '🎉',               category: 'Eğlence' },
+  { var: '{roll}',         desc: 'Zar at — 1 ile 6 arasında rastgele sayı döner',              example: '4',                category: 'Eğlence' },
+  { var: '{coinflip}',     desc: 'Yazı/Tura — "Yazı" veya "Tura" döner',                       example: 'Tura',             category: 'Eğlence' },
+  { var: '{8ball}',        desc: 'Sihirli 8 top yanıtı (rastgele evet/hayır/belki)',            example: 'Evet, kesinlikle!', category: 'Eğlence' },
+  { var: '{lucky}',        desc: 'Günlük şans puanı (1-100 arası)',                             example: '73',               category: 'Eğlence' },
+
+  { var: '{botName}',     desc: 'Bu botun görünen adı',                                         example: 'AuroraBot',        category: 'Bot' },
+  { var: '{botUsername}', desc: 'Bu botun kullanıcı adı',                                       example: 'aurorabot',        category: 'Bot' },
+  { var: '{botVersion}',  desc: 'AuroraChat platform sürümü',                                   example: 'v1.2.3',           category: 'Bot' },
+];
+
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  'Genel':   { bg: 'bg-blue-500/10',    text: 'text-blue-400',    border: 'border-blue-500/20' },
+  'Sunucu':  { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  'Eğlence': { bg: 'bg-orange-500/10',  text: 'text-orange-400',  border: 'border-orange-500/20' },
+  'Bot':     { bg: 'bg-violet-500/10',  text: 'text-violet-400',  border: 'border-violet-500/20' },
+};
+
+const VariablesContent = () => {
+  const categories = ['Genel', 'Sunucu', 'Eğlence', 'Bot'];
+  return (
+    <div className="space-y-6 text-sm">
+      <div className="rounded-xl bg-primary/8 border border-primary/20 p-3 text-xs text-muted-foreground">
+        Komut yanıtlarında bu değişkenleri kullanabilirsin. Değişkenler gönderim anında otomatik gerçek veriye dönüştürülür.
       </div>
-    </Section>
-
-    <Section title="Komut Yanıt Örneği">
-      <CodeBlock language="text" code={`/merhaba → Merhaba {user}! AuroraChat'e hoş geldin! 🎉\n/sunucu  → Şu anda {serverName} sunucusundasın ({memberCount} üye)\n/ben     → Adın: {username}`} />
-    </Section>
-  </div>
-);
-
-const VariablesContent = () => (
-  <div className="space-y-6 text-sm">
-    <Section title="Kullanılabilir Değişkenler">
-      <p className="text-xs text-muted-foreground mb-3">Komut yanıtlarında bu değişkenleri kullanabilirsin. Değişkenler gönderim anında otomatik değerle değiştirilir.</p>
-      <div className="space-y-2">
-        {[
-          { var: '{user}',        desc: 'Komutu kullanan kullanıcının etiket adı (mention)',    example: '@AhmetYılmaz' },
-          { var: '{username}',    desc: 'Kullanıcı adı (@ işareti olmadan)',                    example: 'ahmetyilmaz' },
-          { var: '{memberCount}', desc: 'Sunucudaki toplam üye sayısı',                         example: '142' },
-          { var: '{serverName}',  desc: 'Botun bulunduğu sunucunun adı',                        example: 'AuroraChat Beta' },
-        ].map(({ var: v, desc, example }) => (
-          <div key={v} className="rounded-xl bg-secondary/30 border border-border/40 p-3">
-            <div className="flex items-center justify-between mb-1.5">
-              <code className="text-sm font-mono font-bold text-primary">{v}</code>
-              <span className="text-[10px] text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full font-mono">→ {example}</span>
+      {categories.map(cat => {
+        const vars = ALL_VARIABLES.filter(v => v.category === cat);
+        const cc = CATEGORY_COLORS[cat] || { bg: 'bg-secondary/30', text: 'text-foreground', border: 'border-border/40' };
+        return (
+          <Section key={cat} title={`${cat} Değişkenleri`}>
+            <div className="space-y-2">
+              {vars.map(({ var: v, desc, example }) => (
+                <div key={v} className={`rounded-xl ${cc.bg} border ${cc.border} p-3`}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <code className={`text-sm font-mono font-bold ${cc.text}`}>{v}</code>
+                    <span className="text-[10px] text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full font-mono">→ {example}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <MultilineText text={desc} />
+                  </p>
+                </div>
+              ))}
             </div>
-            <p className="text-xs text-muted-foreground">{desc}</p>
-          </div>
-        ))}
-      </div>
-    </Section>
-
-    <Section title="Kullanım Örneği">
-      <CodeBlock language="text" code={`Giriş: "{user} hoş geldin! {serverName} sunucusunda\nşu an {memberCount} üye var."\n\nÇıktı: "@AhmetYılmaz hoş geldin! AuroraChat Beta\nsunucusunda şu an 142 üye var."`} />
-    </Section>
-  </div>
-);
+          </Section>
+        );
+      })}
+      <Section title="Kullanım Örneği">
+        <CodeBlock language="text" code={`Giriş: "{greeting} {user}! {serverName} sunucusuna\nhoş geldin! Şu an {onlineCount}/{memberCount} üye çevrimiçi."\n\nÇıktı: "İyi akşamlar @AhmetYılmaz! AuroraChat Beta\nsunucusuna hoş geldin! Şu an 37/142 üye çevrimiçi."`} />
+      </Section>
+    </div>
+  );
+};
 
 const ExamplesContent = () => (
   <div className="space-y-6 text-sm">
@@ -222,22 +242,30 @@ const ExamplesContent = () => (
           {
             name: '🎉 Hoş Geldin Botu',
             commands: [
-              { trigger: 'merhaba', response: 'Merhaba {user}! {serverName} sunucusuna hoş geldin 🎉 Aramızdaki {memberCount} üyeyle iyi eğlenceler!' },
-              { trigger: 'selamla', response: 'Selam {username}! Nasılsın? 😊' },
+              { trigger: 'merhaba', response: '{greeting} {user}! {serverName} sunucusuna hoş geldin 🎉\nArамızdaki {memberCount} üyeyle iyi eğlenceler!\nŞu an {onlineCount} kişi çevrimiçi.' },
+              { trigger: 'selamla', response: 'Selam {username}! Nasılsın? 😊\n{serverName}\'da harika vakit geçiriyoruz!' },
             ],
           },
           {
             name: '📊 Sunucu Info Botu',
             commands: [
-              { trigger: 'sunucu',  response: '🏠 Sunucu: {serverName}\n👥 Üye Sayısı: {memberCount}' },
-              { trigger: 'uye',     response: '{serverName} sunucusunda toplam {memberCount} üye bulunuyor.' },
+              { trigger: 'sunucu', response: '🏠 Sunucu: {serverName}\n👥 Toplam Üye: {memberCount}\n🟢 Çevrimiçi: {onlineCount}\n📅 Bugün: {date}' },
+              { trigger: 'kanal',  response: '#{channelName} kanalındasın!\nSunucu: {serverName} ({memberCount} üye)' },
             ],
           },
           {
             name: '🎲 Eğlence Botu',
             commands: [
-              { trigger: 'sarsi',   response: 'Şansın: {username} için yüksek! 🍀' },
-              { trigger: 'siralama', response: '{serverName} liderlik tablosu yakında! 🏆' },
+              { trigger: 'zar',     response: '🎲 {user} zar attı: **{roll}**\nŞansın bugün: {lucky}/100' },
+              { trigger: 'yaztura', response: '🪙 {user} para attı: **{coinflip}**!' },
+              { trigger: '8top',    response: '🎱 {user} sordu, 8-top cevapladı:\n"{8ball}"' },
+            ],
+          },
+          {
+            name: '⏰ Zaman & Tarih Botu',
+            commands: [
+              { trigger: 'saat', response: '🕐 Şu anki saat: {time}\n📅 Bugün: {date} ({dayOfWeek})' },
+              { trigger: 'bugun', response: '📅 Bugün {dayOfWeek}, {date}\nSunucumuz {serverAge} gündür aktif!' },
             ],
           },
         ].map(({ name, commands }) => (
@@ -251,7 +279,7 @@ const ExamplesContent = () => (
                   <div className="flex items-center gap-1 mb-1">
                     <code className="text-primary font-mono font-bold">/{trigger}</code>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed">{response}</p>
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{response}</p>
                 </div>
               ))}
             </div>
@@ -265,7 +293,6 @@ const ExamplesContent = () => (
 const CONTENT: Record<DocTab, React.ReactNode> = {
   start:     <StartContent />,
   api:       <ApiContent />,
-  commands:  <CommandsContent />,
   variables: <VariablesContent />,
   examples:  <ExamplesContent />,
 };
@@ -276,7 +303,6 @@ const BotDocModal = ({ open, onClose }: BotDocModalProps) => {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent className="max-w-xl p-0 overflow-hidden flex flex-col" style={{ height: 'min(90vh, 720px)' }}>
-        {/* Header */}
         <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border shrink-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-base">
@@ -285,13 +311,12 @@ const BotDocModal = ({ open, onClose }: BotDocModalProps) => {
               </div>
               <div>
                 <span className="font-bold text-foreground">Bot Geliştirici Dokümantasyonu</span>
-                <p className="text-xs text-muted-foreground font-normal mt-0.5">AuroraChat Bot API v1</p>
+                <p className="text-xs text-muted-foreground font-normal mt-0.5">AuroraChat Bot API v1 · v1.2.3</p>
               </div>
             </DialogTitle>
           </DialogHeader>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-0.5 px-3 py-2 bg-secondary/20 border-b border-border shrink-0 overflow-x-auto scrollbar-none">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
@@ -309,14 +334,12 @@ const BotDocModal = ({ open, onClose }: BotDocModalProps) => {
           ))}
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-5">
             {CONTENT[activeTab]}
           </div>
         </div>
 
-        {/* Footer */}
         <div className="px-5 py-3 border-t border-border bg-secondary/10 shrink-0 flex items-center justify-between">
           <p className="text-[11px] text-muted-foreground">AuroraChat Bot API · Geliştirici önizlemesi</p>
           <Button size="sm" onClick={onClose} variant="outline">Kapat</Button>

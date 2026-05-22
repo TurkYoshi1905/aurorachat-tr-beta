@@ -2630,9 +2630,9 @@ const Settings = () => {
                     <h3 className="text-2xl font-bold tracking-tight text-foreground">AuroraChat</h3>
                     <div className="flex items-center justify-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold">
-                        <Sparkles className="w-3 h-3" /> v1.2.2
+                        <Sparkles className="w-3 h-3" /> v1.2.4
                       </span>
-                      <span className="text-xs text-muted-foreground">20 Mayıs 2026</span>
+                      <span className="text-xs text-muted-foreground">22 Mayıs 2026</span>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">

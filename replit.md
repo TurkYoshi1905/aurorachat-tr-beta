@@ -64,9 +64,10 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260506000000_v113_announcements_system.sql` — announcements + comments tables, server order_index column, RLS, realtime, helper RPCs
 - `20260506100000_v114_bot_member_commands_fix.sql` — bots.commands NOT NULL fix, server_bots SELECT policy, get_server_members_full EXCEPTION block, get_server_bot_commands RPC
 
-## Current Version: v1.2.4 (21 Mayıs 2026)
+## Current Version: v1.2.4 (22 Mayıs 2026)
 
 ### Features by version
+- **v1.2.4**: Rol hiyerarşisi & dokunulmazlık kuralları (Kurucu bağışık, canActOnTarget), ModerationPage 3-sütun grid, Admin Yap butonu kaldırıldı, AdvancedCooldownModal (9 süre seçeneği, sebep alanı, apply_manual_cooldown RPC), Güvenlik sekmesi kullanıcı arama + aktif manuel cooldownlar listesi, BotDocModal Komutlar sekmesi kaldırıldı + zengin değişkenler paneli (22 değişken 4 kategori), BotDeveloper 6 yeni değişken ({dayOfWeek}/{greeting}/{serverAge}/{8ball}/{lucky}/{botVersion}), sunucu üye listesi bot gösterimi (RPC success path), get_community_servers STABLE→VOLATILE fix, bot avatar RLS 403 fix
 - **v1.2.1**: Communities/Keşfet sayfası + compass butonu (ServerSidebar), mesaj kopyalama (masaüstü hover + mobil long-press), idle/background durum senkronizasyonu (usePresenceKeeper), Bot Developer değişken kopyalama (tıkla→kopyala), PDF veri dışa aktarma (Settings gizlilik), Moderation çevrimiçi sayısı istatistiği, ServerSettings topluluk toggle (is_community, açıklama, kategori), Settings modpanel erişimi (myModRole), sürüm v1.2.1
 - **v1.1.5**: Aurora Guard güvenlik katmanı (IP Ban, Rate Limit 6/s, 30-dk cooldown, XSS sanitize), Bot Profil Modalı (BotProfileModal.tsx), komut değişken sistemi ({user}/{username}/{memberCount}/{serverName}), komut düzenleme, moderasyon rol hiyerarşisi (Yetkili/Admin/Moderatör/Deneme), Güvenlik sekmesi modpanelde, mic chevron görünürlük fix, announcement comment RLS 42501 fix, SEO meta güncelleme
 - **v1.1.4**: Bot üye listesi düzeltmesi (fallback + RPC EXCEPTION), custom bot komutları slash popup'ta görünüyor, bots.commands NULL bug fix, server_bots SELECT politikası güçlendirildi

@@ -338,25 +338,31 @@ const BotDeveloper = () => {
 
   const VARIABLES = [
     // Genel
-    { label: '{user}', desc: 'Kullanıcının görünen adı (ör. Ahmet)', category: 'Genel' },
-    { label: '{username}', desc: 'Kullanıcının kullanıcı adı (ör. ahmet42)', category: 'Genel' },
-    { label: '{userId}', desc: 'Kullanıcının benzersiz sistem kimliği (UUID)', category: 'Genel' },
-    { label: '{time}', desc: 'Şu anki saat — SS:dd formatında (ör. 14:30)', category: 'Genel' },
-    { label: '{date}', desc: 'Bugünün tarihi — GG.AA.YYYY formatında (ör. 19.05.2026)', category: 'Genel' },
+    { label: '{user}',        desc: 'Kullanıcının görünen adı (ör. Ahmet)',                          category: 'Genel' },
+    { label: '{username}',    desc: 'Kullanıcının kullanıcı adı (ör. ahmet42)',                       category: 'Genel' },
+    { label: '{userId}',      desc: 'Kullanıcının benzersiz sistem kimliği (UUID)',                    category: 'Genel' },
+    { label: '{time}',        desc: 'Şu anki saat — SS:dd formatında (ör. 14:30)',                   category: 'Genel' },
+    { label: '{date}',        desc: 'Bugünün tarihi — GG.AA.YYYY formatında (ör. 22.05.2026)',        category: 'Genel' },
+    { label: '{dayOfWeek}',   desc: 'Haftanın günü Türkçe olarak (ör. Perşembe)',                    category: 'Genel' },
+    { label: '{greeting}',    desc: 'Saate göre otomatik selamlama: İyi sabahlar / İyi günler / İyi akşamlar / İyi geceler', category: 'Genel' },
     // Sunucu Yönetimi
-    { label: '{serverName}', desc: 'Sunucunun tam adı', category: 'Sunucu' },
-    { label: '{memberCount}', desc: 'Sunucudaki toplam kayıtlı üye sayısı', category: 'Sunucu' },
-    { label: '{onlineCount}', desc: 'Şu anda çevrimiçi olan üye sayısı', category: 'Sunucu' },
-    { label: '{channelName}', desc: 'Komutun yazıldığı kanalın adı', category: 'Sunucu' },
-    { label: '{serverId}', desc: 'Sunucunun benzersiz kimliği (UUID)', category: 'Sunucu' },
+    { label: '{serverName}',  desc: 'Sunucunun tam adı',                                              category: 'Sunucu' },
+    { label: '{memberCount}', desc: 'Sunucudaki toplam kayıtlı üye sayısı',                          category: 'Sunucu' },
+    { label: '{onlineCount}', desc: 'Şu anda çevrimiçi olan üye sayısı',                             category: 'Sunucu' },
+    { label: '{channelName}', desc: 'Komutun yazıldığı kanalın adı',                                 category: 'Sunucu' },
+    { label: '{serverId}',    desc: 'Sunucunun benzersiz kimliği (UUID)',                             category: 'Sunucu' },
+    { label: '{serverAge}',   desc: 'Sunucunun kurulduğu günden bu yana geçen gün sayısı',           category: 'Sunucu' },
     // Eğlence
-    { label: '{randomNumber}', desc: 'Rastgele bir tam sayı (1 ile 100 arasında)', category: 'Eğlence' },
-    { label: '{randomEmoji}', desc: 'Listeden rastgele seçilen bir emoji', category: 'Eğlence' },
-    { label: '{roll}', desc: 'Zar at — 1 ile 6 arasında rastgele sayı döner', category: 'Eğlence' },
-    { label: '{coinflip}', desc: 'Yazı/Tura — "Yazı" veya "Tura" döner', category: 'Eğlence' },
+    { label: '{randomNumber}',desc: 'Rastgele bir tam sayı (1 ile 100 arasında)',                    category: 'Eğlence' },
+    { label: '{randomEmoji}', desc: 'Listeden rastgele seçilen bir emoji',                           category: 'Eğlence' },
+    { label: '{roll}',        desc: 'Zar at — 1 ile 6 arasında rastgele sayı döner',               category: 'Eğlence' },
+    { label: '{coinflip}',    desc: 'Yazı/Tura — "Yazı" veya "Tura" döner',                        category: 'Eğlence' },
+    { label: '{8ball}',       desc: 'Sihirli 8-top yanıtı — rastgele evet/hayır/belirsiz mesaj döner', category: 'Eğlence' },
+    { label: '{lucky}',       desc: 'Günlük şans puanı (1-100 arası)',                               category: 'Eğlence' },
     // Bot Bilgisi
-    { label: '{botName}', desc: 'Bu botun görünen adı', category: 'Bot' },
-    { label: '{botUsername}', desc: 'Bu botun kullanıcı adı', category: 'Bot' },
+    { label: '{botName}',     desc: 'Bu botun görünen adı',                                          category: 'Bot' },
+    { label: '{botUsername}', desc: 'Bu botun kullanıcı adı',                                        category: 'Bot' },
+    { label: '{botVersion}',  desc: 'AuroraChat platform sürümü (ör. v1.2.4)',                       category: 'Bot' },
   ];
 
   const startEditInfo = () => {

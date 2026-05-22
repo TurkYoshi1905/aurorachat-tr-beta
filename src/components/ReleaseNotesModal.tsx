@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Bug, Shield, Star, Search, MessageSquare, Puzzle, Image, Smartphone } from 'lucide-react';
+import { Sparkles, Wrench, Bug, Shield, Crown, Timer, Users, Bot, Search, Globe, Lock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.2';
+const RELEASE_VERSION = '1.2.4';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,59 +18,66 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Puzzle,
-    iconBg: 'bg-primary/15',
-    iconColor: 'text-primary',
-    label: 'Bot komut değişkenleri tam işlevsel: {coinflip}, {date}, {time}, {onlineCount}, {roll}, {randomEmoji} ve daha fazlası artık gerçek verilerle çalışıyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Star,
+    icon: Crown,
     iconBg: 'bg-yellow-500/15',
     iconColor: 'text-yellow-400',
-    label: 'Eklenti Mağazası marketplace yeniden tasarlandı: 3 sütunlu premium grid, detay sayfası, 5 yıldız derecelendirme sistemi.',
+    label: 'Rol hiyerarşisi & dokunulmazlık: Kurucu kullanıcıya hiçbir moderatör işlem uygulayamaz. Aynı veya daha yüksek roldeki moderatörler birbirlerine işlem yapamaz.',
     badge: 'Yeni',
   },
   {
-    icon: MessageSquare,
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    label: 'Eklenti yorum sistemi: her eklentiye yorum ekle, kendi yorumunu düzenle veya sil. Tam CRUD desteği.',
+    icon: Timer,
+    iconBg: 'bg-orange-500/15',
+    iconColor: 'text-orange-400',
+    label: 'Manuel cooldown sistemi: 5 dakikadan 7 güne kadar 9 farklı seçenekle, sebep zorunlu, hiyerarşi korumalı cooldown uygulama.',
     badge: 'Yeni',
+  },
+  {
+    icon: Users,
+    iconBg: 'bg-primary/15',
+    iconColor: 'text-primary',
+    label: 'Moderasyon paneli 3 sütunlu grid: üye kartları, genişletilmiş kontrol menüsü (mod rolleri, ban, premium, cooldown).',
+    badge: 'İyileştirme',
   },
   {
     icon: Search,
     iconBg: 'bg-violet-500/15',
     iconColor: 'text-violet-400',
-    label: 'Eklenti mağazasına akıllı arama barı eklendi — eklenti adı veya açıklamasına göre anlık filtreleme.',
+    label: 'Güvenlik sekmesine kullanıcı arama: kullanıcı adıyla ara ve direkt manuel cooldown uygula.',
     badge: 'Yeni',
   },
   {
-    icon: Image,
+    icon: Bot,
+    iconBg: 'bg-cyan-500/15',
+    iconColor: 'text-cyan-400',
+    label: 'Sunucu üye listesinde özel botlar artık görünüyor: RPC başarılı olduğunda da server_bots dahil ediliyor.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Lock,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Bot profil fotoğrafı senkronizasyon hatası düzeltildi: avatar güncellenince tüm modallarda anında yansıyor.',
+    label: 'Bot avatar yükleme 403 RLS hatası düzeltildi: avatars bucket\'ta bot-avatars/ öneki için storage politikası eklendi.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Globe,
+    iconBg: 'bg-red-500/15',
+    iconColor: 'text-red-400',
+    label: 'Communities/Keşfet SET hatası düzeltildi: get_community_servers() STABLE→VOLATILE, "0A000" hatası giderildi.',
     badge: 'Düzeltme',
   },
   {
     icon: Sparkles,
-    iconBg: 'bg-orange-500/15',
-    iconColor: 'text-orange-400',
-    label: 'Davet sayfası görsel onarımı: gereksiz mavi alan kaldırıldı, sunucu logosu artık doğru ve büyük görüntüleniyor.',
-    badge: 'Düzeltme',
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Bot Geliştirici: {dayOfWeek}, {greeting}, {serverAge}, {8ball}, {lucky}, {botVersion} yeni değişkenleri. Bot Dok\'ta Komutlar sekmesi kaldırıldı, zengin şablon galerisi eklendi.',
+    badge: 'İyileştirme',
   },
   {
-    icon: Smartphone,
-    iconBg: 'bg-blue-500/15',
-    iconColor: 'text-blue-400',
-    label: 'Mobil API Docs taşma düzeltmesi: URL metinleri mobil ekranda taşmadan alt satıra geçiyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Shield,
+    icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'SQL migration v1.2.2: plugin_ratings, plugin_reviews tabloları + RLS politikaları + get_plugin_avg_rating RPC eklendi.',
+    label: 'SQL migration v1.2.4: user_cooldowns tablosu, apply_manual_cooldown/lift_manual_cooldown RPC, get_founder_id(), bot avatar storage politikaları.',
     badge: 'Teknik',
   },
 ];

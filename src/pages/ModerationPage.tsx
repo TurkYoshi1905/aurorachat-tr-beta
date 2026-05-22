@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import AdvancedCooldownModal from '@/components/AdvancedCooldownModal';
 
 const FOUNDER_EMAIL = 'asfurkan140@gmail.com';
 const ACTIVE_PRESENCE_WINDOW_MS = 2 * 60 * 1000;
@@ -132,6 +133,15 @@ const ModerationPage = () => {
   const [myModRole, setMyModRole] = useState<string | null>(null);
   const [assigningUserRole, setAssigningUserRole] = useState<string | null>(null);
 
+  const [founderUserId, setFounderUserId] = useState<string | null>(null);
+  const [cooldownTarget, setCooldownTarget] = useState<UserProfile | null>(null);
+  const [showCooldownModal, setShowCooldownModal] = useState(false);
+  const [securityUserSearch, setSecurityUserSearch] = useState('');
+  const [securitySearchResults, setSecuritySearchResults] = useState<UserProfile[]>([]);
+  const [searchingSecUser, setSearchingSecUser] = useState(false);
+  const [manualCooldowns, setManualCooldowns] = useState<any[]>([]);
+  const [loadingManualCooldowns, setLoadingManualCooldowns] = useState(false);
+
   const canAccess = isAppAdmin || isFounder || !!myModRole;
 
   useEffect(() => {
@@ -145,6 +155,13 @@ const ModerationPage = () => {
         setMyModRole(data?.mod_role || null);
       });
   }, [user]);
+
+  useEffect(() => {
+    if (!canAccess) return;
+    (supabase as any).rpc('get_founder_id').then(({ data }: any) => {
+      if (data) setFounderUserId(data);
+    }).catch(() => {});
+  }, [canAccess]);
 
   const fetchReports = useCallback(async () => {
     setLoadingReports(true);
@@ -429,6 +446,62 @@ const ModerationPage = () => {
     deneme_moderator: { label: 'Deneme Moderatör', color: 'text-emerald-400', bg: 'bg-emerald-500/15', icon: Star, level: 1 },
   };
 
+  const getMyLevel = () => {
+    if (isFounder) return 99;
+    if (isAppAdmin) return 5;
+    return myModRole ? (MOD_ROLE_META[myModRole]?.level || 0) : 0;
+  };
+
+  const isFounderUser = (targetId: string) => founderUserId !== null && targetId === founderUserId;
+
+  const canActOnTarget = (targetId: string): boolean => {
+    if (targetId === user?.id) return false;
+    if (isFounderUser(targetId)) return false;
+    if (isFounder) return true;
+    const myLevel = getMyLevel();
+    const targetRole = userModRoles[targetId];
+    const targetLevel = targetRole ? (MOD_ROLE_META[targetRole]?.level || 0) : 0;
+    return myLevel > targetLevel;
+  };
+
+  const fetchManualCooldowns = useCallback(async () => {
+    if (!canAccess) return;
+    setLoadingManualCooldowns(true);
+    try {
+      const { data } = await (supabase as any)
+        .from('user_cooldowns')
+        .select('*, profile:profiles!user_cooldowns_user_id_fkey(username, display_name, avatar_url), applier:profiles!user_cooldowns_applied_by_fkey(username, display_name)')
+        .eq('active', true)
+        .gt('cooldown_until', new Date().toISOString())
+        .order('cooldown_until', { ascending: false });
+      setManualCooldowns(data || []);
+    } catch { setManualCooldowns([]); }
+    finally { setLoadingManualCooldowns(false); }
+  }, [canAccess]);
+
+  const searchSecurityUser = async () => {
+    if (!securityUserSearch.trim()) return;
+    setSearchingSecUser(true);
+    try {
+      const term = securityUserSearch.trim().replace(/[,%()]/g, '');
+      const { data } = await (supabase as any)
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, is_app_admin, has_premium_badge, status')
+        .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)
+        .limit(8);
+      setSecuritySearchResults(data || []);
+    } finally { setSearchingSecUser(false); }
+  };
+
+  const liftManualCooldown = async (cooldownId: string) => {
+    try {
+      const { data } = await (supabase as any).rpc('lift_manual_cooldown', { p_cooldown_id: cooldownId });
+      if (data?.success === false) { toast.error(data.error || 'Kaldırılamadı'); return; }
+      toast.success('Manuel cooldown kaldırıldı');
+      fetchManualCooldowns();
+    } catch { toast.error('Cooldown kaldırılamadı'); }
+  };
+
   const handleModRoleError = (error: any) => {
     if (!error) return;
     if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('403')) {
@@ -485,7 +558,8 @@ const ModerationPage = () => {
     fetchBannedIps();
     fetchCooldowns();
     fetchModRoles();
-  }, [canAccess, activeTab, fetchBannedIps, fetchCooldowns, fetchModRoles]);
+    fetchManualCooldowns();
+  }, [canAccess, activeTab, fetchBannedIps, fetchCooldowns, fetchModRoles, fetchManualCooldowns]);
 
   const handleUserSearch = async () => fetchUsers();
 
@@ -504,7 +578,8 @@ const ModerationPage = () => {
   };
 
   const togglePremium = async (userId: string, currentValue: boolean) => {
-    if (!isFounder) return;
+    if (!isFounder && !isAppAdmin && !myModRole) return;
+    if (!canActOnTarget(userId)) { toast.error('Bu kullanıcıya işlem uygulama yetkiniz yok'); return; }
     setUpdatingUser(userId);
     const { error } = await (supabase.from('profiles') as any)
       .update({ has_premium_badge: !currentValue }).eq('id', userId);
@@ -517,7 +592,8 @@ const ModerationPage = () => {
   };
 
   const banAccount = async (target: UserProfile) => {
-    if (!isFounder || !user) return;
+    if ((!isFounder && !isAppAdmin && !myModRole) || !user) return;
+    if (!canActOnTarget(target.id)) { toast.error('Bu kullanıcıya işlem uygulama yetkiniz yok'); return; }
     const reason = (banReasons[target.id] || '').trim();
     if (!reason) {
       toast.error('Ban sebebi yazmalısın.');
@@ -542,7 +618,8 @@ const ModerationPage = () => {
   };
 
   const unbanAccount = async (target: UserProfile) => {
-    if (!isFounder) return;
+    if (!isFounder && !isAppAdmin && !myModRole) return;
+    if (!canActOnTarget(target.id)) { toast.error('Bu kullanıcıya işlem uygulama yetkiniz yok'); return; }
     setUpdatingUser(target.id);
     const { error } = await (supabase.from('account_bans') as any)
       .update({ active: false, lifted_at: new Date().toISOString(), lifted_by: user?.id || null })
@@ -607,6 +684,7 @@ const ModerationPage = () => {
   const approveRate = stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0;
 
   return (
+    <>
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-sidebar shrink-0">
@@ -958,7 +1036,7 @@ const ModerationPage = () => {
                   <p className="text-xs text-muted-foreground/60">Arama metnini veya filtreyi değiştirmeyi deneyin.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-3 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
                   {searchResults.map((u) => {
                     const statusMeta = getStatusMeta(u.status);
                     const lastActivity = u.active_session_last_seen || u.last_seen;
@@ -1034,35 +1112,38 @@ const ModerationPage = () => {
 
                       {expandedUser === u.id && u.id !== user?.id && (
                         <div className="border-t border-border p-3 bg-secondary/5 space-y-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <Button
-                              size="sm"
-                              variant={u.is_app_admin ? 'destructive' : 'outline'}
-                              className="flex-1 text-xs h-8 rounded-lg"
-                              disabled={updatingUser === u.id}
-                              onClick={() => toggleAdmin(u.id, u.is_app_admin)}
-                            >
-                              {updatingUser === u.id ? (
-                                <span className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                              ) : u.is_app_admin ? (
-                                <><ShieldOff className="w-3.5 h-3.5 mr-1" /> Admin Yetkisini Kaldır</>
-                              ) : (
-                                <><ShieldCheck className="w-3.5 h-3.5 mr-1" /> Admin Yap</>
-                              )}
-                            </Button>
-                            {isFounder && (
+                          {isFounderUser(u.id) && (
+                            <div className="flex items-center gap-2 rounded-xl bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
+                              <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                              <p className="text-xs text-yellow-400 font-semibold">Kurucu kullanıcı — İşlem uygulanamaz</p>
+                            </div>
+                          )}
+                          {!isFounderUser(u.id) && (
+                          <div className="flex flex-wrap gap-2">
+                            {(isFounder || isAppAdmin || !!myModRole) && canActOnTarget(u.id) && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className={`flex-1 text-xs h-8 rounded-lg ${u.has_premium_badge ? 'text-orange-400 border-orange-400/30 hover:bg-orange-500/10' : 'text-primary border-primary/30 hover:bg-primary/10'}`}
+                                className={`text-xs h-8 rounded-lg ${u.has_premium_badge ? 'text-orange-400 border-orange-400/30 hover:bg-orange-500/10' : 'text-primary border-primary/30 hover:bg-primary/10'}`}
                                 disabled={updatingUser === u.id}
                                 onClick={() => togglePremium(u.id, u.has_premium_badge)}
                               >
                                 {u.has_premium_badge ? '⬇️ Premiumu Kaldır' : '💎 Premium Ver'}
                               </Button>
                             )}
+                            {canActOnTarget(u.id) && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs h-8 rounded-lg text-yellow-400 border-yellow-400/30 hover:bg-yellow-500/10 gap-1"
+                                onClick={() => { setCooldownTarget(u); setShowCooldownModal(true); }}
+                              >
+                                <Timer className="w-3.5 h-3.5" /> Cooldown Uygula
+                              </Button>
+                            )}
                           </div>
-                          {isFounder && (
+                          )}
+                          {(isFounder || isAppAdmin || !!myModRole) && !isFounderUser(u.id) && canActOnTarget(u.id) && (
                             <div className={`rounded-xl border p-3 space-y-2 ${u.is_banned ? 'border-destructive/25 bg-destructive/5' : 'border-border bg-background/40'}`}>
                               <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                 <ShieldAlert className="w-3.5 h-3.5 text-destructive" /> Hesap Ban Yönetimi
@@ -1205,6 +1286,106 @@ const ModerationPage = () => {
                   </div>
                 )}
               </div>
+
+              {/* Manual Cooldown Apply — available to all mod roles */}
+              <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Timer className="w-4 h-4 text-yellow-400" /> Manuel Cooldown Uygula
+                  </p>
+                  <button onClick={fetchManualCooldowns} className="text-muted-foreground hover:text-foreground">
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">Kullanıcı adıyla ara ve rol hiyerarşisi kurallarına göre manuel cooldown uygula. Kurucu kullanıcıya işlem uygulanamaz.</p>
+                <div className="flex gap-2">
+                  <Input
+                    value={securityUserSearch}
+                    onChange={e => setSecurityUserSearch(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && searchSecurityUser()}
+                    placeholder="Kullanıcı adı veya görünen ad..."
+                    className="bg-input h-8 text-sm flex-1"
+                  />
+                  <Button size="sm" onClick={searchSecurityUser} disabled={searchingSecUser} className="h-8 gap-1">
+                    {searchingSecUser ? <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                    Ara
+                  </Button>
+                </div>
+                {securitySearchResults.length > 0 && (
+                  <div className="space-y-2">
+                    {securitySearchResults.map((su) => {
+                      const canAct = canActOnTarget(su.id);
+                      const isFounderTarget = isFounderUser(su.id);
+                      return (
+                        <div key={su.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-border/50 bg-secondary/20">
+                          <div className="w-8 h-8 rounded-full bg-secondary overflow-hidden flex items-center justify-center shrink-0">
+                            {su.avatar_url
+                              ? <img src={su.avatar_url} alt="" className="w-full h-full object-cover" />
+                              : <User className="w-4 h-4 text-muted-foreground" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{su.display_name || su.username}</p>
+                            <p className="text-xs text-muted-foreground">@{su.username}{isFounderTarget ? ' · Kurucu' : ''}</p>
+                          </div>
+                          {isFounderTarget ? (
+                            <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/15 text-yellow-400 font-bold">Bağışık</span>
+                          ) : canAct ? (
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs gap-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
+                              onClick={() => { setCooldownTarget(su); setShowCooldownModal(true); }}
+                            >
+                              <Timer className="w-3 h-3" /> Cooldown
+                            </Button>
+                          ) : (
+                            <span className="text-[10px] px-2 py-1 rounded-full bg-secondary text-muted-foreground">Yetki Yok</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Active Manual Cooldowns */}
+              {manualCooldowns.length > 0 && (
+                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Timer className="w-4 h-4 text-orange-400" /> Aktif Manuel Cooldownlar ({manualCooldowns.length})
+                  </p>
+                  <div className="space-y-2">
+                    {manualCooldowns.map((mc: any) => {
+                      const profile = mc.profile;
+                      const applier = mc.applier;
+                      const remaining = Math.max(0, Math.ceil((new Date(mc.cooldown_until).getTime() - Date.now()) / 60000));
+                      return (
+                        <div key={mc.id} className="flex items-center gap-3 p-3 rounded-xl border border-orange-500/20 bg-orange-500/5">
+                          <div className="w-8 h-8 rounded-full bg-secondary overflow-hidden flex items-center justify-center shrink-0">
+                            {profile?.avatar_url
+                              ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                              : <User className="w-4 h-4 text-muted-foreground" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground">{profile?.display_name || 'Kullanıcı'}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              @{profile?.username} · {mc.reason || 'Sebep yok'} · {remaining} dk kaldı
+                            </p>
+                            {applier && <p className="text-[10px] text-muted-foreground/60">Uygulayan: @{applier.username}</p>}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 shrink-0"
+                            onClick={() => liftManualCooldown(mc.id)}
+                          >
+                            <Unlock className="w-3.5 h-3.5 mr-1" /> Kaldır
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* IP Ban Management */}
               {isFounder && (
@@ -1486,6 +1667,14 @@ const ModerationPage = () => {
         )}
       </div>
     </div>
+
+    <AdvancedCooldownModal
+      open={showCooldownModal}
+      target={cooldownTarget}
+      onClose={() => { setShowCooldownModal(false); setCooldownTarget(null); }}
+      onSuccess={() => { fetchManualCooldowns(); fetchCooldowns(); }}
+    />
+    </>
   );
 };
 

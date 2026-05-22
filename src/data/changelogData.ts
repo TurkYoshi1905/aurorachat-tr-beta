@@ -16,6 +16,46 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.4',
+    date: '22 Mayıs 2026',
+    summary: 'Rol hiyerarşisi ve dokunulmazlık kuralları, sunucu üye listesinde botların görünmesi, bot avatar RLS 403 düzeltmesi, yeni bot değişkenleri, moderasyon 3 sütun grid ve kontrol menüsü, Güvenlik sekmesi kullanıcı arama ve gelişmiş cooldown modalı, Communities SET hatası düzeltmesi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Rol hiyerarşisi ve dokunulmazlık: Kurucu kullanıcıya hiçbir moderatör işlem uygulayamaz. Aynı veya daha yüksek seviyeli mod rolüne sahip kullanıcılar birbirlerine işlem yapamaz.',
+          'Manuel cooldown sistemi: Moderatörler kullanıcılara 5 dakikadan 7 güne kadar süreli cooldown uygulayabilir. Sebep girişi zorunlu. apply_manual_cooldown RPC ile veritabanı seviyesinde hiyerarşi koruması.',
+          'Moderasyon paneli 3 sütunlu grid: Kullanıcılar A-Z sıralı 3 sütunlu kart grid\'e geçti. Üye kartları genişletilince tam kontrol menüsü (mod rolleri, ban, premium, cooldown) açılıyor.',
+          'Bot Geliştirici: {dayOfWeek}, {greeting}, {serverAge}, {8ball}, {lucky}, {botVersion} değişkenleri eklendi. Bot Dok modalında Komutlar sekmesi kaldırıldı, yeni zengin değişken paneli.',
+          'Güvenlik sekmesi: Kullanıcı arama barı — @kullanıcı adı veya görünen adla ara, bulunan kullanıcıya direkt manuel cooldown uygula.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Communities/Keşfet sayfası SET hatası düzeltildi: get_community_servers() STABLE→VOLATILE değiştirildi, PostgreSQL "SET is not allowed in a non-volatile function (0A000)" hatası giderildi.',
+          'Sunucu üye listesinde özel botlar görünmüyor hatasına tam çözüm: RPC başarılı olduğunda da server_bots ayrıca sorgulanarak üye listesine ekleniyor.',
+          'Bot avatar yükleme 403 RLS hatası düzeltildi: avatars bucket\'a bot-avatars/ önekiyle yükleme için storage politikası eklendi.',
+          'Moderasyon panelinden "Admin Yap/Kaldır" büyük butonu kaldırıldı; yerine daha zarif ve hiyerarşi-duyarlı kontrol menüsü.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'SQL migration v1.2.4: user_cooldowns tablosu, apply_manual_cooldown/lift_manual_cooldown RPC\'leri, get_founder_id() yardımcı fonksiyonu, bot avatar storage politikaları, account_bans hiyerarşi politikası.',
+          'Bot Dok modalı yeniden tasarlandı: Komutlar sekmesi kaldırıldı, zengin değişken kategorileri (Genel/Sunucu/Eğlence/Bot) ve hazır komut şablonları eklendi.',
+          'AdvancedCooldownModal.tsx yeni bileşeni: süre seçici (9 seçenek), sebep girişi, apply_manual_cooldown RPC entegrasyonu.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.2',
     date: '20 Mayıs 2026',
     summary: 'Bot değişkenleri tam işlevsellik (coinflip, date, onlineCount, roll, randomEmoji vb.), Eklenti Mağazası marketplace yeniden tasarımı (3 sütun grid, arama, detay sayfası, yıldızlama ve yorum sistemi), bot avatar senkronizasyon düzeltmesi, davet sayfası görsel onarımı ve mobil API dokümantasyon taşma düzeltmesi.',
