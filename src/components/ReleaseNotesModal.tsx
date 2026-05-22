@@ -5,7 +5,7 @@ import { Sparkles, Wrench, Bug, Shield, Crown, Timer, Users, Bot, Search, Globe,
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.4';
+const RELEASE_VERSION = '1.2.3';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -77,7 +77,7 @@ const features: Feature[] = [
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'SQL migration v1.2.4: user_cooldowns tablosu, apply_manual_cooldown/lift_manual_cooldown RPC, get_founder_id(), bot avatar storage politikaları.',
+    label: 'SQL migration v1.2.3: user_cooldowns tablosu, apply_manual_cooldown/lift_manual_cooldown RPC, get_founder_id(), bot avatar storage politikaları.',
     badge: 'Teknik',
   },
 ];

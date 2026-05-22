@@ -797,7 +797,7 @@ const Index = () => {
           id: m.id,
           author: deletedAuthor || liveName,
           avatar: (deletedAuthor ? 'D' : liveName).charAt(0).toUpperCase(),
-          avatarUrl: isCustomBot ? ((m as any).bot_avatar_url || null) : (isBot ? '/aurora-bot-avatar.jpg' : (m.user_id ? (avatarMap.get(m.user_id) || null) : null)),
+          avatarUrl: isCustomBot ? (((m as any).bots as any)?.avatar_url || (m as any).bot_avatar_url || null) : (isBot ? '/aurora-bot-avatar.jpg' : (m.user_id ? (avatarMap.get(m.user_id) || null) : null)),
           userId: isBot ? 'aurora-bot' : (m.user_id || (m as any).deleted_user_id || 'deleted-user'),
           isBot,
           botId: isCustomBot ? ((m as any).bot_id || undefined) : undefined,
@@ -815,7 +815,7 @@ const Index = () => {
     const fetchMessages = async () => {
       const { data } = await supabase
         .from('messages')
-        .select('id, channel_id, user_id, content, inserted_at, updated_at, author_name, is_bot, bot_id, attachments, reply_to, is_pinned, parent_id, deleted_user_id')
+        .select('id, channel_id, user_id, content, inserted_at, updated_at, author_name, is_bot, bot_id, attachments, reply_to, is_pinned, parent_id, deleted_user_id, bots:bots!messages_bot_id_fkey(avatar_url, name)')
         .eq('channel_id', activeChannel)
         .order('inserted_at', { ascending: false })
         .limit(PAGE_SIZE)
@@ -873,7 +873,7 @@ const Index = () => {
           id: m.id,
           author: deletedAuthor || liveName,
           avatar: (deletedAuthor ? 'D' : liveName).charAt(0).toUpperCase(),
-          avatarUrl: isCustomBot ? (m.bot_avatar_url || null) : (isBot ? '/aurora-bot-avatar.jpg' : (m.user_id ? (avatarMap.get(m.user_id) || null) : null)),
+          avatarUrl: isCustomBot ? ((m.bots as any)?.avatar_url || m.bot_avatar_url || null) : (isBot ? '/aurora-bot-avatar.jpg' : (m.user_id ? (avatarMap.get(m.user_id) || null) : null)),
           userId: isBot ? 'aurora-bot' : (m.user_id || m.deleted_user_id || 'deleted-user'),
           isBot, botId: isCustomBot ? (m.bot_id || undefined) : undefined, content,
           timestamp: formatTimestamp(m.inserted_at),
@@ -894,7 +894,7 @@ const Index = () => {
 
         supabase
           .from('messages')
-          .select('id, channel_id, user_id, content, inserted_at, updated_at, author_name, is_bot, bot_id, attachments, reply_to, is_pinned, parent_id, deleted_user_id')
+          .select('id, channel_id, user_id, content, inserted_at, updated_at, author_name, is_bot, bot_id, attachments, reply_to, is_pinned, parent_id, deleted_user_id, bots:bots!messages_bot_id_fkey(avatar_url, name)')
           .eq('channel_id', activeChannel)
           .lt('inserted_at', oldestTs)
           .order('inserted_at', { ascending: false })

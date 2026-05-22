@@ -16,7 +16,7 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
-    version: '1.2.4',
+    version: '1.2.3',
     date: '22 Mayıs 2026',
     summary: 'Rol hiyerarşisi ve dokunulmazlık kuralları, sunucu üye listesinde botların görünmesi, bot avatar RLS 403 düzeltmesi, yeni bot değişkenleri, moderasyon 3 sütun grid ve kontrol menüsü, Güvenlik sekmesi kullanıcı arama ve gelişmiş cooldown modalı, Communities SET hatası düzeltmesi.',
     sections: [
@@ -48,7 +48,7 @@ export const changelogData: ChangelogRelease[] = [
         icon: Wrench,
         color: 'text-muted-foreground',
         items: [
-          'SQL migration v1.2.4: user_cooldowns tablosu, apply_manual_cooldown/lift_manual_cooldown RPC\'leri, get_founder_id() yardımcı fonksiyonu, bot avatar storage politikaları, account_bans hiyerarşi politikası.',
+          'SQL migration v1.2.3: user_cooldowns tablosu, apply_manual_cooldown/lift_manual_cooldown RPC\'leri, get_founder_id() yardımcı fonksiyonu, bot avatar storage politikaları, account_bans hiyerarşi politikası.',
           'Bot Dok modalı yeniden tasarlandı: Komutlar sekmesi kaldırıldı, zengin değişken kategorileri (Genel/Sunucu/Eğlence/Bot) ve hazır komut şablonları eklendi.',
           'AdvancedCooldownModal.tsx yeni bileşeni: süre seçici (9 seçenek), sebep girişi, apply_manual_cooldown RPC entegrasyonu.',
         ],
