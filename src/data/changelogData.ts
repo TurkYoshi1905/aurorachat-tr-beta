@@ -16,20 +16,17 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
-    version: '1.2.3',
+    version: '1.2.4',
     date: '22 Mayıs 2026',
-    summary: 'Rol hiyerarşisi ve dokunulmazlık kuralları, sunucu üye listesinde botların görünmesi, bot avatar RLS 403 düzeltmesi, yeni bot değişkenleri, moderasyon 3 sütun grid ve kontrol menüsü, Güvenlik sekmesi kullanıcı arama ve gelişmiş cooldown modalı, Communities SET hatası düzeltmesi.',
+    summary: 'Moderasyon paneli Dialog modal yeniden tasarımı, bot değişken motoru düzeltmesi (6 eksik + 5 yeni değişken), bot avatar sohbette görünüyor (send_bot_response p_bot_id), cooldown engeli sunucu oluşturmayı da bloke ediyor.',
     sections: [
       {
         title: 'Yeni Özellikler',
         icon: Sparkles,
         color: 'text-primary',
         items: [
-          'Rol hiyerarşisi ve dokunulmazlık: Kurucu kullanıcıya hiçbir moderatör işlem uygulayamaz. Aynı veya daha yüksek seviyeli mod rolüne sahip kullanıcılar birbirlerine işlem yapamaz.',
-          'Manuel cooldown sistemi: Moderatörler kullanıcılara 5 dakikadan 7 güne kadar süreli cooldown uygulayabilir. Sebep girişi zorunlu. apply_manual_cooldown RPC ile veritabanı seviyesinde hiyerarşi koruması.',
-          'Moderasyon paneli 3 sütunlu grid: Kullanıcılar A-Z sıralı 3 sütunlu kart grid\'e geçti. Üye kartları genişletilince tam kontrol menüsü (mod rolleri, ban, premium, cooldown) açılıyor.',
-          'Bot Geliştirici: {dayOfWeek}, {greeting}, {serverAge}, {8ball}, {lucky}, {botVersion} değişkenleri eklendi. Bot Dok modalında Komutlar sekmesi kaldırıldı, yeni zengin değişken paneli.',
-          'Güvenlik sekmesi: Kullanıcı arama barı — @kullanıcı adı veya görünen adla ara, bulunan kullanıcıya direkt manuel cooldown uygula.',
+          '5 yeni bot değişkeni: {weather} rastgele hava durumu, {motivate} motivasyon sözü, {tip} günlük ipucu, {mood} ruh hali emojisi, {horoscope} rastgele burç — tümü gerçek zamanlı ve rastgele.',
+          'Cooldown engeli sunucu oluşturmayı da bloke ediyor: CooldownBlockModal artık CreateServerDialog\'dan da tetikleniyor (sebep + geri sayım).',
         ],
       },
       {
@@ -37,10 +34,9 @@ export const changelogData: ChangelogRelease[] = [
         icon: Bug,
         color: 'text-red-400',
         items: [
-          'Communities/Keşfet sayfası SET hatası düzeltildi: get_community_servers() STABLE→VOLATILE değiştirildi, PostgreSQL "SET is not allowed in a non-volatile function (0A000)" hatası giderildi.',
-          'Sunucu üye listesinde özel botlar görünmüyor hatasına tam çözüm: RPC başarılı olduğunda da server_bots ayrıca sorgulanarak üye listesine ekleniyor.',
-          'Bot avatar yükleme 403 RLS hatası düzeltildi: avatars bucket\'a bot-avatars/ önekiyle yükleme için storage politikası eklendi.',
-          'Moderasyon panelinden "Admin Yap/Kaldır" büyük butonu kaldırıldı; yerine daha zarif ve hiyerarşi-duyarlı kontrol menüsü.',
+          'Bot değişken motoru tam düzeltmesi: {dayOfWeek}/{greeting}/{serverAge}/{8ball}/{lucky}/{botVersion} artık gerçek değerler döndürüyor. Sunucu sorgusu created_at\'ı da çekiyor, serverAgeDays hesaplama eklendi.',
+          'Bot avatar sohbette görünüyor: send_bot_response RPC\'ye p_bot_id parametresi eklendi; ChatArea.tsx bu değeri geçiyor. FK join (bots!messages_bot_id_fkey) doğru çalışıyor.',
+          'Moderasyon paneli inline genişleme kaldırıldı: md:col-span-3 sütun bozulması ortadan kalktı. Kullanıcı yönetimi artık kompakt Dialog modal üzerinden.',
         ],
       },
       {
@@ -48,15 +44,10 @@ export const changelogData: ChangelogRelease[] = [
         icon: Wrench,
         color: 'text-muted-foreground',
         items: [
-          'SQL migration v1.2.3: user_cooldowns tablosu, apply_manual_cooldown/lift_manual_cooldown RPC\'leri, get_founder_id() yardımcı fonksiyonu, bot avatar storage politikaları, account_bans hiyerarşi politikası.',
-          'Bot Dok modalı yeniden tasarlandı: Komutlar sekmesi kaldırıldı, zengin değişken kategorileri (Genel/Sunucu/Eğlence/Bot) ve hazır komut şablonları eklendi.',
-          'AdvancedCooldownModal.tsx yeni bileşeni: süre seçici (9 seçenek), sebep girişi, apply_manual_cooldown RPC entegrasyonu.',
-          'Cooldown uygulama: cooldown alan kullanıcı mesaj atamaz (metin/resim/emoji/GIF dahil), sunucu oluşturamaz. Her ikisinde gelişmiş modal gösterilir (sebep + kalan süre sayacı).',
-          'useCooldown.ts hook: user_cooldowns + rate_limit_cooldowns tablolarını anlık izler, realtime Supabase aboneliği ile anında güncellenir.',
-          'CooldownBlockModal.tsx: Mesaj/sunucu işlemini neden yapamadığını, sebebi ve geri sayım sayacını gösteren modal.',
-          'ModerationPage grid düzeltmesi: Kullanıcı kartı açılınca md:col-span-3 alarak 3 sütunu tam kaplar, yan kart boşlukları oluşmaz.',
-          'ReleaseNotesModal mobil dikey düzeltmesi: max-h-[90dvh] ve flex-col ile modal artık küçük ekranlarda taşmıyor.',
-          'SQL migration 20260522200000: get_my_active_cooldown() SECURITY DEFINER RPC, cooldown tablo SELECT politika garantileri, realtime abonelik garantisi.',
+          'SQL migration 20260522300000: send_bot_response(p_bot_id UUID DEFAULT NULL) güncellendi, bots public okuma politikası, idx_bots_id_covering ve idx_messages_bot_id_fk indexleri, get_my_active_cooldown() SECURITY DEFINER RPC.',
+          'ModerationPage.tsx: expandedUser inline expansion tamamen kaldırıldı; selectedUser: UserProfile | null state eklendi; Dialog/DialogContent/DialogHeader/DialogTitle importları; kullanıcı kartlarında ⚙️ Settings ikonu.',
+          'botCommands.ts: tüm 11 değişken replace zincirine eklendi; server query created_at içeriyor; DAYS_TR/BALL_ANSWERS/WEATHERS/MOTIVATES/TIPS/MOODS/HOROSCOPES dizileri.',
+          'ChatArea.tsx: send_bot_response RPC çağrısına ...(response.botId ? { p_bot_id: response.botId } : {}) spread eklendi.',
         ],
       },
     ],

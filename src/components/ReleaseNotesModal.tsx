@@ -5,7 +5,7 @@ import { Sparkles, Wrench, Bug, Shield, Crown, Timer, Users, Bot, Search, Globe,
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.3';
+const RELEASE_VERSION = '1.2.4';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,66 +18,45 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Crown,
-    iconBg: 'bg-yellow-500/15',
-    iconColor: 'text-yellow-400',
-    label: 'Rol hiyerarşisi & dokunulmazlık: Kurucu kullanıcıya hiçbir moderatör işlem uygulayamaz. Aynı veya daha yüksek roldeki moderatörler birbirlerine işlem yapamaz.',
-    badge: 'Yeni',
-  },
-  {
-    icon: Timer,
-    iconBg: 'bg-orange-500/15',
-    iconColor: 'text-orange-400',
-    label: 'Manuel cooldown sistemi: 5 dakikadan 7 güne kadar 9 farklı seçenekle, sebep zorunlu, hiyerarşi korumalı cooldown uygulama.',
-    badge: 'Yeni',
-  },
-  {
     icon: Users,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Moderasyon paneli 3 sütunlu grid: üye kartları, genişletilmiş kontrol menüsü (mod rolleri, ban, premium, cooldown).',
+    label: 'Moderasyon paneli: kullanıcı kartlarından inline genişleme kaldırıldı, ⚙️ butonu açık ve kompakt Dialog modal ile değiştirildi.',
     badge: 'İyileştirme',
   },
   {
-    icon: Search,
+    icon: Bot,
     iconBg: 'bg-violet-500/15',
     iconColor: 'text-violet-400',
-    label: 'Güvenlik sekmesine kullanıcı arama: kullanıcı adıyla ara ve direkt manuel cooldown uygula.',
-    badge: 'Yeni',
+    label: 'Bot değişkenleri düzeltildi: {dayOfWeek}, {greeting}, {serverAge}, {8ball}, {lucky}, {botVersion} artık gerçek değerleri döndürüyor.',
+    badge: 'Düzeltme',
   },
   {
-    icon: Bot,
+    icon: Sparkles,
     iconBg: 'bg-cyan-500/15',
     iconColor: 'text-cyan-400',
-    label: 'Sunucu üye listesinde özel botlar artık görünüyor: RPC başarılı olduğunda da server_bots dahil ediliyor.',
-    badge: 'Düzeltme',
+    label: '5 yeni bot değişkeni: {weather} hava durumu, {motivate} motivasyon, {tip} günlük ipucu, {mood} ruh hali, {horoscope} burç.',
+    badge: 'Yeni',
   },
   {
     icon: Lock,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Bot avatar yükleme 403 RLS hatası düzeltildi: avatars bucket\'ta bot-avatars/ öneki için storage politikası eklendi.',
+    label: 'Bot avatar sohbette görünüyor: send_bot_response RPC\'ye p_bot_id eklendi, FK join ile bot avatar ve adı mesajda gösteriliyor.',
     badge: 'Düzeltme',
   },
   {
-    icon: Globe,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'Communities/Keşfet SET hatası düzeltildi: get_community_servers() STABLE→VOLATILE, "0A000" hatası giderildi.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Sparkles,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Bot Geliştirici: {dayOfWeek}, {greeting}, {serverAge}, {8ball}, {lucky}, {botVersion} yeni değişkenleri. Bot Dok\'ta Komutlar sekmesi kaldırıldı, zengin şablon galerisi eklendi.',
+    icon: Timer,
+    iconBg: 'bg-orange-500/15',
+    iconColor: 'text-orange-400',
+    label: 'Cooldown engeli: cooldown alan kullanıcı mesaj gönderemez ve sunucu oluşturamaz. Kalan süre sayacı ile açıklayıcı modal gösterilir.',
     badge: 'İyileştirme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'SQL migration v1.2.3: user_cooldowns tablosu, apply_manual_cooldown/lift_manual_cooldown RPC, get_founder_id(), bot avatar storage politikaları.',
+    label: 'SQL migration v1.2.4: send_bot_response p_bot_id parametresi, bots tablosu public okuma politikası, bot FK index, get_my_active_cooldown RPC.',
     badge: 'Teknik',
   },
 ];

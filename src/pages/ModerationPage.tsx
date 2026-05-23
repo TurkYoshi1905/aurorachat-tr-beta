@@ -9,11 +9,12 @@ import {
   ShieldCheck, ShieldOff, ChevronDown, ChevronUp, MessageSquare,
   AlertTriangle, Zap, User, Filter, TrendingUp, Activity, Ban,
   Hash, Globe, UserX, Unlock, Radio, ShieldAlert, Timer, Globe2,
-  Star,
+  Star, Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AdvancedCooldownModal from '@/components/AdvancedCooldownModal';
 
 const FOUNDER_EMAIL = 'asfurkan140@gmail.com';
@@ -109,6 +110,7 @@ const ModerationPage = () => {
   const [userFilter, setUserFilter] = useState<'all' | 'admins' | 'banned'>('all');
   const [updatingUser, setUpdatingUser] = useState<string | null>(null);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [banReasons, setBanReasons] = useState<Record<string, string>>({});
 
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, users: 0, admins: 0, banned: 0, online: 0 });
@@ -1041,7 +1043,7 @@ const ModerationPage = () => {
                     const statusMeta = getStatusMeta(u.status);
                     const lastActivity = u.active_session_last_seen || u.last_seen;
                     return (
-                    <div key={u.id} className={`self-start rounded-2xl border bg-card overflow-hidden transition-all hover:border-primary/40 ${expandedUser === u.id ? 'md:col-span-3' : ''} ${u.is_banned ? 'border-destructive/40 shadow-[0_0_0_1px_rgba(239,68,68,0.08)]' : 'border-border'}`}>
+                    <div key={u.id} className={`self-start rounded-2xl border bg-card overflow-hidden transition-all hover:border-primary/40 ${u.is_banned ? 'border-destructive/40 shadow-[0_0_0_1px_rgba(239,68,68,0.08)]' : 'border-border'}`}>
                       <div className="flex items-center gap-3 p-3.5">
                         <div className="relative w-11 h-11 rounded-full bg-secondary flex items-center justify-center shrink-0 overflow-hidden border border-border/50">
                           {u.avatar_url ? (
@@ -1103,122 +1105,14 @@ const ModerationPage = () => {
                           )}
                         </div>
                         <button
-                          onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
-                          className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                          onClick={() => setSelectedUser(u)}
+                          className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors shrink-0"
+                          title="Kullanıcıyı Yönet"
                         >
-                          {expandedUser === u.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          <Settings className="w-4 h-4" />
                         </button>
                       </div>
 
-                      {expandedUser === u.id && u.id !== user?.id && (
-                        <div className="border-t border-border p-3 bg-secondary/5 space-y-2">
-                          {isFounderUser(u.id) && (
-                            <div className="flex items-center gap-2 rounded-xl bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
-                              <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                              <p className="text-xs text-yellow-400 font-semibold">Kurucu kullanıcı — İşlem uygulanamaz</p>
-                            </div>
-                          )}
-                          {!isFounderUser(u.id) && (
-                          <div className="flex flex-wrap gap-2">
-                            {(isFounder || isAppAdmin || !!myModRole) && canActOnTarget(u.id) && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className={`text-xs h-8 rounded-lg ${u.has_premium_badge ? 'text-orange-400 border-orange-400/30 hover:bg-orange-500/10' : 'text-primary border-primary/30 hover:bg-primary/10'}`}
-                                disabled={updatingUser === u.id}
-                                onClick={() => togglePremium(u.id, u.has_premium_badge)}
-                              >
-                                {u.has_premium_badge ? '⬇️ Premiumu Kaldır' : '💎 Premium Ver'}
-                              </Button>
-                            )}
-                            {canActOnTarget(u.id) && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs h-8 rounded-lg text-yellow-400 border-yellow-400/30 hover:bg-yellow-500/10 gap-1"
-                                onClick={() => { setCooldownTarget(u); setShowCooldownModal(true); }}
-                              >
-                                <Timer className="w-3.5 h-3.5" /> Cooldown Uygula
-                              </Button>
-                            )}
-                          </div>
-                          )}
-                          {(isFounder || isAppAdmin || !!myModRole) && !isFounderUser(u.id) && canActOnTarget(u.id) && (
-                            <div className={`rounded-xl border p-3 space-y-2 ${u.is_banned ? 'border-destructive/25 bg-destructive/5' : 'border-border bg-background/40'}`}>
-                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                                <ShieldAlert className="w-3.5 h-3.5 text-destructive" /> Hesap Ban Yönetimi
-                              </p>
-                              {u.is_banned ? (
-                                <div className="space-y-2">
-                                  <p className="text-xs text-muted-foreground">
-                                    Bu kullanıcı giriş yapamaz. Sebep: <span className="text-destructive">{u.ban_reason || 'Sebep belirtilmedi'}</span>
-                                  </p>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="w-full h-8 rounded-lg text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-                                    disabled={updatingUser === u.id}
-                                    onClick={() => unbanAccount(u)}
-                                  >
-                                    <Unlock className="w-3.5 h-3.5 mr-1" /> Banı Kaldır
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="space-y-2">
-                                  <Input
-                                    value={banReasons[u.id] || ''}
-                                    onChange={(e) => setBanReasons(prev => ({ ...prev, [u.id]: e.target.value }))}
-                                    placeholder="Ban sebebi yaz..."
-                                    className="h-8 rounded-lg text-xs bg-input"
-                                  />
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    className="w-full h-8 rounded-lg text-xs"
-                                    disabled={updatingUser === u.id}
-                                    onClick={() => banAccount(u)}
-                                  >
-                                    <UserX className="w-3.5 h-3.5 mr-1" /> Hesabı Banla
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {(isFounder || isAppAdmin) && (
-                            <div className="rounded-xl border border-border bg-background/40 p-3 space-y-2">
-                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                                <Crown className="w-3.5 h-3.5 text-yellow-400" /> Moderasyon Rolü
-                              </p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {Object.entries(MOD_ROLE_META).map(([key, meta]) => {
-                                  const isActive = userModRoles[u.id] === key;
-                                  const RoleIcon = meta.icon;
-                                  return (
-                                    <button
-                                      key={key}
-                                      onClick={() => assignUserModRoleInline(u.id, key)}
-                                      disabled={assigningUserRole === u.id}
-                                      className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full border transition-all ${
-                                        isActive
-                                          ? `${meta.bg} ${meta.color} border-current/40 shadow-sm`
-                                          : 'bg-secondary text-muted-foreground border-border hover:bg-secondary/80'
-                                      }`}
-                                    >
-                                      <RoleIcon className="w-2.5 h-2.5" />
-                                      {meta.label}
-                                      {isActive && ' ✓'}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                              {userModRoles[u.id] && (
-                                <p className="text-[10px] text-muted-foreground">Aktif rol: <span className={MOD_ROLE_META[userModRoles[u.id]]?.color}>{MOD_ROLE_META[userModRoles[u.id]]?.label}</span> — tekrar tıklayarak kaldırabilirsin.</p>
-                              )}
-                            </div>
-                          )}
-                          <p className="text-[10px] text-muted-foreground/60">ID: {u.id}</p>
-                        </div>
-                      )}
                     </div>
                   )})}
                 </div>
@@ -1667,6 +1561,153 @@ const ModerationPage = () => {
         )}
       </div>
     </div>
+
+    {/* ── User Control Modal ─────────────────────────────────────── */}
+    <Dialog open={!!selectedUser} onOpenChange={(v) => { if (!v) setSelectedUser(null); }}>
+      <DialogContent className="max-w-sm max-h-[90dvh] overflow-y-auto">
+        {selectedUser && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center overflow-hidden border border-border/50 shrink-0">
+                  {selectedUser.avatar_url
+                    ? <img src={selectedUser.avatar_url} alt="" className="w-full h-full object-cover" />
+                    : <User className="w-5 h-5 text-muted-foreground" />}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold truncate">{selectedUser.display_name || selectedUser.username}</p>
+                  <p className="text-xs text-muted-foreground">@{selectedUser.username}</p>
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-1">
+              {selectedUser.email && (
+                <p className="text-xs text-muted-foreground bg-secondary/30 rounded-lg px-3 py-2">{selectedUser.email}</p>
+              )}
+
+              {/* Founder protection */}
+              {isFounderUser(selectedUser.id) && (
+                <div className="flex items-center gap-2 rounded-xl bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
+                  <Crown className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                  <p className="text-xs text-yellow-400 font-semibold">Kurucu kullanıcı — İşlem uygulanamaz</p>
+                </div>
+              )}
+
+              {/* Self guard */}
+              {selectedUser.id === user?.id && !isFounderUser(selectedUser.id) && (
+                <p className="text-xs text-muted-foreground text-center py-2">Kendi hesabınıza işlem uygulanamaz.</p>
+              )}
+
+              {/* Action area */}
+              {selectedUser.id !== user?.id && !isFounderUser(selectedUser.id) && (
+                <>
+                  {/* Quick actions */}
+                  <div className="flex flex-wrap gap-2">
+                    {(isFounder || isAppAdmin || !!myModRole) && canActOnTarget(selectedUser.id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`text-xs h-8 rounded-lg ${selectedUser.has_premium_badge ? 'text-orange-400 border-orange-400/30 hover:bg-orange-500/10' : 'text-primary border-primary/30 hover:bg-primary/10'}`}
+                        disabled={updatingUser === selectedUser.id}
+                        onClick={() => togglePremium(selectedUser.id, selectedUser.has_premium_badge)}
+                      >
+                        {selectedUser.has_premium_badge ? '⬇️ Premiumu Kaldır' : '💎 Premium Ver'}
+                      </Button>
+                    )}
+                    {canActOnTarget(selectedUser.id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-8 rounded-lg text-yellow-400 border-yellow-400/30 hover:bg-yellow-500/10 gap-1"
+                        onClick={() => { setCooldownTarget(selectedUser); setShowCooldownModal(true); setSelectedUser(null); }}
+                      >
+                        <Timer className="w-3.5 h-3.5" /> Cooldown Uygula
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Ban management */}
+                  {(isFounder || isAppAdmin || !!myModRole) && canActOnTarget(selectedUser.id) && (
+                    <div className={`rounded-xl border p-3 space-y-2 ${selectedUser.is_banned ? 'border-destructive/25 bg-destructive/5' : 'border-border bg-background/40'}`}>
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <ShieldAlert className="w-3.5 h-3.5 text-destructive" /> Hesap Ban Yönetimi
+                      </p>
+                      {selectedUser.is_banned ? (
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">Sebep: <span className="text-destructive">{selectedUser.ban_reason || 'Belirtilmedi'}</span></p>
+                          <Button
+                            size="sm" variant="outline"
+                            className="w-full h-8 rounded-lg text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                            disabled={updatingUser === selectedUser.id}
+                            onClick={() => unbanAccount(selectedUser)}
+                          >
+                            <Unlock className="w-3.5 h-3.5 mr-1" /> Banı Kaldır
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Input
+                            value={banReasons[selectedUser.id] || ''}
+                            onChange={(e) => setBanReasons(prev => ({ ...prev, [selectedUser.id]: e.target.value }))}
+                            placeholder="Ban sebebi yaz..."
+                            className="h-8 rounded-lg text-xs bg-input"
+                          />
+                          <Button
+                            size="sm" variant="destructive"
+                            className="w-full h-8 rounded-lg text-xs"
+                            disabled={updatingUser === selectedUser.id}
+                            onClick={() => banAccount(selectedUser)}
+                          >
+                            <UserX className="w-3.5 h-3.5 mr-1" /> Hesabı Banla
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mod role */}
+                  {(isFounder || isAppAdmin) && (
+                    <div className="rounded-xl border border-border bg-background/40 p-3 space-y-2">
+                      <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                        <Crown className="w-3.5 h-3.5 text-yellow-400" /> Moderasyon Rolü
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {Object.entries(MOD_ROLE_META).map(([key, meta]) => {
+                          const isActive = userModRoles[selectedUser.id] === key;
+                          const RoleIcon = meta.icon;
+                          return (
+                            <button
+                              key={key}
+                              onClick={() => assignUserModRoleInline(selectedUser.id, key)}
+                              disabled={assigningUserRole === selectedUser.id}
+                              className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full border transition-all ${
+                                isActive
+                                  ? `${meta.bg} ${meta.color} border-current/40 shadow-sm`
+                                  : 'bg-secondary text-muted-foreground border-border hover:bg-secondary/80'
+                              }`}
+                            >
+                              <RoleIcon className="w-2.5 h-2.5" />
+                              {meta.label}
+                              {isActive && ' ✓'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {userModRoles[selectedUser.id] && (
+                        <p className="text-[10px] text-muted-foreground">Aktif: <span className={MOD_ROLE_META[userModRoles[selectedUser.id]]?.color}>{MOD_ROLE_META[userModRoles[selectedUser.id]]?.label}</span> — tekrar tıklayarak kaldır.</p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              <p className="text-[10px] text-muted-foreground/50 font-mono">ID: {selectedUser.id}</p>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
 
     <AdvancedCooldownModal
       open={showCooldownModal}

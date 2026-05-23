@@ -453,6 +453,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
           p_server_id: serverId,
           p_author_name: response.botName || 'AuroraChat Bot',
           p_content: response.content,
+          ...(response.botId ? { p_bot_id: response.botId } : {}),
         });
         if (botInsertError) {
           console.error('[Bot] send_bot_response RPC failed:', botInsertError);

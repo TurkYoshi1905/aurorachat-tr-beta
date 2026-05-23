@@ -299,7 +299,7 @@ const Landing = () => {
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="font-semibold text-foreground">AuroraChat</span>
-            <span>• v1.2.3</span>
+            <span>• v1.2.4</span>
           </div>
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/privacy')} className="hover:text-foreground transition-colors">Gizlilik Politikası</button>

@@ -313,11 +313,24 @@ export async function executeBotCommand(
                   .eq('server_id', ctx.serverId);
                 const serverDataRes = await supabase
                   .from('servers')
-                  .select('name')
+                  .select('name, created_at')
                   .eq('id', ctx.serverId)
                   .single();
                 const memberCount = memberCountRes.count ?? 0;
                 const serverName = (serverDataRes.data as any)?.name ?? '';
+                const serverCreatedAt = (serverDataRes.data as any)?.created_at;
+                const serverAgeDays = serverCreatedAt
+                  ? Math.floor((Date.now() - new Date(serverCreatedAt).getTime()) / (1000 * 60 * 60 * 24))
+                  : 0;
+                const DAYS_TR = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+                const curHour = new Date().getHours();
+                const greetingStr = curHour < 6 ? 'İyi geceler' : curHour < 12 ? 'İyi sabahlar' : curHour < 17 ? 'İyi günler' : curHour < 21 ? 'İyi akşamlar' : 'İyi geceler';
+                const BALL_ANSWERS = ['Evet, kesinlikle!', 'Evet', 'Muhtemelen evet', 'Belirsiz...', 'Şüpheli görünüyor', 'Hayır', 'Kesinlikle hayır', 'Daha sonra sor'];
+                const WEATHERS = ['☀️ Güneşli', '⛅ Parçalı bulutlu', '🌧️ Yağmurlu', '❄️ Karlı', '🌩️ Fırtınalı', '🌤️ Az bulutlu'];
+                const MOTIVATES = ['Başarı, vazgeçmeyenlerin hakkıdır! 💪', 'Her gün bir adım daha! 🚀', 'Hedeflerin seni bekliyor! 🎯', 'Bugün harika bir gün olacak! ✨'];
+                const TIPS = ['Düzenli mola vermek verimliliği artırır.', 'Su içmeyi unutma! 💧', 'Küçük adımlar büyük sonuçlar doğurur.', '8 saat uyku beyin için şarttır. 😴'];
+                const MOODS = ['😊 Neşeli', '😤 Kararlı', '😴 Uykulu', '🤩 Heyecanlı', '😌 Sakin', '🥳 Kutlama modunda', '🤔 Düşünceli'];
+                const HOROSCOPES = ['♈ Koç', '♉ Boğa', '♊ İkizler', '♋ Yengeç', '♌ Aslan', '♍ Başak', '♎ Terazi', '♏ Akrep', '♐ Yay', '♑ Oğlak', '♒ Kova', '♓ Balık'];
                   const now = new Date();
                 const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
                 const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '.');
@@ -345,7 +358,18 @@ export async function executeBotCommand(
                   .replace(/\{roll\}/g, String(Math.floor(Math.random() * 6) + 1))
                   .replace(/\{coinflip\}/g, Math.random() < 0.5 ? 'Yazı' : 'Tura')
                   .replace(/\{botName\}/g, bot.name || '')
-                  .replace(/\{botUsername\}/g, (bot as any).username || '');
+                  .replace(/\{botUsername\}/g, (bot as any).username || '')
+                  .replace(/\{dayOfWeek\}/g, DAYS_TR[new Date().getDay()])
+                  .replace(/\{greeting\}/g, greetingStr)
+                  .replace(/\{serverAge\}/g, `${serverAgeDays} gün`)
+                  .replace(/\{8ball\}/g, BALL_ANSWERS[Math.floor(Math.random() * BALL_ANSWERS.length)])
+                  .replace(/\{lucky\}/g, String(Math.floor(Math.random() * 100) + 1))
+                  .replace(/\{botVersion\}/g, 'v1.2.4')
+                  .replace(/\{weather\}/g, WEATHERS[Math.floor(Math.random() * WEATHERS.length)])
+                  .replace(/\{motivate\}/g, MOTIVATES[Math.floor(Math.random() * MOTIVATES.length)])
+                  .replace(/\{tip\}/g, TIPS[Math.floor(Math.random() * TIPS.length)])
+                  .replace(/\{mood\}/g, MOODS[Math.floor(Math.random() * MOODS.length)])
+                  .replace(/\{horoscope\}/g, HOROSCOPES[Math.floor(Math.random() * HOROSCOPES.length)]);
                 const { data: botProfile } = await (supabase as any).from('bots').select('avatar_url').eq('id', bot.id).maybeSingle();
                 return { content: rendered, botName: bot.name, botId: bot.id, botAvatarUrl: botProfile?.avatar_url || undefined };
               }
