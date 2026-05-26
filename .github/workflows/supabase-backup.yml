@@ -24,53 +24,71 @@ jobs:
           ref: database-backups
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🔧 Node.js kur
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: 🔧 PostgreSQL 17 istemcisini kur (pg_dump 17 ≥ server 17.6)
+        run: |
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
+          echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] \
+            http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client-17
+          pg_dump --version
 
       - name: 📁 Yedek klasörünü hazırla
         run: mkdir -p backups
 
-      - name: 🗄️ Supabase CLI ile yedek al (roles + schema + data)
+      - name: 🗄️ pg_dump 17 ile yedek al (roles + schema + data)
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGSSLMODE: require
         run: |
           TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
           LABEL="${{ github.event.inputs.label || 'otomatik' }}"
           BACKUP_DIR="backups/${TIMESTAMP}_${LABEL}"
           mkdir -p "$BACKUP_DIR"
 
-          DB_URL="postgresql://postgres:${DB_PASSWORD}@db.blifnflcwuadrryntskw.supabase.co:5432/postgres"
+          # Doğrudan DB host (IPv4, Pro plan)
+          DB_HOST="db.ktittqaubkaylprxnoya.supabase.co"
+          DB_PORT=5432
+          DB_USER="postgres"
+          DB_NAME="postgres"
 
-          echo "📋 Roller yedekleniyor..."
-          npx supabase@latest db dump \
-            --db-url "$DB_URL" \
-            -f "${BACKUP_DIR}/roles.sql" \
-            --role-only
+          PG_DUMP="/usr/lib/postgresql/17/bin/pg_dump"
+          PG_DUMPALL="/usr/lib/postgresql/17/bin/pg_dumpall"
 
-          echo "🏗️ Şema yedekleniyor..."
-          npx supabase@latest db dump \
-            --db-url "$DB_URL" \
+          echo "📋 Roller yedekleniyor (roles.sql)..."
+          "$PG_DUMPALL" \
+            -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+            --roles-only \
+            --no-role-passwords \
+            -f "${BACKUP_DIR}/roles.sql"
+
+          echo "🏗️ Şema yedekleniyor (schema.sql)..."
+          "$PG_DUMP" \
+            -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+            --schema-only \
+            --no-owner \
+            --no-acl \
             -f "${BACKUP_DIR}/schema.sql"
 
-          echo "💾 Veri yedekleniyor..."
-          npx supabase@latest db dump \
-            --db-url "$DB_URL" \
-            -f "${BACKUP_DIR}/data.sql" \
-            --use-copy \
+          echo "💾 Veri yedekleniyor (data.sql)..."
+          "$PG_DUMP" \
+            -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
             --data-only \
-            -x "storage.buckets_vectors" \
-            -x "storage.vector_indexes"
+            --use-copy \
+            -T "storage.buckets_vectors" \
+            -T "storage.vector_indexes" \
+            -f "${BACKUP_DIR}/data.sql"
 
           echo "🗜️ Arşivleniyor..."
-          tar -czf "backups/backup_${TIMESTAMP}_${LABEL}.tar.gz" -C backups "${TIMESTAMP}_${LABEL}/"
+          tar -czf "backups/backup_${TIMESTAMP}_${LABEL}.tar.gz" \
+            -C backups "${TIMESTAMP}_${LABEL}/"
           rm -rf "$BACKUP_DIR"
 
           SIZE=$(du -sh "backups/backup_${TIMESTAMP}_${LABEL}.tar.gz" | cut -f1)
           FILENAME="backup_${TIMESTAMP}_${LABEL}.tar.gz"
-          echo "✅ Yedek alındı: ${FILENAME} (${SIZE})"
+          echo "✅ Yedek tamamlandı: ${FILENAME} (${SIZE})"
           echo "BACKUP_FILE=${FILENAME}" >> $GITHUB_ENV
           echo "BACKUP_SIZE=${SIZE}" >> $GITHUB_ENV
 
@@ -85,20 +103,21 @@ jobs:
             echo "📦 Toplam yedek sayısı: ${COUNT}"
           fi
 
-      - name: 📊 Yedek listesini güncelle
+      - name: 📊 Yedek listesini güncelle (INDEX.md)
         run: |
           cd backups
           echo "# AuroraChat Supabase Yedek Listesi" > INDEX.md
           echo "" >> INDEX.md
           echo "Son güncelleme: $(date '+%d.%m.%Y %H:%M UTC')" >> INDEX.md
           echo "" >> INDEX.md
-          echo "Her arşiv içinde 3 dosya bulunur: \`roles.sql\`, \`schema.sql\`, \`data.sql\`" >> INDEX.md
+          echo "Her \`.tar.gz\` arşivi içinde 3 dosya bulunur: \`roles.sql\` · \`schema.sql\` · \`data.sql\`" >> INDEX.md
           echo "" >> INDEX.md
           echo "| Dosya | Boyut | Tarih |" >> INDEX.md
           echo "|-------|-------|-------|" >> INDEX.md
           for f in $(ls -t *.tar.gz 2>/dev/null); do
             SIZE=$(du -sh "$f" | cut -f1)
-            DATE=$(echo "$f" | grep -oP '\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}' | sed 's/_/ /' | sed 's/-/\./g')
+            DATE=$(echo "$f" | grep -oP '\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}' \
+              | sed 's/_/ /' | sed 's/-/./g')
             echo "| \`${f}\` | ${SIZE} | ${DATE} |" >> INDEX.md
           done
 
@@ -112,5 +131,5 @@ jobs:
           else
             git commit -m "🗄️ Yedek: $(date '+%d.%m.%Y %H:%M UTC') — ${{ env.BACKUP_FILE }} (${{ env.BACKUP_SIZE }})"
             git push
-            echo "✅ Yedek başarıyla GitHub'a kaydedildi!"
+            echo "✅ GitHub'a kaydedildi!"
           fi
