@@ -24,41 +24,52 @@ jobs:
           ref: database-backups
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🔧 PostgreSQL araçlarını kur
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y postgresql-client
+      - name: 🔧 Node.js kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: 📁 Yedek klasörünü hazırla
         run: mkdir -p backups
 
-      - name: 🗄️ pg_dump ile yedek al
+      - name: 🗄️ Supabase CLI ile yedek al (roles + schema + data)
         env:
-          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          PGSSLMODE: require
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
           LABEL="${{ github.event.inputs.label || 'otomatik' }}"
-          FILENAME="backup_${TIMESTAMP}_${LABEL}.dump"
+          BACKUP_DIR="backups/${TIMESTAMP}_${LABEL}"
+          mkdir -p "$BACKUP_DIR"
 
-          # NOT: GitHub Actions runner'larında IPv6 yok; Supabase'in direkt host'u
-          # (db.<ref>.supabase.co) free plan'da AAAA-only döndüğü için bağlantı
-          # "Network is unreachable" hatasıyla başarısız olur. Bu yüzden IPv4
-          # destekli Supavisor "session pooler"ı (port 5432) üzerinden bağlanıyoruz.
-          # Pooler SSL zorunlu kıldığı için PGSSLMODE=require gerekli.
-          POOLER_HOST="aws-1-ap-southeast-2.pooler.supabase.com"
-          POOLER_USER="postgres.ktittqaubkaylprxnoya"
+          DB_URL="postgresql://postgres:${DB_PASSWORD}@db.blifnflcwuadrryntskw.supabase.co:5432/postgres"
 
-          pg_dump \
-            "host=${POOLER_HOST} port=5432 user=${POOLER_USER} dbname=postgres sslmode=require" \
-            --no-owner \
-            --no-acl \
-            --no-privileges \
-            -F c \
-            -Z 6 \
-            -f "backups/${FILENAME}"
+          echo "📋 Roller yedekleniyor..."
+          npx supabase@latest db dump \
+            --db-url "$DB_URL" \
+            -f "${BACKUP_DIR}/roles.sql" \
+            --role-only
 
-          SIZE=$(du -sh "backups/${FILENAME}" | cut -f1)
+          echo "🏗️ Şema yedekleniyor..."
+          npx supabase@latest db dump \
+            --db-url "$DB_URL" \
+            -f "${BACKUP_DIR}/schema.sql"
+
+          echo "💾 Veri yedekleniyor..."
+          npx supabase@latest db dump \
+            --db-url "$DB_URL" \
+            -f "${BACKUP_DIR}/data.sql" \
+            --use-copy \
+            --data-only \
+            -x "storage.buckets_vectors" \
+            -x "storage.vector_indexes"
+
+          echo "🗜️ Arşivleniyor..."
+          tar -czf "backups/backup_${TIMESTAMP}_${LABEL}.tar.gz" -C backups "${TIMESTAMP}_${LABEL}/"
+          rm -rf "$BACKUP_DIR"
+
+          SIZE=$(du -sh "backups/backup_${TIMESTAMP}_${LABEL}.tar.gz" | cut -f1)
+          FILENAME="backup_${TIMESTAMP}_${LABEL}.tar.gz"
           echo "✅ Yedek alındı: ${FILENAME} (${SIZE})"
           echo "BACKUP_FILE=${FILENAME}" >> $GITHUB_ENV
           echo "BACKUP_SIZE=${SIZE}" >> $GITHUB_ENV
@@ -66,9 +77,9 @@ jobs:
       - name: 🧹 Eski yedekleri temizle (son 30 adet tut)
         run: |
           cd backups
-          COUNT=$(ls -1 *.dump 2>/dev/null | wc -l)
+          COUNT=$(ls -1 *.tar.gz 2>/dev/null | wc -l)
           if [ "$COUNT" -gt 30 ]; then
-            ls -t *.dump | tail -n +31 | xargs rm -f
+            ls -t *.tar.gz | tail -n +31 | xargs rm -f
             echo "🗑️ Eski yedekler silindi. Kalan: 30"
           else
             echo "📦 Toplam yedek sayısı: ${COUNT}"
@@ -81,11 +92,13 @@ jobs:
           echo "" >> INDEX.md
           echo "Son güncelleme: $(date '+%d.%m.%Y %H:%M UTC')" >> INDEX.md
           echo "" >> INDEX.md
+          echo "Her arşiv içinde 3 dosya bulunur: \`roles.sql\`, \`schema.sql\`, \`data.sql\`" >> INDEX.md
+          echo "" >> INDEX.md
           echo "| Dosya | Boyut | Tarih |" >> INDEX.md
           echo "|-------|-------|-------|" >> INDEX.md
-          for f in $(ls -t *.dump 2>/dev/null); do
+          for f in $(ls -t *.tar.gz 2>/dev/null); do
             SIZE=$(du -sh "$f" | cut -f1)
-            DATE=$(echo "$f" | grep -oP '\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}' | sed 's/_/ /' | sed 's/-/./g')
+            DATE=$(echo "$f" | grep -oP '\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}' | sed 's/_/ /' | sed 's/-/\./g')
             echo "| \`${f}\` | ${SIZE} | ${DATE} |" >> INDEX.md
           done
 
