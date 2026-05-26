@@ -1,6 +1,6 @@
 [package]
 name = "aurorachat"
-version = "1.0.5"
+version = "1.2.5"
 description = "AuroraChat - Discord benzeri gerçek zamanlı sohbet uygulaması"
 authors = ["AuroraChat Team"]
 license = "MIT"

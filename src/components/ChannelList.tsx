@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DbChannel, DbMember, DbCategory } from '@/types/chat';
-import { Hash, Volume2, Settings, Plus, UserPlus, LogOut, ChevronRight, ChevronDown } from 'lucide-react';
+import { Hash, Volume2, Settings, Plus, UserPlus, LogOut, ChevronRight, ChevronDown, GripVertical } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import CreateChannelDialog from '@/components/CreateChannelDialog';
 import InviteDialog from '@/components/InviteDialog';
@@ -12,6 +12,21 @@ import VoiceParticipants from '@/components/VoiceParticipants';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface VoiceState {
   connected: boolean;
@@ -39,6 +54,38 @@ interface ChannelListProps {
   unreadChannels?: Set<string>;
 }
 
+interface SortableItemProps {
+  id: string;
+  canDrag: boolean;
+  children: React.ReactNode;
+}
+
+const SortableItem = ({ id, canDrag, children }: SortableItemProps) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.45 : 1,
+    position: isDragging ? 'relative' : undefined,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center group/drag">
+      {canDrag && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="opacity-0 group-hover/drag:opacity-100 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground/80 shrink-0 px-0.5 transition-opacity"
+          title="Kanalı sürükle"
+        >
+          <GripVertical className="w-3 h-3" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  );
+};
+
 const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = [], activeChannel, onChannelChange, currentUserStatus = 'offline', onStatusChange, isOwner, onChannelCreated, onServerDeleted, onServerUpdated, onLeaveServer, isMobile, voiceState, userPermissions, unreadChannels }: ChannelListProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -47,12 +94,24 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [voiceMembers, setVoiceMembers] = useState<Record<string, { user_id: string; display_name: string; avatar_url: string | null; mic_muted: boolean; camera_enabled?: boolean; screen_sharing?: boolean }[]>>({});
+  const [localChannels, setLocalChannels] = useState<DbChannel[]>([]);
+
+  const canManageChannels = !!(isOwner || userPermissions?.manage_channels || userPermissions?.administrator);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  useEffect(() => {
+    setLocalChannels(
+      [...channels].sort((a, b) => ((a as any).position ?? 999) - ((b as any).position ?? 999))
+    );
+  }, [channels]);
 
   useEffect(() => {
     if (!serverId) return;
 
     const fetchVoiceMembers = async () => {
-      // Clean up stale ghost sessions (WebView / tab-close misses) before fetching
       try { await (supabase as any).rpc('cleanup_stale_voice_members'); } catch { }
       let { data, error } = await (supabase as any)
         .from('voice_channel_members')
@@ -98,12 +157,30 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
     });
   };
 
-  // Group channels by category
-  const uncategorizedChannels = channels.filter(c => !c.category_id);
-  const textUncategorized = uncategorizedChannels.filter(c => c.type === 'text');
-  const voiceUncategorized = uncategorizedChannels.filter(c => c.type === 'voice');
+  const handleDragEnd = useCallback(async (event: DragEndEvent, groupChannels: DbChannel[]) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-  const renderChannel = (channel: DbChannel) => {
+    const oldIndex = groupChannels.findIndex(c => c.id === active.id);
+    const newIndex = groupChannels.findIndex(c => c.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newGroup = arrayMove(groupChannels, oldIndex, newIndex);
+    const groupIds = new Set(groupChannels.map(c => c.id));
+
+    setLocalChannels(prev => {
+      const others = prev.filter(c => !groupIds.has(c.id));
+      return [...others, ...newGroup];
+    });
+
+    await Promise.all(
+      newGroup.map((ch, idx) =>
+        (supabase as any).from('channels').update({ position: idx }).eq('id', ch.id)
+      )
+    );
+  }, []);
+
+  const renderChannelInner = (channel: DbChannel) => {
     const isVoice = channel.type === 'voice';
     const Icon = isVoice ? Volume2 : Hash;
     const isVoiceActive = voiceState?.voiceChannelId === channel.id;
@@ -160,10 +237,37 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
     );
   };
 
+  const renderSortableGroup = (groupChannels: DbChannel[], groupKey: string) => {
+    if (!canManageChannels || isMobile || groupChannels.length <= 1) {
+      return groupChannels.map(ch => renderChannelInner(ch));
+    }
+
+    return (
+      <DndContext
+        key={groupKey}
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={(e) => handleDragEnd(e, groupChannels)}
+      >
+        <SortableContext items={groupChannels.map(c => c.id)} strategy={verticalListSortingStrategy}>
+          {groupChannels.map(ch => (
+            <SortableItem key={ch.id} id={ch.id} canDrag={canManageChannels && !isMobile}>
+              {renderChannelInner(ch)}
+            </SortableItem>
+          ))}
+        </SortableContext>
+      </DndContext>
+    );
+  };
+
+  const uncategorizedChannels = localChannels.filter(c => !c.category_id);
+  const textUncategorized = uncategorizedChannels.filter(c => c.type === 'text');
+  const voiceUncategorized = uncategorizedChannels.filter(c => c.type === 'voice');
+
   return (
     <TooltipProvider delayDuration={300}>
     <div className={`${isMobile ? 'flex-1 h-full' : 'w-60'} bg-sidebar flex flex-col`}>
-      {/* Server Header - Discord style */}
+      {/* Server Header */}
       <div className="h-12 flex items-center px-3 border-b border-border/60 shadow-sm cursor-pointer hover:bg-secondary/40 transition-colors group justify-between shrink-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {serverIcon && (serverIcon.startsWith('http') || serverIcon.startsWith('/')) ? (
@@ -211,8 +315,9 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
           )}
         </div>
       </div>
+
       <div className="flex-1 overflow-y-auto scrollbar-thin px-2 py-2">
-        {/* Uncategorized channels */}
+        {/* Uncategorized text channels */}
         {textUncategorized.length > 0 && (
           <div className="mb-1">
             <div className="flex items-center justify-between px-1 mt-4 mb-0.5 group/cat">
@@ -220,7 +325,7 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
                 <ChevronDown className="w-3 h-3 text-muted-foreground/70 shrink-0" />
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground group-hover/cat:text-foreground transition-colors truncate">{t('channels.textChannels')}</p>
               </button>
-              {(isOwner || userPermissions?.manage_channels || userPermissions?.administrator) && (
+              {canManageChannels && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button onClick={() => openCreateChannel('text')} className="text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover/cat:opacity-100 shrink-0 p-0.5 rounded hover:bg-secondary/60">
@@ -231,10 +336,11 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
                 </Tooltip>
               )}
             </div>
-            {textUncategorized.map(renderChannel)}
+            {renderSortableGroup(textUncategorized, 'text-uncategorized')}
           </div>
         )}
 
+        {/* Uncategorized voice channels */}
         {voiceUncategorized.length > 0 && (
           <div className="mb-1">
             <div className="flex items-center justify-between px-1 mt-4 mb-0.5 group/cat">
@@ -242,7 +348,7 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
                 <ChevronDown className="w-3 h-3 text-muted-foreground/70 shrink-0" />
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground group-hover/cat:text-foreground transition-colors truncate">{t('channels.voiceChannels')}</p>
               </button>
-              {(isOwner || userPermissions?.manage_channels || userPermissions?.administrator) && (
+              {canManageChannels && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button onClick={() => openCreateChannel('voice')} className="text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover/cat:opacity-100 shrink-0 p-0.5 rounded hover:bg-secondary/60">
@@ -253,13 +359,13 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
                 </Tooltip>
               )}
             </div>
-            {voiceUncategorized.map(renderChannel)}
+            {renderSortableGroup(voiceUncategorized, 'voice-uncategorized')}
           </div>
         )}
 
         {/* Categorized channels */}
         {categories.map(cat => {
-          const catChannels = channels.filter(c => c.category_id === cat.id);
+          const catChannels = localChannels.filter(c => c.category_id === cat.id);
           if (catChannels.length === 0) return null;
           const isCollapsed = collapsedCategories.has(cat.id);
 
@@ -279,7 +385,7 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
                     {cat.name}
                   </p>
                 </button>
-                {(isOwner || userPermissions?.manage_channels || userPermissions?.administrator) && (
+                {canManageChannels && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button onClick={() => openCreateChannel('text')} className="text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover/cat:opacity-100 shrink-0 p-0.5 rounded hover:bg-secondary/60">
@@ -290,7 +396,11 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
                   </Tooltip>
                 )}
               </div>
-              {!isCollapsed && <div>{catChannels.map(renderChannel)}</div>}
+              {!isCollapsed && (
+                <div>
+                  {renderSortableGroup(catChannels, `cat-${cat.id}`)}
+                </div>
+              )}
             </div>
           );
         })}
@@ -303,7 +413,7 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
                 <ChevronDown className="w-3 h-3 text-muted-foreground/70 shrink-0" />
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground truncate">{t('channels.textChannels')}</p>
               </button>
-              {(isOwner || userPermissions?.manage_channels || userPermissions?.administrator) && (
+              {canManageChannels && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button onClick={() => openCreateChannel('text')} className="text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover/cat:opacity-100 shrink-0 p-0.5 rounded hover:bg-secondary/60">
@@ -333,7 +443,7 @@ const ChannelList = ({ serverName, serverId, serverIcon, channels, categories = 
 
       <UserInfoPanel currentUserStatus={currentUserStatus} onStatusChange={onStatusChange} isOwner={isOwner} />
 
-      {(isOwner || userPermissions?.manage_channels || userPermissions?.administrator) && (
+      {canManageChannels && (
         <CreateChannelDialog open={channelDialogOpen} onOpenChange={setChannelDialogOpen} serverId={serverId} defaultType={channelDialogType} existingCount={channels.length} onChannelCreated={() => onChannelCreated?.()} />
       )}
       <InviteDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen} serverId={serverId} serverName={serverName} />

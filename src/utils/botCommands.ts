@@ -331,6 +331,12 @@ export async function executeBotCommand(
                 const TIPS = ['Düzenli mola vermek verimliliği artırır.', 'Su içmeyi unutma! 💧', 'Küçük adımlar büyük sonuçlar doğurur.', '8 saat uyku beyin için şarttır. 😴'];
                 const MOODS = ['😊 Neşeli', '😤 Kararlı', '😴 Uykulu', '🤩 Heyecanlı', '😌 Sakin', '🥳 Kutlama modunda', '🤔 Düşünceli'];
                 const HOROSCOPES = ['♈ Koç', '♉ Boğa', '♊ İkizler', '♋ Yengeç', '♌ Aslan', '♍ Başak', '♎ Terazi', '♏ Akrep', '♐ Yay', '♑ Oğlak', '♒ Kova', '♓ Balık'];
+                const JOKES = ['Neden bilgisayarlar hiç hastalanmaz? Çünkü her zaman virüs programı kullanırlar! 😄', 'Matematik kitabı neden üzgündi? Çünkü çok fazla problemi vardı! 😂', 'Kediye neden güvenilmez? Çünkü her zaman bir şeyleri tırmalamaya çalışır! 😹', 'Programcı neden gözlük takar? Çünkü C# görür! 🤓'];
+                const QUOTES = ['"Başarı, her gün tekrarlanan küçük çabaların toplamıdır." – R. Collier', '"Büyük şeyler asla konfor bölgesinden gelmez." – Ben Carson', '"Hayal et, inan, başar." – Walt Disney', '"Bugün yapamazsan yarın da yapamazsın." – Anonim'];
+                const TRIVIAS = ['🧠 Bilgi: Bal asla bozulmaz — 3000 yıllık bal hâlâ yenilebilir!', '🧠 Bilgi: Balıklar göz kapaklarına sahip değil!', '🧠 Bilgi: Bir bulut ortalama 500 ton ağırlığındadır.', '🧠 Bilgi: Ahtapotların 3 kalbi vardır.'];
+                const WYR = ['Uçabilmek mi yoksa görünmez olmak mı tercih ederdin? 🤔', 'Geçmişe mi yoksa geleceğe mi yolculuk yapmak isterdin? ⏳', 'Hiç uyumak zorunda kalmamak mı yoksa hiç yemek yememek zorunda kalmamak mı? 😴', 'Çok zengin ama yalnız mı yoksa mütevazı ama mutlu mu? 💰'];
+                const RIDDLES = ['🧩 Bilmece: Koşar ama ayağı yok, mırıldar ama dili yok. Nedir? (Cevap: Nehir)', '🧩 Bilmece: Dolu olduğunda hafif, boş olduğunda ağır. Nedir? (Cevap: Balon)', '🧩 Bilmece: Gözü var ama görmez, dili var ama konuşmaz. Nedir? (Cevap: İğne)', '🧩 Bilmece: Ne kadar alırsam o kadar büyürüm. Nedir? (Cevap: Delik)'];
+                const COMPLIMENTS = ['🌟 Sen gerçekten harikasın!', '✨ Bugün çok parlıyorsun!', '💎 Seninle konuşmak bir ayrıcalık!', '🚀 Azmin ve enerjin ilham verici!', '🎯 Muhteşem bir bakış açısı var sende!'];
                   const now = new Date();
                 const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
                 const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '.');
@@ -364,12 +370,18 @@ export async function executeBotCommand(
                   .replace(/\{serverAge\}/g, `${serverAgeDays} gün`)
                   .replace(/\{8ball\}/g, BALL_ANSWERS[Math.floor(Math.random() * BALL_ANSWERS.length)])
                   .replace(/\{lucky\}/g, String(Math.floor(Math.random() * 100) + 1))
-                  .replace(/\{botVersion\}/g, 'v1.2.4')
                   .replace(/\{weather\}/g, WEATHERS[Math.floor(Math.random() * WEATHERS.length)])
                   .replace(/\{motivate\}/g, MOTIVATES[Math.floor(Math.random() * MOTIVATES.length)])
                   .replace(/\{tip\}/g, TIPS[Math.floor(Math.random() * TIPS.length)])
                   .replace(/\{mood\}/g, MOODS[Math.floor(Math.random() * MOODS.length)])
-                  .replace(/\{horoscope\}/g, HOROSCOPES[Math.floor(Math.random() * HOROSCOPES.length)]);
+                  .replace(/\{horoscope\}/g, HOROSCOPES[Math.floor(Math.random() * HOROSCOPES.length)])
+                  .replace(/\{joke\}/g, JOKES[Math.floor(Math.random() * JOKES.length)])
+                  .replace(/\{quote\}/g, QUOTES[Math.floor(Math.random() * QUOTES.length)])
+                  .replace(/\{trivia\}/g, TRIVIAS[Math.floor(Math.random() * TRIVIAS.length)])
+                  .replace(/\{wouldYouRather\}/g, WYR[Math.floor(Math.random() * WYR.length)])
+                  .replace(/\{riddle\}/g, RIDDLES[Math.floor(Math.random() * RIDDLES.length)])
+                  .replace(/\{compliment\}/g, COMPLIMENTS[Math.floor(Math.random() * COMPLIMENTS.length)])
+                  .replace(/\{botVersion\}/g, 'v1.2.5');
                 const { data: botProfile } = await (supabase as any).from('bots').select('avatar_url').eq('id', bot.id).maybeSingle();
                 return { content: rendered, botName: bot.name, botId: bot.id, botAvatarUrl: botProfile?.avatar_url || undefined };
               }

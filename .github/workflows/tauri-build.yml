@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (örn: 1.0.4)'
+        description: 'Release version (örn: 1.2.5)'
         required: true
-        default: '1.0.4'
+        default: '1.2.5'
 
 permissions:
   contents: write
@@ -202,7 +202,7 @@ jobs:
       - name: Get version
         id: ver
         run: |
-          V="${{ github.event.inputs.version || '1.0.4' }}"
+          V="${{ github.event.inputs.version || '1.2.5' }}"
           echo "version=$V" >> $GITHUB_OUTPUT
           echo "tag=v${V}-tauri" >> $GITHUB_OUTPUT
 

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Bug, Shield, Crown, Timer, Users, Bot, Search, Globe, Lock } from 'lucide-react';
+import { Sparkles, Wrench, Bug, Shield, GripVertical, Globe, Bot, Puzzle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.4';
+const RELEASE_VERSION = '1.2.5';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,45 +18,52 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Users,
+    icon: GripVertical,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Moderasyon paneli: kullanıcı kartlarından inline genişleme kaldırıldı, ⚙️ butonu açık ve kompakt Dialog modal ile değiştirildi.',
+    label: 'Sürükle-bırak kanal sıralama: Sunucu sahibi ve yöneticiler kanalları sürükleyerek yeniden sıralayabilir. Sıra Supabase\'e anlık kaydedilir.',
+    badge: 'Yeni',
+  },
+  {
+    icon: Globe,
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Topluluklar sayfası premium yenileme: gradient hero, glassmorphism kartlar, kategori ikonu, animasyonlu hover efektleri.',
     badge: 'İyileştirme',
   },
   {
     icon: Bot,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Bot değişkenleri düzeltildi: {dayOfWeek}, {greeting}, {serverAge}, {8ball}, {lucky}, {botVersion} artık gerçek değerleri döndürüyor.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Sparkles,
     iconBg: 'bg-cyan-500/15',
     iconColor: 'text-cyan-400',
-    label: '5 yeni bot değişkeni: {weather} hava durumu, {motivate} motivasyon, {tip} günlük ipucu, {mood} ruh hali, {horoscope} burç.',
+    label: '6 yeni bot değişkeni: {joke} şaka, {quote} alıntı, {trivia} bilgi, {wouldYouRather} tercih, {riddle} bilmece, {compliment} iltifat.',
     badge: 'Yeni',
   },
   {
-    icon: Lock,
+    icon: Puzzle,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Bot avatar sohbette görünüyor: send_bot_response RPC\'ye p_bot_id eklendi, FK join ile bot avatar ve adı mesajda gösteriliyor.',
+    label: 'Eklenti yorumları PGRST200 hatası giderildi: plugin_reviews → profiles FK kısıtlaması SQL migrasyonunda oluşturuldu, ayrıca profil sorgusu iki aşamalı hale getirildi.',
     badge: 'Düzeltme',
   },
   {
-    icon: Timer,
+    icon: Shield,
     iconBg: 'bg-orange-500/15',
     iconColor: 'text-orange-400',
-    label: 'Cooldown engeli: cooldown alan kullanıcı mesaj gönderemez ve sunucu oluşturamaz. Kalan süre sayacı ile açıklayıcı modal gösterilir.',
+    label: 'Üye listesi başlığından "canlı" göstergesi kaldırıldı. Davet sayfası görsel iyileştirmesi: animasyonlu parçacıklar, premium kart tasarımı.',
     badge: 'İyileştirme',
+  },
+  {
+    icon: Bug,
+    iconBg: 'bg-red-500/15',
+    iconColor: 'text-red-400',
+    label: 'Windows indirme bağlantıları GitHub Releases sayfasına yönlendirildi. Artık 404 hatası vermiyor.',
+    badge: 'Düzeltme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'SQL migration v1.2.4: send_bot_response p_bot_id parametresi, bots tablosu public okuma politikası, bot FK index, get_my_active_cooldown RPC.',
+    label: 'SQL migration v1.2.5: channels.position kolonu, plugin_reviews_user_id_fkey FK kısıtlaması, kanal sıralama için index.',
     badge: 'Teknik',
   },
 ];

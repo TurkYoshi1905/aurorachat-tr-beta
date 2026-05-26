@@ -359,10 +359,16 @@ const BotDeveloper = () => {
     { label: '{coinflip}',    desc: 'Yazı/Tura — "Yazı" veya "Tura" döner',                        category: 'Eğlence' },
     { label: '{8ball}',       desc: 'Sihirli 8-top yanıtı — rastgele evet/hayır/belirsiz mesaj döner', category: 'Eğlence' },
     { label: '{lucky}',       desc: 'Günlük şans puanı (1-100 arası)',                               category: 'Eğlence' },
+    { label: '{joke}',        desc: 'Rastgele komik bir şaka döner',                                 category: 'Eğlence' },
+    { label: '{quote}',       desc: 'Rastgele motivasyon alıntısı döner',                            category: 'Eğlence' },
+    { label: '{trivia}',      desc: 'Rastgele bir bilgi sorusu / ilginç gerçek döner',               category: 'Eğlence' },
+    { label: '{wouldYouRather}', desc: 'Rastgele "Şunu mu yoksa bunu mu tercih ederdin?" sorusu',   category: 'Eğlence' },
+    { label: '{riddle}',      desc: 'Rastgele bir bilmece döner',                                    category: 'Eğlence' },
+    { label: '{compliment}',  desc: 'Kullanıcıya rastgele bir iltifat gönderir',                     category: 'Eğlence' },
     // Bot Bilgisi
     { label: '{botName}',     desc: 'Bu botun görünen adı',                                          category: 'Bot' },
     { label: '{botUsername}', desc: 'Bu botun kullanıcı adı',                                        category: 'Bot' },
-    { label: '{botVersion}',  desc: 'AuroraChat platform sürümü (ör. v1.2.4)',                       category: 'Bot' },
+    { label: '{botVersion}',  desc: 'AuroraChat platform sürümü (ör. v1.2.5)',                       category: 'Bot' },
   ];
 
   const startEditInfo = () => {

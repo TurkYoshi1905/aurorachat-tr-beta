@@ -9,7 +9,7 @@
   },
   "package": {
     "productName": "AuroraChat",
-    "version": "1.0.5"
+    "version": "1.2.5"
   },
   "tauri": {
     "allowlist": {

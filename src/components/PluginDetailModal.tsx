@@ -102,7 +102,7 @@ const PluginDetailModal = ({
     const [ratingsRes, userRatingRes, reviewsRes] = await Promise.all([
       (supabase as any).from('plugin_ratings').select('stars').eq('plugin_id', plugin.id),
       user ? (supabase as any).from('plugin_ratings').select('stars').eq('plugin_id', plugin.id).eq('user_id', user.id).maybeSingle() : Promise.resolve({ data: null }),
-      (supabase as any).from('plugin_reviews').select('*, profile:profiles!plugin_reviews_user_id_fkey(display_name, username)').eq('plugin_id', plugin.id).order('created_at', { ascending: false }),
+      (supabase as any).from('plugin_reviews').select('id, user_id, content, created_at, updated_at').eq('plugin_id', plugin.id).order('created_at', { ascending: false }),
     ]);
 
     const ratings: { stars: number }[] = ratingsRes.data || [];
@@ -111,7 +111,25 @@ const PluginDetailModal = ({
     setAvgRating(Math.round(avg * 10) / 10);
     setTotalRatings(total);
     setUserRating(userRatingRes.data?.stars || 0);
-    setReviews(reviewsRes.data || []);
+
+    const rawReviews: Array<{ id: string; user_id: string; content: string; created_at: string; updated_at: string }> = reviewsRes.data || [];
+    if (rawReviews.length > 0) {
+      const userIds = [...new Set(rawReviews.map(r => r.user_id))];
+      const { data: profilesData } = await (supabase as any)
+        .from('profiles')
+        .select('id, display_name, username')
+        .in('id', userIds);
+      const profileMap = new Map((profilesData || []).map((p: any) => [p.id, p]));
+      setReviews(rawReviews.map(r => ({
+        ...r,
+        profile: profileMap.get(r.user_id) ? {
+          display_name: profileMap.get(r.user_id).display_name,
+          username: profileMap.get(r.user_id).username,
+        } : { display_name: null, username: null },
+      })));
+    } else {
+      setReviews([]);
+    }
     setLoadingData(false);
   };
 

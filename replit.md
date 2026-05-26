@@ -64,9 +64,10 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260506000000_v113_announcements_system.sql` — announcements + comments tables, server order_index column, RLS, realtime, helper RPCs
 - `20260506100000_v114_bot_member_commands_fix.sql` — bots.commands NOT NULL fix, server_bots SELECT policy, get_server_members_full EXCEPTION block, get_server_bot_commands RPC
 
-## Current Version: v1.2.3 (22 Mayıs 2026)
+## Current Version: v1.2.5 (26 Mayıs 2026)
 
 ### Features by version
+- **v1.2.5**: Sürükle-bırak kanal sıralama (@dnd-kit/sortable, channels.position kolonu, SortableChannelItem), Topluluklar sayfası premium yenileme (glassmorphism kartlar, emoji kategoriler, 3-sütun grid), 6 yeni bot değişkeni ({joke}/{quote}/{trivia}/{wouldYouRather}/{riddle}/{compliment}), plugin yorumları PGRST200 FK düzeltmesi (2-aşamalı profil sorgusu), üye listesi "canlı" göstergesi kaldırıldı, Windows indirme linkleri GitHub releases/latest'e güncellendi, botVersion v1.2.5, SQL migration 20260526000000
 - **v1.2.3**: Rol hiyerarşisi & dokunulmazlık kuralları (Kurucu bağışık, canActOnTarget), ModerationPage 3-sütun grid, Admin Yap butonu kaldırıldı, AdvancedCooldownModal (9 süre seçeneği, sebep alanı, apply_manual_cooldown RPC), Güvenlik sekmesi kullanıcı arama + aktif manuel cooldownlar listesi, BotDocModal Komutlar sekmesi kaldırıldı + zengin değişkenler paneli (22 değişken 4 kategori), BotDeveloper 6 yeni değişken ({dayOfWeek}/{greeting}/{serverAge}/{8ball}/{lucky}/{botVersion}), sunucu üye listesi bot gösterimi (RPC success path), get_community_servers STABLE→VOLATILE fix, bot avatar RLS 403 fix
 - **v1.2.1**: Communities/Keşfet sayfası + compass butonu (ServerSidebar), mesaj kopyalama (masaüstü hover + mobil long-press), idle/background durum senkronizasyonu (usePresenceKeeper), Bot Developer değişken kopyalama (tıkla→kopyala), PDF veri dışa aktarma (Settings gizlilik), Moderation çevrimiçi sayısı istatistiği, ServerSettings topluluk toggle (is_community, açıklama, kategori), Settings modpanel erişimi (myModRole), sürüm v1.2.1
 - **v1.1.5**: Aurora Guard güvenlik katmanı (IP Ban, Rate Limit 6/s, 30-dk cooldown, XSS sanitize), Bot Profil Modalı (BotProfileModal.tsx), komut değişken sistemi ({user}/{username}/{memberCount}/{serverName}), komut düzenleme, moderasyon rol hiyerarşisi (Yetkili/Admin/Moderatör/Deneme), Güvenlik sekmesi modpanelde, mic chevron görünürlük fix, announcement comment RLS 42501 fix, SEO meta güncelleme
@@ -89,6 +90,7 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260520100000_v122_statement_timeout_fix.sql` — **57014 timeout tamamen giderildi**: profiles.status index, pg_trgm GIN index (community search), get_landing_stats approximate counts, get_server_members_full N+1→LATERAL JOIN, get_community_servers timeout guard, get_server_online_count timeout guard, validate_bot_token JOIN optimizasyonu, get_user_servers_full tek-pass sorgu, plugin_ratings/reviews/bot_api_tokens indexleri
 - `20260520200000_v123_realtime_rls_fix.sql` — global 15s statement_timeout kaldırıldı, messages REPLICA IDENTITY DEFAULT, messages.server_id kolonu+trigger+backfill, members_can_read_messages_v5 RLS (tek JOIN), is_dm_participant SECURITY DEFINER (politikalar drop+recreate), ek indexler
 - `20260521000000_v124_reset_stale_statuses.sql` — pg_cron uzantısı, reset_stale_online_statuses() fonksiyonu (8dk+ last_seen → offline), cron job her 5dk, idx_profiles_last_seen_status partial index
+- `20260526000000_v125_channel_position_fk_fix.sql` — channels.position kolonu + backfill, idx_channels_position, plugin_reviews_user_id_fkey FK kısıtlaması, realtime publication
 
 ## New files (v1.1.5)
 - `src/utils/rateLimiter.ts` — in-memory rate limiter (6 req/s, 30-min cooldown)

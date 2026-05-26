@@ -247,10 +247,6 @@ const MemberList = ({ members, isMobile, onBack, serverId, premiumUsers, current
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wider text-[#6d6f78]">Üyeler</span>
-            <span className="flex items-center gap-1 text-[9px] text-green-500/80 font-semibold" title="Supabase Realtime WebSocket ile canlı">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
-              canlı
-            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] text-[#6d6f78] flex items-center gap-1">

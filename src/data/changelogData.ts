@@ -16,6 +16,51 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.5',
+    date: '26 Mayıs 2026',
+    summary: 'Sürükle-bırak kanal sıralama (Discord tarzı), Topluluklar sayfası premium yenileme, 6 yeni bot değişkeni, plugin yorumları PGRST200 FK düzeltmesi, üye listesi "canlı" göstergesi kaldırıldı, Windows indirme linkleri güncellendi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Sürükle-bırak kanal sıralama: Sunucu sahibi ve yöneticiler kanalları masaüstünde sürükleyerek yeniden sıralayabilir. Sıra Supabase channels.position kolonuna anlık kaydedilir.',
+          '6 yeni bot değişkeni: {joke} rastgele şaka, {quote} motivasyon alıntısı, {trivia} bilgi sorusu, {wouldYouRather} tercih sorusu, {riddle} bilmece, {compliment} iltifat.',
+          'Topluluklar sayfası premium yenileme: gradient hero alanı, glassmorphism kartlar, emoji kategori ikonları, üye sayacı ve animasyonlu hover efektleri.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Plugin yorumları PGRST200 hatası giderildi: plugin_reviews → profiles yabancı anahtar kısıtlaması SQL migrasyonunda oluşturuldu; frontend sorgusu iki aşamalı hale getirildi.',
+          'Windows indirme linkleri güncellendi: 404 veren doğrudan dosya linkleri GitHub Releases sayfasına yönlendirildi.',
+        ],
+      },
+      {
+        title: 'İyileştirmeler',
+        icon: Sparkles,
+        color: 'text-cyan-400',
+        items: [
+          'Üye listesi başlığından "canlı" WebSocket göstergesi kaldırıldı — gereksiz bilgi gürültüsü azaltıldı.',
+          'Davet sayfası görsel iyileştirmesi: animasyonlu parçacıklar, aurora glow arka planı, premium kart tasarımı.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'SQL migration 20260526000000: channels.position INTEGER kolonu, idx_channels_position index, plugin_reviews_user_id_fkey FK kısıtlaması oluşturuldu.',
+          'ChannelList.tsx: @dnd-kit/core + @dnd-kit/sortable entegrasyonu, SortableChannelItem bileşeni, dragEnd\'de Supabase toplu position güncellemesi.',
+          'botCommands.ts: 6 yeni değişken (joke/quote/trivia/wouldYouRather/riddle/compliment) replace zincirine eklendi, BotDeveloper.tsx VARIABLES dizisi güncellendi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.4',
     date: '22 Mayıs 2026',
     summary: 'Moderasyon paneli Dialog modal yeniden tasarımı, bot değişken motoru düzeltmesi (6 eksik + 5 yeni değişken), bot avatar sohbette görünüyor (send_bot_response p_bot_id), cooldown engeli sunucu oluşturmayı da bloke ediyor.',
