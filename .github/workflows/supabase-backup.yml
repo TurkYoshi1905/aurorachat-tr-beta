@@ -24,7 +24,7 @@ jobs:
           ref: database-backups
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🔧 PostgreSQL 17 istemcisini kur (pg_dump 17 ≥ server 17.6)
+      - name: 🔧 PostgreSQL 17 istemcisini kur
         run: |
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
             | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
@@ -33,53 +33,63 @@ jobs:
             | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update -qq
           sudo apt-get install -y postgresql-client-17
-          pg_dump --version
+          /usr/lib/postgresql/17/bin/pg_dump --version
 
       - name: 📁 Yedek klasörünü hazırla
         run: mkdir -p backups
 
-      - name: 🗄️ pg_dump 17 ile yedek al (roles + schema + data)
+      - name: 🗄️ Yedek al (roles + schema + data)
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          PGSSLMODE: require
         run: |
           TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
           LABEL="${{ github.event.inputs.label || 'otomatik' }}"
           BACKUP_DIR="backups/${TIMESTAMP}_${LABEL}"
           mkdir -p "$BACKUP_DIR"
 
-          # Doğrudan DB host (IPv4, Pro plan)
-          DB_HOST="db.ktittqaubkaylprxnoya.supabase.co"
-          DB_PORT=5432
-          DB_USER="postgres"
+          # IPv4 Session Pooler — direkt DB host GitHub Actions'da IPv6 only olduğundan kullanılamaz
+          POOLER_HOST="aws-1-ap-southeast-2.pooler.supabase.com"
+          POOLER_USER="postgres.ktittqaubkaylprxnoya"
           DB_NAME="postgres"
 
           PG_DUMP="/usr/lib/postgresql/17/bin/pg_dump"
-          PG_DUMPALL="/usr/lib/postgresql/17/bin/pg_dumpall"
+          PSQL="/usr/lib/postgresql/17/bin/psql"
+
+          POOL_URL="postgresql://${POOLER_USER}:${PGPASSWORD}@${POOLER_HOST}:5432/${DB_NAME}?sslmode=require"
 
           echo "📋 Roller yedekleniyor (roles.sql)..."
-          "$PG_DUMPALL" \
-            -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" \
-            --roles-only \
-            --no-role-passwords \
-            -f "${BACKUP_DIR}/roles.sql"
+          "$PSQL" "$POOL_URL" -t -A -c "
+            SELECT
+              'CREATE ROLE IF NOT EXISTS \"' || rolname || '\"' ||
+              CASE WHEN rolsuper      THEN ' SUPERUSER'    ELSE ' NOSUPERUSER'   END ||
+              CASE WHEN rolinherit    THEN ' INHERIT'      ELSE ' NOINHERIT'     END ||
+              CASE WHEN rolcreaterole THEN ' CREATEROLE'   ELSE ' NOCREATEROLE'  END ||
+              CASE WHEN rolcreatedb   THEN ' CREATEDB'     ELSE ' NOCREATEDB'    END ||
+              CASE WHEN rolcanlogin   THEN ' LOGIN'        ELSE ' NOLOGIN'       END ||
+              CASE WHEN rolbypassrls  THEN ' BYPASSRLS'    ELSE ' NOBYPASSRLS'   END ||
+              ';'
+            FROM pg_roles
+            WHERE rolname NOT LIKE 'pg_%'
+            ORDER BY rolname;
+          " > "${BACKUP_DIR}/roles.sql"
+          echo "  ✓ $(wc -l < "${BACKUP_DIR}/roles.sql") rol yedeklendi"
 
           echo "🏗️ Şema yedekleniyor (schema.sql)..."
-          "$PG_DUMP" \
-            -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+          "$PG_DUMP" "$POOL_URL" \
             --schema-only \
             --no-owner \
             --no-acl \
             -f "${BACKUP_DIR}/schema.sql"
+          echo "  ✓ $(wc -l < "${BACKUP_DIR}/schema.sql") satır"
 
           echo "💾 Veri yedekleniyor (data.sql)..."
-          "$PG_DUMP" \
-            -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+          "$PG_DUMP" "$POOL_URL" \
             --data-only \
             --use-copy \
             -T "storage.buckets_vectors" \
             -T "storage.vector_indexes" \
             -f "${BACKUP_DIR}/data.sql"
+          echo "  ✓ $(wc -l < "${BACKUP_DIR}/data.sql") satır"
 
           echo "🗜️ Arşivleniyor..."
           tar -czf "backups/backup_${TIMESTAMP}_${LABEL}.tar.gz" \
@@ -110,7 +120,7 @@ jobs:
           echo "" >> INDEX.md
           echo "Son güncelleme: $(date '+%d.%m.%Y %H:%M UTC')" >> INDEX.md
           echo "" >> INDEX.md
-          echo "Her \`.tar.gz\` arşivi içinde 3 dosya bulunur: \`roles.sql\` · \`schema.sql\` · \`data.sql\`" >> INDEX.md
+          echo "Her \`.tar.gz\` arşivi içinde 3 dosya: \`roles.sql\` · \`schema.sql\` · \`data.sql\`" >> INDEX.md
           echo "" >> INDEX.md
           echo "| Dosya | Boyut | Tarih |" >> INDEX.md
           echo "|-------|-------|-------|" >> INDEX.md
