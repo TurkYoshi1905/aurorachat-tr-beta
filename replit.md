@@ -64,7 +64,7 @@ A Discord-like real-time chat application built with React + Vite + TypeScript.
 - `20260506000000_v113_announcements_system.sql` — announcements + comments tables, server order_index column, RLS, realtime, helper RPCs
 - `20260506100000_v114_bot_member_commands_fix.sql` — bots.commands NOT NULL fix, server_bots SELECT policy, get_server_members_full EXCEPTION block, get_server_bot_commands RPC
 
-## Current Version: v1.2.5 (26 Mayıs 2026)
+## Current Version: v1.2.6 (27 Mayıs 2026)
 
 ### Features by version
 - **v1.2.5**: Sürükle-bırak kanal sıralama (@dnd-kit/sortable, channels.position kolonu, SortableChannelItem), Topluluklar sayfası premium yenileme (glassmorphism kartlar, emoji kategoriler, 3-sütun grid), 6 yeni bot değişkeni ({joke}/{quote}/{trivia}/{wouldYouRather}/{riddle}/{compliment}), plugin yorumları PGRST200 FK düzeltmesi (2-aşamalı profil sorgusu), üye listesi "canlı" göstergesi kaldırıldı, Windows indirme linkleri GitHub releases/latest'e güncellendi, botVersion v1.2.5, SQL migration 20260526000000

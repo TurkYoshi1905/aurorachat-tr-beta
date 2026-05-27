@@ -16,6 +16,48 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.6',
+    date: '27 Mayıs 2026',
+    summary: 'Sunucu Ayarları\'nda roller ve kanallar için sürükle-bırak sıralama, Discord tarzı kanal listesi iyileştirmesi (yeşil çizgi göstergesi, görünür tutucular kaldırıldı), davet sayfası logo hatası düzeltmesi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Sunucu Ayarları → Roller sekmesinde sürükle-bırak sıralama: Yöneticiler rolleri GripVertical tutacağından tutup sürükleyerek pozisyon belirleyebilir. server_roles.position Supabase\'e anlık yazılır.',
+          'Sunucu Ayarları → Kanallar sekmesinde sürükle-bırak sıralama: Hem kategorisiz hem kategorili kanallar sürüklenebilir. channels.position/sort_order Supabase\'e anlık güncellenir.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Davet sayfası logo hatası giderildi: Sunucunun icon alanı (servers.icon) sorguya eklendi; icon_url boş olsa bile gerçek logo görüntüleniyor.',
+        ],
+      },
+      {
+        title: 'İyileştirmeler',
+        icon: Sparkles,
+        color: 'text-cyan-400',
+        items: [
+          'Ana kanal listesi Discord tarzına güncellendi: GripVertical nokta tutucular kaldırıldı, yeşil çizgi ile bırakma noktası göstergesi eklendi, DragOverlay kanal adını gösteriyor.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'SQL migration 20260527000000: idx_server_roles_server_position, idx_channels_server_category_position ve idx_servers_id_icon indexleri eklendi.',
+          'ServerSettings.tsx: @dnd-kit entegrasyonu — SortableRoleCard ve SortableChannelCard bileşenleri, handleRoleDragEnd ve handleChannelDragEnd fonksiyonları.',
+          'ChannelList.tsx tam yeniden yazımı: SortableChannelRow bileşeni, yeşil çizgi isOver göstergesi, DragOverlay, GripVertical kaldırıldı.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.5',
     date: '26 Mayıs 2026',
     summary: 'Sürükle-bırak kanal sıralama (Discord tarzı), Topluluklar sayfası premium yenileme, 6 yeni bot değişkeni, plugin yorumları PGRST200 FK düzeltmesi, üye listesi "canlı" göstergesi kaldırıldı, Windows indirme linkleri güncellendi.',

@@ -24,7 +24,7 @@ const InvitePage = () => {
 
       const { data: inviteData } = await (supabase
         .from('server_invites') as any)
-        .select('*, landing_channel_id, servers(id, name, icon_url)')
+        .select('*, landing_channel_id, servers(id, name, icon, icon_url)')
         .eq('code', code)
         .maybeSingle();
 
@@ -51,7 +51,8 @@ const InvitePage = () => {
       const { data: memberCount } = await supabase.rpc('get_server_member_count', { p_server_id: srv.id });
 
       setInvite(inviteData);
-      setServer({ id: srv.id, name: srv.name, icon_url: srv.icon_url, memberCount: (memberCount as number) || 0 });
+      const iconUrl = srv.icon || srv.icon_url || null;
+      setServer({ id: srv.id, name: srv.name, icon_url: iconUrl, memberCount: (memberCount as number) || 0 });
       setLoading(false);
     };
     fetchInvite();

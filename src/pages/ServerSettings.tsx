@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { getHighestPermissions } from '@/lib/permissions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { X, Settings, Users, Shield, ScrollText, Trash2, Camera, UserMinus, Plus, ArrowUp, ArrowDown, ChevronDown, ChevronRight, Hash, Volume2, SmilePlus, Upload, Pencil, Check, Ban, BarChart3, Filter, Palette, ArrowLeft, Clock, Bell, LogOut, Crown, UserCog, Search, RefreshCw, Calendar, ArrowUpDown, AlertTriangle } from 'lucide-react';
+import { X, Settings, Users, Shield, ScrollText, Trash2, Camera, UserMinus, Plus, ArrowUp, ArrowDown, ChevronDown, ChevronRight, Hash, Volume2, SmilePlus, Upload, Pencil, Check, Ban, BarChart3, Filter, Palette, ArrowLeft, Clock, Bell, LogOut, Crown, UserCog, Search, RefreshCw, Calendar, ArrowUpDown, AlertTriangle, GripVertical } from 'lucide-react';
 import { useTranslation } from '@/i18n';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,6 +15,13 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext, useSortable, verticalListSortingStrategy, arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Member { id: string; user_id: string; display_name: string; username: string; avatar_url: string | null; joined_at: string | null; roles: { id: string; name: string; color: string }[]; is_bot?: boolean; }
 interface Role { id: string; name: string; color: string; position: number; permissions: Record<string, boolean>; }
@@ -23,6 +30,62 @@ interface ServerEmoji { id: string; name: string; image_url: string; uploaded_by
 interface BanEntry { id: string; user_id: string; banned_by: string; reason: string | null; created_at: string; user_name?: string; user_avatar?: string | null; banned_by_name?: string; }
 
 const PRESET_COLORS = ['#E74C3C', '#E91E63', '#9B59B6', '#8E44AD', '#3498DB', '#2196F3', '#1ABC9C', '#2ECC71', '#F1C40F', '#FF9800', '#E67E22', '#95A5A6', '#607D8B', '#99AAB5'];
+
+// Sortable role card wrapper for DnD
+const SortableRoleCard = ({ id, canDrag, children }: { id: string; canDrag: boolean; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: !canDrag });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.55 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      {canDrag && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-1.5 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing z-10 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors p-0.5 rounded select-none"
+          style={{ userSelect: 'none', touchAction: 'none' }}
+          title="Sürükle"
+        >
+          <GripVertical className="w-3.5 h-3.5" />
+        </div>
+      )}
+      {children}
+    </div>
+  );
+};
+
+// Sortable channel card wrapper for DnD
+const SortableChannelCard = ({ id, canDrag, children }: { id: string; canDrag: boolean; children: React.ReactNode }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: !canDrag });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.55 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      {canDrag && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-1.5 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing z-10 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors p-0.5 rounded select-none"
+          style={{ userSelect: 'none', touchAction: 'none' }}
+          title="Sürükle"
+        >
+          <GripVertical className="w-3.5 h-3.5" />
+        </div>
+      )}
+      {children}
+    </div>
+  );
+};
 const MAX_EMOJIS = 50;
 
 const PERMISSION_CATEGORIES = [
@@ -63,6 +126,10 @@ const ServerSettings = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [localRoles, setLocalRoles] = useState<Role[]>([]);
+  const [localChannelsList, setLocalChannelsList] = useState<{ id: string; name: string; type: string; position: number; sort_order?: number; category_id: string | null; slow_mode_interval?: number }[]>([]);
+  const roleSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const channelSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleColor, setNewRoleColor] = useState('#3498DB');
@@ -697,6 +764,8 @@ const ServerSettings = () => {
   }, [serverId]);
 
   useEffect(() => { fetchRoles(); }, [fetchRoles]);
+  useEffect(() => { setLocalRoles(roles); }, [roles]);
+  useEffect(() => { setLocalChannelsList(channelsList); }, [channelsList]);
   useEffect(() => { fetchUserPermissions(); }, [fetchUserPermissions]);
   useEffect(() => { if (activeTab === 'members' || activeTab === 'roles') fetchMembers(); }, [activeTab, fetchMembers]);
   useEffect(() => { if (activeTab === 'audit') fetchAuditLogs(); }, [activeTab, fetchAuditLogs]);
@@ -821,6 +890,43 @@ const ServerSettings = () => {
     await supabase.from('server_roles').update({ position: roles[swapIdx].position }).eq('id', roles[idx].id);
     await supabase.from('server_roles').update({ position: roles[idx].position }).eq('id', roles[swapIdx].id);
     fetchRoles();
+  };
+
+  const handleRoleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localRoles.findIndex(r => r.id === active.id);
+    const newIndex = localRoles.findIndex(r => r.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(localRoles, oldIndex, newIndex);
+    setLocalRoles(reordered);
+    // Assign positions: highest index = highest position value (matching fetchRoles order: ascending: false)
+    await Promise.all(reordered.map(async (role, idx) => {
+      const newPos = reordered.length - 1 - idx;
+      await supabase.from('server_roles').update({ position: newPos } as any).eq('id', role.id);
+    }));
+    fetchRoles();
+  };
+
+  const handleChannelDragEnd = async (event: DragEndEvent, categoryId: string | null) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const groupChannels = localChannelsList
+      .filter(c => (c.category_id || null) === categoryId)
+      .sort((a, b) => (a.sort_order ?? a.position) - (b.sort_order ?? b.position));
+    const oldIndex = groupChannels.findIndex(c => c.id === active.id);
+    const newIndex = groupChannels.findIndex(c => c.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(groupChannels, oldIndex, newIndex);
+    const groupIds = new Set(groupChannels.map(c => c.id));
+    setLocalChannelsList(prev => [
+      ...prev.filter(c => !groupIds.has(c.id)),
+      ...reordered.map((ch, idx) => ({ ...ch, position: idx, sort_order: idx })),
+    ]);
+    await Promise.all(reordered.map(async (ch, idx) => {
+      const { error } = await (supabase as any).from('channels').update({ position: idx, sort_order: idx }).eq('id', ch.id);
+      if (error) await supabase.from('channels').update({ position: idx } as any).eq('id', ch.id);
+    }));
   };
 
   const handleRenameRole = async (roleId: string) => {
@@ -1474,15 +1580,18 @@ const ServerSettings = () => {
                 </div>
               )}
 
+              <DndContext sensors={roleSensors} collisionDetection={closestCenter} onDragEnd={handleRoleDragEnd}>
+              <SortableContext items={localRoles.map(r => r.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-2">
-                {roles.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Henüz rol oluşturulmamış</p>}
-                {roles.map((role, idx) => {
+                {localRoles.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">Henüz rol oluşturulmamış</p>}
+                {localRoles.map((role, idx) => {
                   const memberCount = members.filter(m => m.roles.some(r => r.id === role.id)).length;
                   const roleMembers = members.filter(m => m.roles.some(r => r.id === role.id));
                   const isExpanded = editingRole?.id === role.id;
                   const activeTab2 = roleActiveTab[role.id] || 'permissions';
                   return (
-                    <div key={role.id} className="rounded-lg border border-border bg-card overflow-hidden">
+                    <SortableRoleCard key={role.id} id={role.id} canDrag={canManageRoles}>
+                    <div className="rounded-lg border border-border bg-card overflow-hidden" style={{ paddingLeft: canManageRoles ? '22px' : undefined }}>
                       <div className="flex items-center gap-3 px-3 py-2.5">
                         {/* Color dot (click to edit color inline) */}
                         <div className="relative group shrink-0">
@@ -1529,8 +1638,6 @@ const ServerSettings = () => {
                           <div className="flex items-center gap-0.5 shrink-0">
                             <button onClick={() => { setRenamingRoleId(role.id); setRenamingRoleVal(role.name); }} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/50" title="Yeniden adlandır"><Pencil className="w-3.5 h-3.5" /></button>
                             <button onClick={() => { setEditingRole(isExpanded ? null : role); setRoleActiveTab(prev => ({ ...prev, [role.id]: 'permissions' })); }} className={`p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/50 ${isExpanded ? 'bg-secondary text-foreground' : ''}`} title="Düzenle"><Shield className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => handleMoveRole(role.id, 'up')} disabled={idx === 0} className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30"><ArrowUp className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => handleMoveRole(role.id, 'down')} disabled={idx === roles.length - 1} className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30"><ArrowDown className="w-3.5 h-3.5" /></button>
                             <button onClick={() => handleDeleteRole(role.id)} className="p-1.5 rounded text-destructive hover:text-destructive/80 hover:bg-destructive/10"><Trash2 className="w-3.5 h-3.5" /></button>
                           </div>
                         )}
@@ -1701,9 +1808,12 @@ const ServerSettings = () => {
                         </div>
                       )}
                     </div>
+                    </SortableRoleCard>
                   );
                 })}
               </div>
+              </SortableContext>
+              </DndContext>
             </div>
           )}
 
@@ -2133,11 +2243,14 @@ const ServerSettings = () => {
                 </>
               )}
               <p className="text-xs text-muted-foreground">Kanalları kategoriler arasında taşımak için aşağıdaki açılır menüyü kullanın.</p>
-              {channelsList.filter(c => !c.category_id).length > 0 && (
+              {localChannelsList.filter(c => !c.category_id).length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">Kategorisiz</p>
-                  {channelsList.filter(c => !c.category_id).sort((a, b) => (a.sort_order ?? a.position) - (b.sort_order ?? b.position)).map((ch, idx, arr) => (
-                    <div key={ch.id} className="rounded-lg border border-border bg-card px-3 py-2 space-y-1.5">
+                  <DndContext sensors={channelSensors} collisionDetection={closestCenter} onDragEnd={(e) => handleChannelDragEnd(e, null)}>
+                  <SortableContext items={localChannelsList.filter(c => !c.category_id).sort((a, b) => (a.sort_order ?? a.position) - (b.sort_order ?? b.position)).map(c => c.id)} strategy={verticalListSortingStrategy}>
+                  {localChannelsList.filter(c => !c.category_id).sort((a, b) => (a.sort_order ?? a.position) - (b.sort_order ?? b.position)).map((ch, idx, arr) => (
+                    <SortableChannelCard key={ch.id} id={ch.id} canDrag={canManageChannels}>
+                    <div className="rounded-lg border border-border bg-card px-3 py-2 space-y-1.5" style={{ paddingLeft: canManageChannels ? '28px' : undefined }}>
                       <div className="flex items-center gap-2">
                         {ch.type === 'voice' ? <Volume2 className="w-4 h-4 text-muted-foreground shrink-0" /> : <Hash className="w-4 h-4 text-muted-foreground shrink-0" />}
                         {renamingChannelId === ch.id ? (
@@ -2161,8 +2274,6 @@ const ServerSettings = () => {
                             ) : (
                               <button onClick={() => { setRenamingChannelId(ch.id); setRenamingChannelVal(ch.name); }} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/50" title="Yeniden Adlandır"><Pencil className="w-3.5 h-3.5" /></button>
                             )}
-                            <button onClick={() => handleMoveChannel(ch.id, 'up')} disabled={idx === 0} className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 hover:bg-secondary/50" title="Yukarı taşı"><ArrowUp className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => handleMoveChannel(ch.id, 'down')} disabled={idx === arr.length - 1} className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 hover:bg-secondary/50" title="Aşağı taşı"><ArrowDown className="w-3.5 h-3.5" /></button>
                             <button onClick={() => handleDeleteChannel(ch.id)} className="p-1.5 rounded text-destructive hover:text-destructive/80 hover:bg-destructive/10" title="Kanalı sil"><Trash2 className="w-3.5 h-3.5" /></button>
                           </div>
                         )}
@@ -2184,7 +2295,10 @@ const ServerSettings = () => {
                         </div>
                       )}
                     </div>
+                    </SortableChannelCard>
                   ))}
+                  </SortableContext>
+                  </DndContext>
                 </div>
               )}
               {[...categories].sort((a, b) => a.position - b.position).map((cat, catIdx, sortedCats) => (
@@ -2217,8 +2331,11 @@ const ServerSettings = () => {
                       </div>
                     )}
                   </div>
-                  {channelsList.filter(c => c.category_id === cat.id).sort((a, b) => (a.sort_order ?? a.position) - (b.sort_order ?? b.position)).map((ch, idx, arr) => (
-                    <div key={ch.id} className="rounded-lg border border-border bg-card px-3 py-2 space-y-1.5 ml-3">
+                  <DndContext sensors={channelSensors} collisionDetection={closestCenter} onDragEnd={(e) => handleChannelDragEnd(e, cat.id)}>
+                  <SortableContext items={localChannelsList.filter(c => c.category_id === cat.id).sort((a, b) => (a.sort_order ?? a.position) - (b.sort_order ?? b.position)).map(c => c.id)} strategy={verticalListSortingStrategy}>
+                  {localChannelsList.filter(c => c.category_id === cat.id).sort((a, b) => (a.sort_order ?? a.position) - (b.sort_order ?? b.position)).map((ch, idx, arr) => (
+                    <SortableChannelCard key={ch.id} id={ch.id} canDrag={canManageChannels}>
+                    <div className="rounded-lg border border-border bg-card px-3 py-2 space-y-1.5 ml-3" style={{ paddingLeft: canManageChannels ? '40px' : undefined }}>
                       <div className="flex items-center gap-2">
                         {ch.type === 'voice' ? <Volume2 className="w-4 h-4 text-muted-foreground shrink-0" /> : <Hash className="w-4 h-4 text-muted-foreground shrink-0" />}
                         {renamingChannelId === ch.id ? (
@@ -2242,8 +2359,6 @@ const ServerSettings = () => {
                             ) : (
                               <button onClick={() => { setRenamingChannelId(ch.id); setRenamingChannelVal(ch.name); }} className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/50" title="Yeniden Adlandır"><Pencil className="w-3.5 h-3.5" /></button>
                             )}
-                            <button onClick={() => handleMoveChannel(ch.id, 'up')} disabled={idx === 0} className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 hover:bg-secondary/50" title="Yukarı taşı"><ArrowUp className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => handleMoveChannel(ch.id, 'down')} disabled={idx === arr.length - 1} className="p-1.5 rounded text-muted-foreground hover:text-foreground disabled:opacity-30 hover:bg-secondary/50" title="Aşağı taşı"><ArrowDown className="w-3.5 h-3.5" /></button>
                             <button onClick={() => handleDeleteChannel(ch.id)} className="p-1.5 rounded text-destructive hover:text-destructive/80 hover:bg-destructive/10" title="Kanalı sil"><Trash2 className="w-3.5 h-3.5" /></button>
                           </div>
                         )}
@@ -2263,7 +2378,10 @@ const ServerSettings = () => {
                         </div>
                       )}
                     </div>
+                    </SortableChannelCard>
                   ))}
+                  </SortableContext>
+                  </DndContext>
                 </div>
               ))}
             </div>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Bug, Shield, GripVertical, Globe, Bot, Puzzle } from 'lucide-react';
+import { Sparkles, Wrench, Bug, Shield, GripVertical, Globe, Bot, Puzzle, SlidersHorizontal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.5';
+const RELEASE_VERSION = '1.2.6';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -21,49 +21,35 @@ const features: Feature[] = [
     icon: GripVertical,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Sürükle-bırak kanal sıralama: Sunucu sahibi ve yöneticiler kanalları sürükleyerek yeniden sıralayabilir. Sıra Supabase\'e anlık kaydedilir.',
+    label: 'Sunucu Ayarları → Roller sekmesinde sürükle-bırak ile rol sıralaması. Pozisyon Supabase\'e anlık kaydedilir.',
+    badge: 'Yeni',
+  },
+  {
+    icon: SlidersHorizontal,
+    iconBg: 'bg-cyan-500/15',
+    iconColor: 'text-cyan-400',
+    label: 'Sunucu Ayarları → Kanallar sekmesinde sürükle-bırak ile kanal sıralaması. Hem kategorili hem kategorisiz kanallar desteklenir.',
     badge: 'Yeni',
   },
   {
     icon: Globe,
     iconBg: 'bg-violet-500/15',
     iconColor: 'text-violet-400',
-    label: 'Topluluklar sayfası premium yenileme: gradient hero, glassmorphism kartlar, kategori ikonu, animasyonlu hover efektleri.',
+    label: 'Ana kanal listesinde Discord tarzı sürükle-bırak: görünür tutucu nokta kaldırıldı, yeşil çizgi bırakma noktasını gösteriyor.',
     badge: 'İyileştirme',
-  },
-  {
-    icon: Bot,
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    label: '6 yeni bot değişkeni: {joke} şaka, {quote} alıntı, {trivia} bilgi, {wouldYouRather} tercih, {riddle} bilmece, {compliment} iltifat.',
-    badge: 'Yeni',
   },
   {
     icon: Puzzle,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Eklenti yorumları PGRST200 hatası giderildi: plugin_reviews → profiles FK kısıtlaması SQL migrasyonunda oluşturuldu, ayrıca profil sorgusu iki aşamalı hale getirildi.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Shield,
-    iconBg: 'bg-orange-500/15',
-    iconColor: 'text-orange-400',
-    label: 'Üye listesi başlığından "canlı" göstergesi kaldırıldı. Davet sayfası görsel iyileştirmesi: animasyonlu parçacıklar, premium kart tasarımı.',
-    badge: 'İyileştirme',
-  },
-  {
-    icon: Bug,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'Windows indirme bağlantıları GitHub Releases sayfasına yönlendirildi. Artık 404 hatası vermiyor.',
+    label: 'Davet sayfası logo sorunu düzeltildi: sunucu logosu olan sunucularda gri kutu yerine gerçek ikon gösteriliyor.',
     badge: 'Düzeltme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'SQL migration v1.2.5: channels.position kolonu, plugin_reviews_user_id_fkey FK kısıtlaması, kanal sıralama için index.',
+    label: 'SQL migration v1.2.6: server_roles.position realtime güncellemeleri için ek index, channels DnD optimizasyonu.',
     badge: 'Teknik',
   },
 ];
