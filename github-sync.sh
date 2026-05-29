@@ -32,7 +32,7 @@ for f in \
   package.json package-lock.json index.html vite.config.ts tailwind.config.ts \
   tsconfig.json tsconfig.app.json tsconfig.node.json \
   postcss.config.js eslint.config.js components.json \
-  netlify.toml CHANGELOG.md README.md replit.md \
+  netlify.toml vercel.json CHANGELOG.md README.md replit.md \
   .gitignore .gitattributes nativefier.json electron-builder.json \
   build-electron.sh github-sync.sh playwright.config.ts \
   playwright-fixture.ts vitest.config.ts; do
