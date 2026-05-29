@@ -8,16 +8,7 @@ import EmailSentModal from '@/components/EmailSentModal';
 
 type Step = 'names' | 'birthday' | 'avatar' | 'password' | 'terms' | 'email';
 
-// Domain-based reCAPTCHA key selection:
-// Vercel site (aurorachat-tr.vercel.app) → new keys
-// Netlify site (aurorachat-beta-tr.netlify.app) → old keys
-const RECAPTCHA_SITE_KEY = (() => {
-  const h = window.location.hostname;
-  if (h.includes('vercel.app') || h.includes('aurorachat-tr.vercel')) {
-    return '6LfHJeosAAAAALeAHpS1gAKZ7lQ_XguO6KLYlqAW'; // Vercel
-  }
-  return '6LdS-J8sAAAAAOiGrK87r8WNkmyOEhQuSCRXHC9P'; // Netlify (default)
-})();
+const HCAPTCHA_SITE_KEY = '67dcfdac-873a-4fdc-acd6-24f2e75e2562';
 
 const MONTHS = [
   'Ocak','Şubat','Mart','Nisan','Mayıs','Haziran',
@@ -113,22 +104,22 @@ const Register = () => {
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
-  // Load reCAPTCHA script once; poll until grecaptcha is available
+  // Load hCaptcha script once; poll until hcaptcha is available
   useEffect(() => {
-    if ((window as any).grecaptcha?.render) {
+    if ((window as any).hcaptcha?.render) {
       setCaptchaReady(true);
       return;
     }
-    if (!document.getElementById('recaptcha-script')) {
+    if (!document.getElementById('hcaptcha-script')) {
       const script = document.createElement('script');
-      script.id = 'recaptcha-script';
-      script.src = 'https://www.google.com/recaptcha/api.js';
+      script.id = 'hcaptcha-script';
+      script.src = 'https://js.hcaptcha.com/1/api.js?render=explicit';
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
     }
     const interval = setInterval(() => {
-      if ((window as any).grecaptcha?.render) {
+      if ((window as any).hcaptcha?.render) {
         clearInterval(interval);
         setCaptchaReady(true);
       }
@@ -136,16 +127,16 @@ const Register = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Explicitly render widget when we reach email step & grecaptcha is ready
+  // Explicitly render widget when we reach email step & hcaptcha is ready
   useEffect(() => {
     if (step !== 'email' || !captchaReady) return;
     const container = captchaContainerRef.current;
     if (!container || captchaWidgetId.current !== null) return;
     const timer = setTimeout(() => {
       if (!captchaContainerRef.current || captchaWidgetId.current !== null) return;
-      if (!(window as any).grecaptcha?.render) return;
-      captchaWidgetId.current = (window as any).grecaptcha.render(captchaContainerRef.current, {
-        sitekey: RECAPTCHA_SITE_KEY,
+      if (!(window as any).hcaptcha?.render) return;
+      captchaWidgetId.current = (window as any).hcaptcha.render(captchaContainerRef.current, {
+        sitekey: HCAPTCHA_SITE_KEY,
         callback: (token: string) => setCaptchaToken(token),
         'expired-callback': () => setCaptchaToken(null),
         theme: 'dark',
@@ -262,8 +253,8 @@ const Register = () => {
           if (!isServerError && captchaResult?.success === false) {
             setErrors({ captcha: 'Doğrulama başarısız, lütfen tekrar deneyin.' });
             setLoading(false);
-            if ((window as any).grecaptcha && captchaWidgetId.current !== null) {
-              (window as any).grecaptcha.reset(captchaWidgetId.current);
+            if ((window as any).hcaptcha && captchaWidgetId.current !== null) {
+              (window as any).hcaptcha.reset(captchaWidgetId.current);
             }
             setCaptchaToken(null);
             return;

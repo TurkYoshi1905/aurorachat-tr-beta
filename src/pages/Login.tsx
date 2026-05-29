@@ -10,16 +10,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { Button } from '@/components/ui/button';
 import LoginBanModal from '@/components/LoginBanModal';
 
-// Domain-based reCAPTCHA key selection:
-// Vercel site (aurorachat-tr.vercel.app) → new keys
-// Netlify site (aurorachat-beta-tr.netlify.app) → old keys
-const RECAPTCHA_SITE_KEY = (() => {
-  const h = window.location.hostname;
-  if (h.includes('vercel.app') || h.includes('aurorachat-tr.vercel')) {
-    return '6LfHJeosAAAAALeAHpS1gAKZ7lQ_XguO6KLYlqAW'; // Vercel
-  }
-  return '6LdS-J8sAAAAAOiGrK87r8WNkmyOEhQuSCRXHC9P'; // Netlify (default)
-})();
+const HCAPTCHA_SITE_KEY = '67dcfdac-873a-4fdc-acd6-24f2e75e2562';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -57,24 +48,24 @@ const Login = () => {
     setMfaFactorId(id);
   };
 
-  // Load reCaptcha script
+  // Load hCaptcha script
   useEffect(() => {
-    if (document.getElementById('recaptcha-script')) return;
+    if (document.getElementById('hcaptcha-script')) return;
     const script = document.createElement('script');
-    script.id = 'recaptcha-script';
-    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.id = 'hcaptcha-script';
+    script.src = 'https://js.hcaptcha.com/1/api.js';
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);
   }, []);
 
-  // Callback for reCaptcha
+  // Callbacks for hCaptcha
   useEffect(() => {
-    (window as any).onRecaptchaSuccess = (token: string) => setCaptchaToken(token);
-    (window as any).onRecaptchaExpired = () => setCaptchaToken(null);
+    (window as any).onHCaptchaSuccess = (token: string) => setCaptchaToken(token);
+    (window as any).onHCaptchaExpired = () => setCaptchaToken(null);
     return () => {
-      delete (window as any).onRecaptchaSuccess;
-      delete (window as any).onRecaptchaExpired;
+      delete (window as any).onHCaptchaSuccess;
+      delete (window as any).onHCaptchaExpired;
     };
   }, []);
 
@@ -86,7 +77,7 @@ const Login = () => {
   }, [mfaOtp, showMFAChallenge]);
 
   const resetCaptcha = () => {
-    if ((window as any).grecaptcha) (window as any).grecaptcha.reset();
+    if ((window as any).hcaptcha) (window as any).hcaptcha.reset();
     setCaptchaToken(null);
   };
 
@@ -404,13 +395,13 @@ const Login = () => {
             {errors.password && <p className="text-destructive text-xs mt-1">{errors.password}</p>}
           </div>
 
-          {/* reCaptcha v2 */}
+          {/* hCaptcha */}
           <div>
             <div
-              className="g-recaptcha"
-              data-sitekey={RECAPTCHA_SITE_KEY}
-              data-callback="onRecaptchaSuccess"
-              data-expired-callback="onRecaptchaExpired"
+              className="h-captcha"
+              data-sitekey={HCAPTCHA_SITE_KEY}
+              data-callback="onHCaptchaSuccess"
+              data-expired-callback="onHCaptchaExpired"
               data-theme="dark"
             />
             {errors.captcha && <p className="text-destructive text-xs mt-1">{errors.captcha}</p>}
