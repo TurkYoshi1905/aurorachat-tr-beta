@@ -16,6 +16,42 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.7',
+    date: '30 Mayıs 2026',
+    summary: 'Android v1.2.7 (Version Code 11): Sesli sohbet bildirim takılması düzeltildi, DownloadManager ile dosya indirme desteği eklendi, depolama izinleri güncellendi, açılış URL\'si güncellendi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Android APK v1.2.7 (Version Code 11): Uygulama sürümü güncellendi.',
+          'Yeni açılış adresi: https://aurorachat-tr.vercel.app/ olarak güncellendi.',
+          'Dosya İndirme (DownloadManager): Uygulama içerisinden resim, video veya herhangi bir dosya indirilebilmesi için DownloadManager entegrasyonu yapıldı. İndirilen dosyalar cihazın Downloads (İndirilenler) klasörüne kaydedilir ve bildirim çubuğunda ilerleme gösterilir.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Sesli Sohbet Bildirimi Düzeltmesi: Sohbetten çıkıldığında bildirimin takılı kalma sorunu giderildi.',
+          'stopVoiceChatService fonksiyonu, Android 8.0+ cihazlarda servisi doğru şekilde sonlandıracak şekilde güncellendi.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'Depolama İzinleri: Dosya indirme işlemi için gerekli olan depolama izinleri (Android 10 altı için) manifest ve çalışma zamanı izinlerine eklendi.',
+          'github-sync.sh scripti eklendi: Tek komutla tüm değişiklikleri GitHub\'a gönderme desteği.',
+          'Tüm frontend bileşenlerinde versiyon referansları 1.2.6\'dan 1.2.7\'ye güncellendi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.6',
     date: '27 Mayıs 2026',
     summary: 'Sunucu Ayarları\'nda roller ve kanallar için sürükle-bırak sıralama, Discord tarzı kanal listesi iyileştirmesi (yeşil çizgi göstergesi, görünür tutucular kaldırıldı), davet sayfası logo hatası düzeltmesi.',

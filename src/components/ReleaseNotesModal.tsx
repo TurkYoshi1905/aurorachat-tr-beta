@@ -5,7 +5,7 @@ import { Sparkles, Wrench, Bug, Shield, GripVertical, Globe, Bot, Puzzle, Slider
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.6';
+const RELEASE_VERSION = '1.2.7';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,38 +18,38 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: GripVertical,
+    icon: Sparkles,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Sunucu Ayarları → Roller sekmesinde sürükle-bırak ile rol sıralaması. Pozisyon Supabase\'e anlık kaydedilir.',
+    label: 'Android uygulaması v1.2.7\'ye güncellendi (Version Code 11). Açılış adresi aurorachat-tr.vercel.app olarak değiştirildi.',
     badge: 'Yeni',
   },
   {
-    icon: SlidersHorizontal,
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    label: 'Sunucu Ayarları → Kanallar sekmesinde sürükle-bırak ile kanal sıralaması. Hem kategorili hem kategorisiz kanallar desteklenir.',
-    badge: 'Yeni',
-  },
-  {
-    icon: Globe,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Ana kanal listesinde Discord tarzı sürükle-bırak: görünür tutucu nokta kaldırıldı, yeşil çizgi bırakma noktasını gösteriyor.',
-    badge: 'İyileştirme',
-  },
-  {
-    icon: Puzzle,
+    icon: Bot,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Davet sayfası logo sorunu düzeltildi: sunucu logosu olan sunucularda gri kutu yerine gerçek ikon gösteriliyor.',
+    label: 'Sesli sohbetten çıkıldığında bildirim takılı kalma sorunu giderildi. Android 8.0+ cihazlarda stopVoiceChatService düzgün çalışıyor.',
     badge: 'Düzeltme',
+  },
+  {
+    icon: GripVertical,
+    iconBg: 'bg-cyan-500/15',
+    iconColor: 'text-cyan-400',
+    label: 'Dosya İndirme (DownloadManager): uygulama içinden resim, video veya dosya indirilebiliyor. İndirilenler klasörüne kaydedilir, bildirim çubuğunda ilerleme görünür.',
+    badge: 'Yeni',
+  },
+  {
+    icon: Shield,
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Depolama izinleri (Android 10 altı) manifest ve çalışma zamanına eklendi. Dosya indirme için gerekli izinler otomatik isteniyor.',
+    badge: 'Teknik',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'SQL migration v1.2.6: server_roles.position realtime güncellemeleri için ek index, channels DnD optimizasyonu.',
+    label: 'APK Version Code 10 → 11. GitHub sync scripti eklendi. Tüm versiyon referansları 1.2.7\'ye güncellendi.',
     badge: 'Teknik',
   },
 ];
