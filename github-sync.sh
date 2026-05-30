@@ -1,91 +1,58 @@
 #!/bin/bash
+# ─────────────────────────────────────────────────────────────
+#  AuroraChat — GitHub Sync Script
+#  Tüm değişiklikleri commit edip GitHub'a gönderir.
+#  Kullanım: bash github-sync.sh [isteğe bağlı commit mesajı]
+# ─────────────────────────────────────────────────────────────
 
-# Değişkenler
-REPO_URL="https://TurkYoshi1905:${GITHUB_PAT}@github.com/TurkYoshi1905/aurorachat-tr-beta.git"
-TEMP_DIR="/tmp/github_sync_$$"
-WORKSPACE="/home/runner/workspace"
+set -e
 
-echo "GitHub sync basliyor..."
+VERSION="v1.2.7"
+REMOTE="origin"
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M')
 
-# Geçici dizini temizle ve depoyu CLONE et (Geçmişi korumak için init yerine clone)
-rm -rf "$TEMP_DIR"
-git clone "$REPO_URL" "$TEMP_DIR"
-cd "$TEMP_DIR"
+COMMIT_MSG="${1:-"release: AuroraChat $VERSION — $(date '+%d %b %Y')"}"
 
-# Git kullanıcı ayarlarını yap
-git config user.email "asfurkan140@gmail.com"
-git config user.name "TurkYoshi1905"
-
-echo "Dosyalar guncelleniyor..."
-
-# Dosyaları kopyala (Dosyaları üzerine yazar, .git klasörüne dokunmaz)
-cp -r "$WORKSPACE/src"      "$TEMP_DIR/"
-cp -r "$WORKSPACE/public"   "$TEMP_DIR/"
-cp -r "$WORKSPACE/supabase" "$TEMP_DIR/"
-cp -r "$WORKSPACE/src-tauri" "$TEMP_DIR/" 2>/dev/null || true
-cp -r "$WORKSPACE/electron" "$TEMP_DIR/" 2>/dev/null || true
-cp -r "$WORKSPACE/.github"  "$TEMP_DIR/" 2>/dev/null || true
-cp -r "$WORKSPACE/scripts"  "$TEMP_DIR/" 2>/dev/null || true
-
-# Tekil dosyaları kopyala
-for f in \
-  package.json package-lock.json index.html vite.config.ts tailwind.config.ts \
-  tsconfig.json tsconfig.app.json tsconfig.node.json \
-  postcss.config.js eslint.config.js components.json \
-  netlify.toml vercel.json CHANGELOG.md README.md replit.md \
-  .gitignore .gitattributes nativefier.json electron-builder.json \
-  build-electron.sh github-sync.sh playwright.config.ts \
-  playwright-fixture.ts vitest.config.ts; do
-  [ -f "$WORKSPACE/$f" ] && cp "$WORKSPACE/$f" "$TEMP_DIR/$f"
-done
-
-COMMIT_MSG="${1:-Otomatik guncelleme: $(date '+%Y-%m-%d %H:%M')}"
-
-# Değişiklikleri ekle ve commitle
-git add -A
-# Eğer değişiklik yoksa hata vermemesi için kontrol
-git diff-index --quiet HEAD || git commit -m "$COMMIT_MSG"
-
-echo "GitHub'a yukleniyor..."
-# --force kaldırıldı, normal push yapılıyor
-git push origin main
-
-STATUS=$?
-if [ $STATUS -eq 0 ]; then
-  echo ""
-  echo "Tamamlandi! GitHub'a basariyla yuklendi."
-  echo "Repo: https://github.com/TurkYoshi1905/aurorachat-tr-beta"
-else
-  echo ""
-  echo "HATA: Push basarisiz oldu! (Cikis kodu: $STATUS)"
-fi
-
-# Temizlik
-rm -rf "$TEMP_DIR"
-
-# --- Supabase Bölümü (Aynı Kaldı) ---
 echo ""
-echo "Supabase Edge Functions deploy ediliyor..."
-cd "$WORKSPACE"
+echo "╔══════════════════════════════════════════════╗"
+echo "║        AuroraChat — GitHub Sync              ║"
+echo "║  Sürüm : $VERSION                             ║"
+echo "║  Dal   : $BRANCH                              ║"
+echo "║  Zaman : $TIMESTAMP                           ║"
+echo "╚══════════════════════════════════════════════╝"
+echo ""
 
-SUPA_BIN="/tmp/supabase_cli_bin"
-if [ ! -f "$SUPA_BIN" ]; then
-  echo "  Supabase CLI indiriliyor..."
-  curl -fsSL https://github.com/supabase/cli/releases/download/v2.15.8/supabase_linux_amd64.tar.gz \
-    -o /tmp/supabase_cli.tar.gz 2>/dev/null
-  tar -xzf /tmp/supabase_cli.tar.gz -C /tmp 2>/dev/null
-  mv /tmp/supabase "$SUPA_BIN" 2>/dev/null || true
-  chmod +x "$SUPA_BIN" 2>/dev/null
+# ── 1. Durum kontrolü ──────────────────────────────────────
+echo "▶ [1/4] Değişiklikler kontrol ediliyor..."
+CHANGED=$(git status --porcelain | wc -l)
+if [ "$CHANGED" -eq 0 ]; then
+  echo "  ✓ Gönderilek değişiklik yok — her şey güncel."
+  exit 0
 fi
+echo "  → $CHANGED değiştirilmiş / yeni dosya bulundu."
 
-for fn_dir in supabase/functions/*/; do
-  fn_name=$(basename "$fn_dir")
-  echo "  -> $fn_name deploy ediliyor..."
-  SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" "$SUPA_BIN" functions deploy "$fn_name" \
-    --project-ref ktittqaubkaylprxnoya \
-    --no-verify-jwt \
-    --use-api \
-    2>&1 | grep -E "Deployed|Error|error|failed"
-done
+# ── 2. Staging ─────────────────────────────────────────────
+echo ""
+echo "▶ [2/4] Tüm değişiklikler stage ediliyor..."
+git add -A
+echo "  ✓ git add -A tamamlandı."
 
-echo "Supabase deploy tamamlandi!"
+# ── 3. Commit ──────────────────────────────────────────────
+echo ""
+echo "▶ [3/4] Commit oluşturuluyor..."
+echo "  Mesaj: \"$COMMIT_MSG\""
+git commit -m "$COMMIT_MSG"
+echo "  ✓ Commit oluşturuldu."
+
+# ── 4. Push ────────────────────────────────────────────────
+echo ""
+echo "▶ [4/4] GitHub'a gönderiliyor ($REMOTE/$BRANCH)..."
+git push "$REMOTE" "$BRANCH"
+
+echo ""
+echo "══════════════════════════════════════════════"
+echo "  ✅ Başarılı! Tüm değişiklikler GitHub'da."
+echo "  🔗 https://github.com/TurkYoshi1905/aurorachat-tr-beta"
+echo "══════════════════════════════════════════════"
+echo ""
