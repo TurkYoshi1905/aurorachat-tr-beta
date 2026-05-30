@@ -2533,7 +2533,7 @@ const Settings = () => {
                       <Smartphone className="w-5 h-5 text-emerald-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">AuroraChat for Android v1.2.7</p>
+                      <p className="text-sm font-medium text-foreground">AuroraChat v1.2.7</p>
                       <p className="text-xs text-muted-foreground">GitHub üzerinden doğrudan indirme · ~7.6 MB</p>
                     </div>
                   </div>
