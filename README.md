@@ -10,7 +10,7 @@ Sunucular · Kanallar · Sesli & Görüntülü · Gerçek Zamanlı Mesajlaşma
 
 <br/>
 
-[![Version](https://img.shields.io/badge/sürüm-v1.2.6-6366f1?style=for-the-badge&logo=sparkles&logoColor=white)](https://github.com)
+[![Version](https://img.shields.io/badge/sürüm-v1.2.7-6366f1?style=for-the-badge&logo=sparkles&logoColor=white)](https://github.com)
 [![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Android%20%7C%20Windows-2dd4bf?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com)
 [![Stack](https://img.shields.io/badge/stack-React%20%2B%20Supabase-f59e0b?style=for-the-badge&logo=react&logoColor=white)](https://github.com)
 [![Language](https://img.shields.io/badge/dil-TypeScript-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://github.com)
