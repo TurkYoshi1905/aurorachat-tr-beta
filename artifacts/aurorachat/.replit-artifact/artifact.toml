@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AuroraChat"
+version = "1.0.0"
+id = "artifacts/aurorachat"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18436
+
+[services.development]
+run = "pnpm --filter @workspace/aurorachat run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aurorachat", "run", "build" ]
+publicDir = "artifacts/aurorachat/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18436"
+BASE_PATH = "/"
