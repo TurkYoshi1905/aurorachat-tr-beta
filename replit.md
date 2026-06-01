@@ -1,6 +1,6 @@
-# [Project name]
+# AuroraChat
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Türkiye'nin modern iletişim platformu — sesli, yazılı ve topluluk odaklı gerçek zamanlı chat uygulaması.
 
 ## Run & Operate
 
@@ -34,7 +34,8 @@ _Describe the high-level user-facing capabilities of this app once they exist._
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- UI/UX tasarım kararlarında her zaman `.agents/skills/ui-ux-pro-max/SKILL.md` skillini kullan — renk, tipografi, erişilebilirlik, animasyon, bileşen tasarımı.
+- Yeni sayfa, bileşen veya stil seçimi yapılmadan önce bu skill okunmalı.
 
 ## Gotchas
 

@@ -1,0 +1,1 @@
+- [UI/UX Pro Max Skill](ui-ux-pro-max.md) — Her UI/UX kararında kullanılacak tasarım skili; renk, tipografi, erişilebilirlik, animasyon, form, navigasyon içerir.
