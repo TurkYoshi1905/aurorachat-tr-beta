@@ -5,8 +5,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import UserProfileCard from './UserProfileCard';
 import {
   ArrowLeft, Send, Users, Pencil, Trash2, Check, X, Loader2, LogOut,
-  UserPlus, Search, AlertTriangle, Circle, Moon, MinusCircle, Phone, PhoneOff, PhoneCall,
+  UserPlus, Search, AlertTriangle, Circle, Moon, MinusCircle, Phone, PhoneOff, PhoneCall, Mic,
 } from 'lucide-react';
+import VoiceRecorder from './VoiceRecorder';
+import VoicePlayerCard, { parseVoiceNote } from './VoicePlayerCard';
+import { MessageSkeletonList } from './MessageSkeleton';
 import { toast } from 'sonner';
 import { renderMessageContent } from '@/utils/messageRenderer';
 import EmojiPicker from './EmojiPicker';
@@ -351,6 +354,29 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
     return () => { supabase.removeChannel(presenceCh); };
   }, [user, groupId]);
 
+  const sendVoiceNote = async (url: string, dur: number) => {
+    if (!user) return;
+    const content = JSON.stringify({ __vn: 1, url, dur });
+    const optimisticId = `opt-vn-${Date.now()}`;
+    const me = profileMap.current.get(user.id);
+    setMessages(prev => [...prev, {
+      id: optimisticId,
+      senderId: user.id,
+      senderName: me?.displayName || 'Sen',
+      senderAvatar: me?.avatarUrl || null,
+      content,
+      insertedAt: new Date().toISOString(),
+      updatedAt: null,
+      status: 'sending' as const,
+    }]);
+    const { error } = await (supabase.from('group_dm_messages' as any).insert({ group_id: groupId, sender_id: user.id, content }) as any);
+    if (error) {
+      setMessages(prev => prev.map(m => m.id === optimisticId ? { ...m, status: 'failed' as const } : m));
+    } else {
+      setMessages(prev => prev.filter(m => m.id !== optimisticId));
+    }
+  };
+
   const sendMessage = async () => {
     if (!user || !input.trim() || sending) return;
     const content = input.trim();
@@ -536,8 +562,10 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full items-center justify-center bg-[#313338]">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className="flex flex-col h-full bg-[#313338] overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-2 pt-6">
+          <MessageSkeletonList count={10} />
+        </div>
       </div>
     );
   }
@@ -814,7 +842,11 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
                         </div>
                       ) : (
                         <div className={`text-sm text-[#dbdee1] leading-relaxed break-words ${msg.status === 'failed' ? 'text-[#ed4245]' : ''}`}>
-                          {renderMessageContent(msg.content)}
+                          {(() => {
+                            const vn = parseVoiceNote(msg.content);
+                            if (vn) return <VoicePlayerCard key={vn.url} url={vn.url} duration={vn.dur} isOwn={msg.senderId === user?.id} />;
+                            return renderMessageContent(msg.content);
+                          })()}
                           {!showHeader && msg.updatedAt && <span className="text-[10px] text-[#6d6f78] ml-1">(düzenlendi)</span>}
                         </div>
                       )}
@@ -860,6 +892,7 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
                 className="flex-1 bg-transparent text-[#dbdee1] text-sm placeholder-[#6d6f78] resize-none outline-none min-h-[24px] max-h-[160px] overflow-y-auto leading-6"
               />
               <GifPicker onGifSelect={(url: string) => { setInput(p => (p + ' ' + url).trim()); }} />
+              {!input.trim() && <VoiceRecorder onVoiceNoteSend={sendVoiceNote} />}
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || sending}

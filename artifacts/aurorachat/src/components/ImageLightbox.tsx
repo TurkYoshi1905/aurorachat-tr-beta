@@ -154,13 +154,32 @@ const ImageLightbox = ({ images, currentIndex, open, onOpenChange, onIndexChange
 
   const handleDownload = async () => {
     const url = images[currentIndex];
+    const filename = url.split('/').pop()?.split('?')[0] || 'image';
+
+    // Android WebView native DownloadManager köprüsü
+    const androidBridge = (window as unknown as {
+      Android?: { downloadFile?: (url: string, filename: string, mimeType: string) => void };
+    }).Android;
+    if (androidBridge?.downloadFile) {
+      try {
+        const mimeType = /\.gif(\?|$)/i.test(url) ? 'image/gif'
+          : /\.png(\?|$)/i.test(url) ? 'image/png'
+          : /\.webp(\?|$)/i.test(url) ? 'image/webp'
+          : /\.svg(\?|$)/i.test(url) ? 'image/svg+xml'
+          : 'image/jpeg';
+        androidBridge.downloadFile(url, filename, mimeType);
+        return;
+      } catch { /* standart indirmeye geç */ }
+    }
+
+    // Standart tarayıcı indirme
     try {
       const resp = await fetch(url);
       const blob = await resp.blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = url.split('/').pop()?.split('?')[0] || 'image';
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

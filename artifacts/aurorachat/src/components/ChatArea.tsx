@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { DbMessage, DbReaction, DbMember } from '@/types/chat';
-import { Hash, Users, Pin, Search, SmilePlus, PlusCircle, Gift, ImagePlus, Send, ArrowLeft, Trash2, Pencil, Check, X, Lock, SendHorizontal, Reply, CornerDownRight, MessageSquare, Clock, Bell, Flag, Copy } from 'lucide-react';
+import { Hash, Users, Pin, Search, SmilePlus, PlusCircle, Gift, ImagePlus, Send, ArrowLeft, Trash2, Pencil, Check, X, Lock, SendHorizontal, Reply, CornerDownRight, MessageSquare, Clock, Bell, Flag, Copy, Mic } from 'lucide-react';
+import VoiceRecorder from './VoiceRecorder';
+import VoicePlayerCard, { parseVoiceNote } from './VoicePlayerCard';
+import { MessageSkeletonList } from './MessageSkeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { renderMessageContent, type ServerEmoji } from '@/utils/messageRenderer';
@@ -405,6 +408,10 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
     return `${seconds}s`;
   };
 
+  const handleSendVoiceNote = useCallback((url: string, dur: number) => {
+    onSendMessage(JSON.stringify({ __vn: 1, url, dur }));
+  }, [onSendMessage]);
+
   const handleSend = async () => {
     if (!input.trim() && pendingFiles.length === 0) return;
 
@@ -759,11 +766,12 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                   </div>
                 ) : (
                   <>
-                    {msg.content && (
-                      msg.content.startsWith('📊 **ANKET**')
-                        ? <PollMessage messageId={msg.id} content={msg.content} reactions={reactions?.[msg.id] || []} onToggleReaction={onToggleReaction} currentUserId={user?.id} />
-                        : <CollapsibleMessageContent content={msg.content} userId={user?.id} serverEmojis={serverEmojis} />
-                    )}
+                    {msg.content && (() => {
+                      const vn = parseVoiceNote(msg.content);
+                      if (vn) return <VoicePlayerCard key={vn.url} url={vn.url} duration={vn.dur} isOwn={msg.userId === user?.id} />;
+                      if (msg.content.startsWith('📊 **ANKET**')) return <PollMessage messageId={msg.id} content={msg.content} reactions={reactions?.[msg.id] || []} onToggleReaction={onToggleReaction} currentUserId={user?.id} />;
+                      return <CollapsibleMessageContent content={msg.content} userId={user?.id} serverEmojis={serverEmojis} />;
+                    })()}
                     {msg.attachments && msg.attachments.length > 0 && (
                       <MessageAttachments attachments={msg.attachments} />
                     )}
@@ -1094,6 +1102,9 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
               </div>
             </div>
 
+            {!input.trim() && pendingFiles.length === 0 && (
+              <VoiceRecorder onVoiceNoteSend={handleSendVoiceNote} disabled={isOnCooldown} />
+            )}
             <button
               onClick={handleSend}
               disabled={!input.trim() && pendingFiles.length === 0}
@@ -1116,6 +1127,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
               )}
               <GifPicker onGifSelect={(url: string) => { if (isOnCooldown) { setShowCooldownBlock(true); return; } onSendMessage(url); }}><button className="hover:text-foreground transition-colors text-xs font-bold">GIF</button></GifPicker>
               <EmojiPicker onEmojiSelect={(emoji) => setInput(prev => prev + emoji)} serverEmojis={serverEmojis} />
+              {!input.trim() && pendingFiles.length === 0 && <VoiceRecorder onVoiceNoteSend={handleSendVoiceNote} disabled={isOnCooldown} />}
               {(input.trim() || pendingFiles.length > 0) && (<button onClick={handleSend} className="text-primary hover:text-primary/80 transition-colors"><Send className="w-5 h-5" /></button>)}
             </div>
           </div>

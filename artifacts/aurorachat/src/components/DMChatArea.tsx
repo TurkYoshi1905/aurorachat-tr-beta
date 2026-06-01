@@ -3,7 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { restoreDMFromHistory } from '@/lib/dmHistory';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, PlusCircle, Pencil, Trash2, Check, X, ImagePlus, Phone, PhoneOff, Video, ChevronDown, ChevronUp, Maximize2, Minimize2, Loader2, SendHorizontal, Flag } from 'lucide-react';
+import { ArrowLeft, Send, PlusCircle, Pencil, Trash2, Check, X, ImagePlus, Phone, PhoneOff, Video, ChevronDown, ChevronUp, Maximize2, Minimize2, Loader2, SendHorizontal, Flag, Mic } from 'lucide-react';
+import VoiceRecorder from './VoiceRecorder';
+import VoicePlayerCard, { parseVoiceNote } from './VoicePlayerCard';
 import UserProfileCard from '@/components/UserProfileCard';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -462,6 +464,17 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, [pendingFiles, t]);
 
+  const handleSendVoiceNote = useCallback(async (url: string, dur: number) => {
+    if (!user || !profile || !conversationId) return;
+    const content = JSON.stringify({ __vn: 1, url, dur });
+    const tempId = crypto.randomUUID();
+    const optimistic: DMMessage = { id: tempId, senderId: user.id, content, createdAt: new Date().toISOString(), updatedAt: null, senderName: (profile as any).display_name || 'Sen', senderAvatar: (profile as any).avatar_url || null, status: 'sending' };
+    setMessages(prev => [...prev, optimistic]);
+    const { error } = await supabase.from('direct_messages').insert({ id: tempId, sender_id: user.id, conversation_id: conversationId, content });
+    if (error) { setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: 'failed' as const } : m)); }
+    else { setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: undefined } : m)); }
+  }, [user, profile, conversationId]);
+
   const handleSend = useCallback(async (overrideContent?: string) => {
     const contentToSend = overrideContent ?? input.trim();
     if ((!contentToSend && pendingFiles.length === 0) || !user || !profile || !conversationId) return;
@@ -759,11 +772,15 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                   </div>
                 ) : (
                   <div>
-                    {msg.content && (
-                      <div className="block rounded-2xl px-3.5 py-2 text-sm max-w-[85%] bg-secondary/60 text-foreground rounded-bl-md break-words overflow-wrap-anywhere whitespace-pre-wrap">
-                        {renderMessageContent(msg.content)}
-                      </div>
-                    )}
+                    {msg.content && (() => {
+                      const vn = parseVoiceNote(msg.content);
+                      if (vn) return <VoicePlayerCard key={vn.url} url={vn.url} duration={vn.dur} isOwn={msg.senderId === user?.id} />;
+                      return (
+                        <div className="block rounded-2xl px-3.5 py-2 text-sm max-w-[85%] bg-secondary/60 text-foreground rounded-bl-md break-words overflow-wrap-anywhere whitespace-pre-wrap">
+                          {renderMessageContent(msg.content)}
+                        </div>
+                      );
+                    })()}
                     {msg.attachments && msg.attachments.length > 0 && (
                       <MessageAttachments attachments={msg.attachments} />
                     )}
@@ -889,6 +906,9 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                 <EmojiPicker onEmojiSelect={(emoji) => setInput(prev => prev + emoji)} />
               </div>
             </div>
+            {!input.trim() && pendingFiles.length === 0 && (
+              <VoiceRecorder onVoiceNoteSend={handleSendVoiceNote} disabled={dmBlocked} />
+            )}
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() && pendingFiles.length === 0}
@@ -918,6 +938,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
               </button>
               <GifPicker onGifSelect={(url) => handleSend(url)} />
               <EmojiPicker onEmojiSelect={(emoji) => setInput(prev => prev + emoji)} />
+              {!input.trim() && pendingFiles.length === 0 && <VoiceRecorder onVoiceNoteSend={handleSendVoiceNote} disabled={dmBlocked} />}
               {(input.trim() || pendingFiles.length > 0) && (
                 <button onClick={() => handleSend()} className="bg-primary text-primary-foreground rounded-full p-1.5 hover:bg-primary/90 transition-colors">
                   <Send className="w-4 h-4" />

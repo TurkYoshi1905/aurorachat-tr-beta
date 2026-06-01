@@ -16,6 +16,35 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.8',
+    date: '01 Haziran 2026',
+    summary: 'Premium Sesli Mesajlar (Voice Notes), Android DownloadManager Köprüsü, Skeleton yükleme ekranları ve GitHub sync v2.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Sesli Mesaj (Voice Notes): Sunucu kanalları ve DM konuşmalarında mikrofon ikonu ile ses kaydı yapılır. Kayıt esnasında dinamik süre sayacı, iptal ve gönder butonları gösterilir.',
+          'Premium Ses Oynatıcı Kartı: Gönderilen sesli mesajlar Discord/WhatsApp tarzı özel bir kart olarak render edilir; Play/Pause butonu, waveform çubuğu ve süre göstergesi içerir.',
+          'Skeleton Yükleme: Sohbet geçmişi yüklenirken boş ekran yerine animasyonlu iskelet blokları gösterilir, veri geldiğinde akıcı geçiş yapılır.',
+          'Android DownloadManager Köprüsü: WebView/PWA üzerinden indirme işlemlerinde Android native DownloadManager sistemi devreye alınır.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'voice-notes Supabase Storage bucket\'ı oluşturuldu, RLS politikaları ve erişim izinleri yapılandırıldı.',
+          'MediaRecorder API entegrasyonu: ses dosyaları audio/webm formatında yüklenir, content alanında JSON olarak saklanır.',
+          'GitHub sync scripti v2: push/pull modları, Replit monorepo yapısı desteği.',
+          'Tüm frontend bileşenlerinde versiyon referansları 1.2.7\'den 1.2.8\'e güncellendi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.7',
     date: '30 Mayıs 2026',
     summary: 'Android v1.2.7 (Version Code 11): Sesli sohbet bildirim takılması düzeltildi, DownloadManager ile dosya indirme desteği eklendi, depolama izinleri güncellendi, açılış URL\'si güncellendi.',
