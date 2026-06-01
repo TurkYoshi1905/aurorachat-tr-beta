@@ -1,116 +1,114 @@
 #!/bin/bash
+# ─────────────────────────────────────────────────────────────
+#  AuroraChat — GitHub Sync Script
+#  Kullanım:
+#    bash github-sync.sh push ["commit mesajı"]   → GitHub'a gönder
+#    bash github-sync.sh pull                     → GitHub'dan çek
+# ─────────────────────────────────────────────────────────────
 
-# Değişkenler
-REPO_URL="https://TurkYoshi1905:${GITHUB_PAT}@github.com/TurkYoshi1905/aurorachat-tr-beta.git"
-TEMP_DIR="/tmp/github_sync_$$"
+set -e
+
+MODE="${1:-push}"
+COMMIT_MSG="${2:-Otomatik guncelleme: $(date '+%Y-%m-%d %H:%M')}"
+REMOTE="origin"
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 WORKSPACE="/home/runner/workspace"
-ARTIFACT="$WORKSPACE/artifacts/aurorachat"
-BACKUP="$WORKSPACE/.migration-backup"
 
-echo "GitHub sync basliyor..."
-
-# Geçici dizini temizle ve depoyu CLONE et
-rm -rf "$TEMP_DIR"
-git clone "$REPO_URL" "$TEMP_DIR"
-cd "$TEMP_DIR"
-
-# Git kullanıcı ayarlarını yap
-git config user.email "asfurkan140@gmail.com"
-git config user.name "TurkYoshi1905"
-
-echo "Dosyalar guncelleniyor..."
-
-# Ana kaynak klasörlerini kopyala (Replit'te artifacts/aurorachat/ altında)
-cp -r "$ARTIFACT/src"    "$TEMP_DIR/"
-cp -r "$ARTIFACT/public" "$TEMP_DIR/"
-
-# Yalnızca migration backup'ta bulunan klasörler
-cp -r "$BACKUP/supabase"  "$TEMP_DIR/" 2>/dev/null || true
-cp -r "$BACKUP/src-tauri" "$TEMP_DIR/" 2>/dev/null || true
-cp -r "$BACKUP/electron"  "$TEMP_DIR/" 2>/dev/null || true
-cp -r "$BACKUP/.github"   "$TEMP_DIR/" 2>/dev/null || true
-cp -r "$BACKUP/scripts"   "$TEMP_DIR/scripts-src" 2>/dev/null || true
-
-# Artifact içindeki aktif config dosyaları (Replit'te düzenlenenler)
-for f in \
-  index.html \
-  components.json \
-  postcss.config.js \
-  tailwind.config.ts \
-  tsconfig.json; do
-  [ -f "$ARTIFACT/$f" ] && cp "$ARTIFACT/$f" "$TEMP_DIR/$f"
-done
-
-# Backup'taki config dosyaları (GitHub yapısına özgü, Replit'te değişmeyenler)
-for f in \
-  package.json \
-  package-lock.json \
-  vite.config.ts \
-  tsconfig.app.json \
-  tsconfig.node.json \
-  eslint.config.js \
-  netlify.toml \
-  CHANGELOG.md \
-  README.md \
-  .gitignore \
-  .gitattributes \
-  nativefier.json \
-  electron-builder.json \
-  build-electron.sh \
-  playwright.config.ts \
-  playwright-fixture.ts \
-  vitest.config.ts; do
-  [ -f "$BACKUP/$f" ] && cp "$BACKUP/$f" "$TEMP_DIR/$f"
-done
-
-# Bu sync scriptinin kendisini de kopyala (workspace kökündeki güncel hali)
-[ -f "$WORKSPACE/github-sync.sh" ] && cp "$WORKSPACE/github-sync.sh" "$TEMP_DIR/github-sync.sh"
-
-COMMIT_MSG="${1:-Otomatik guncelleme: $(date '+%Y-%m-%d %H:%M')}"
-
-# Değişiklikleri ekle ve commitle
-git add -A
-git diff-index --quiet HEAD || git commit -m "$COMMIT_MSG"
-
-echo "GitHub'a yukleniyor..."
-git push origin main
-
-STATUS=$?
-if [ $STATUS -eq 0 ]; then
-  echo ""
-  echo "Tamamlandi! GitHub'a basariyla yuklendi."
-  echo "Repo: https://github.com/TurkYoshi1905/aurorachat-tr-beta"
-else
-  echo ""
-  echo "HATA: Push basarisiz oldu! (Cikis kodu: $STATUS)"
+# GITHUB_PAT varsa remote URL'ye göm (HTTPS auth için)
+if [ -n "$GITHUB_PAT" ]; then
+  git remote set-url "$REMOTE" \
+    "https://TurkYoshi1905:${GITHUB_PAT}@github.com/TurkYoshi1905/aurorachat-tr-beta.git"
 fi
 
-# Temizlik
-rm -rf "$TEMP_DIR"
-
-# --- Supabase Bölümü ---
 echo ""
-echo "Supabase Edge Functions deploy ediliyor..."
-cd "$WORKSPACE"
+echo "╔══════════════════════════════════════════════╗"
+echo "║        AuroraChat — GitHub Sync              ║"
+echo "║  Mod   : $MODE                               ║"
+echo "║  Dal   : $BRANCH                             ║"
+echo "╚══════════════════════════════════════════════╝"
+echo ""
 
-SUPA_BIN="/tmp/supabase_cli_bin"
-if [ ! -f "$SUPA_BIN" ]; then
-  echo "  Supabase CLI indiriliyor..."
-  curl -fsSL https://github.com/supabase/cli/releases/download/v2.15.8/supabase_linux_amd64.tar.gz \
-    -o /tmp/supabase_cli.tar.gz 2>/dev/null
-  tar -xzf /tmp/supabase_cli.tar.gz -C /tmp 2>/dev/null
-  mv /tmp/supabase "$SUPA_BIN" 2>/dev/null || true
-  chmod +x "$SUPA_BIN" 2>/dev/null
+# ─── PUSH ────────────────────────────────────────────────────
+if [ "$MODE" = "push" ]; then
+
+  echo "▶ [1/3] Değişiklikler kontrol ediliyor..."
+  CHANGED=$(git status --porcelain | wc -l)
+  if [ "$CHANGED" -eq 0 ]; then
+    echo "  ✓ Gönderilek değişiklik yok — her şey güncel."
+    exit 0
+  fi
+  echo "  → $CHANGED değiştirilmiş / yeni dosya bulundu."
+
+  echo ""
+  echo "▶ [2/3] Stage ediliyor..."
+  git add -A
+  echo "  ✓ git add -A tamamlandı."
+
+  echo ""
+  echo "▶ [3/3] Commit & Push yapılıyor..."
+  echo "  Mesaj: \"$COMMIT_MSG\""
+  git commit -m "$COMMIT_MSG"
+  git push "$REMOTE" "$BRANCH"
+
+  echo ""
+  echo "══════════════════════════════════════════════"
+  echo "  ✅ Başarılı! Tüm değişiklikler GitHub'da."
+  echo "  🔗 https://github.com/TurkYoshi1905/aurorachat-tr-beta"
+  echo "══════════════════════════════════════════════"
+
+# ─── PULL ────────────────────────────────────────────────────
+elif [ "$MODE" = "pull" ]; then
+
+  echo "▶ [1/2] GitHub'tan çekiliyor..."
+  git pull "$REMOTE" "$BRANCH"
+
+  echo ""
+  echo "▶ [2/2] Dosyalar doğru konumda mı kontrol ediliyor..."
+  if [ -d "$WORKSPACE/artifacts/aurorachat/src" ]; then
+    echo "  ✓ artifacts/aurorachat/src/ mevcut — dosyalar doğru yerde."
+  else
+    echo "  ⚠ artifacts/aurorachat/src/ bulunamadı. Beklenmedik durum."
+  fi
+
+  echo ""
+  echo "══════════════════════════════════════════════"
+  echo "  ✅ GitHub'tan başarıyla çekildi."
+  echo "══════════════════════════════════════════════"
+
+else
+  echo "Kullanım:"
+  echo "  bash github-sync.sh push [\"commit mesajı\"]"
+  echo "  bash github-sync.sh pull"
+  exit 1
 fi
 
-for fn_dir in "$BACKUP/supabase/functions"/*/; do
-  fn_name=$(basename "$fn_dir")
-  echo "  -> $fn_name deploy ediliyor..."
-  SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" "$SUPA_BIN" functions deploy "$fn_name" \
-    --project-ref ktittqaubkaylprxnoya \
-    --no-verify-jwt \
-    --use-api \
-    2>&1 | grep -E "Deployed|Error|error|failed"
-done
+# ─── Supabase Edge Functions Deploy ──────────────────────────
+if [ "$MODE" = "push" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
+  echo ""
+  echo "Supabase Edge Functions deploy ediliyor..."
+  cd "$WORKSPACE"
 
-echo "Supabase deploy tamamlandi!"
+  SUPA_BIN="/tmp/supabase_cli_bin"
+  if [ ! -f "$SUPA_BIN" ]; then
+    echo "  Supabase CLI indiriliyor..."
+    curl -fsSL https://github.com/supabase/cli/releases/download/v2.15.8/supabase_linux_amd64.tar.gz \
+      -o /tmp/supabase_cli.tar.gz 2>/dev/null
+    tar -xzf /tmp/supabase_cli.tar.gz -C /tmp 2>/dev/null
+    mv /tmp/supabase "$SUPA_BIN" 2>/dev/null || true
+    chmod +x "$SUPA_BIN" 2>/dev/null
+  fi
+
+  SUPA_FUNCS="$WORKSPACE/.migration-backup/supabase/functions"
+  if [ -d "$SUPA_FUNCS" ]; then
+    for fn_dir in "$SUPA_FUNCS"/*/; do
+      fn_name=$(basename "$fn_dir")
+      echo "  -> $fn_name deploy ediliyor..."
+      SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" "$SUPA_BIN" functions deploy "$fn_name" \
+        --project-ref ktittqaubkaylprxnoya \
+        --no-verify-jwt \
+        --use-api \
+        2>&1 | grep -E "Deployed|Error|error|failed"
+    done
+    echo "Supabase deploy tamamlandi!"
+  fi
+fi
