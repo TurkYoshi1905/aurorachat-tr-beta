@@ -169,7 +169,6 @@ fi
 if [ "$MODE" = "push" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
   echo ""
   echo "▶ Supabase Edge Functions deploy ediliyor..."
-  cd "$WORKSPACE"
 
   SUPA_BIN="/tmp/supabase_cli_bin"
   if [ ! -f "$SUPA_BIN" ]; then
@@ -182,18 +181,52 @@ if [ "$MODE" = "push" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
   fi
 
   SUPA_FUNCS="$MIGRATION_BACKUP/supabase/functions"
-  if [ -d "$SUPA_FUNCS" ]; then
+  SUPA_CONFIG="$MIGRATION_BACKUP/supabase/config.toml"
+
+  if [ ! -f "$SUPA_CONFIG" ]; then
+    echo "  ⚠ Supabase config.toml bulunamadı: $SUPA_CONFIG — deploy atlandı."
+  elif [ ! -d "$SUPA_FUNCS" ]; then
+    echo "  ⚠ Supabase functions dizini bulunamadı: $SUPA_FUNCS — deploy atlandı."
+  else
+    # CLI'ın 'supabase/functions/<fn>/index.ts' yolunu doğru çözmesi için
+    # .migration-backup/ kökünden çalıştır (config.toml ve functions/ burada)
+    cd "$MIGRATION_BACKUP"
+
+    DEPLOY_ERRORS=0
+    DEPLOY_OK=0
+
     for fn_dir in "$SUPA_FUNCS"/*/; do
       fn_name=$(basename "$fn_dir")
+      fn_file="$fn_dir/index.ts"
+
+      if [ ! -f "$fn_file" ]; then
+        echo "  ⚠ $fn_name — index.ts bulunamadı, atlandı."
+        continue
+      fi
+
       echo "  -> $fn_name deploy ediliyor..."
-      SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" "$SUPA_BIN" functions deploy "$fn_name" \
+      OUTPUT=$(SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" "$SUPA_BIN" functions deploy "$fn_name" \
         --project-ref ktittqaubkaylprxnoya \
         --no-verify-jwt \
-        --use-api \
-        2>&1 | grep -E "Deployed|Error|error|failed" || true
+        2>&1)
+      EXIT_CODE=$?
+
+      if [ $EXIT_CODE -eq 0 ]; then
+        echo "     ✓ $fn_name deploy edildi."
+        DEPLOY_OK=$((DEPLOY_OK + 1))
+      else
+        echo "     ✗ $fn_name hata: $(echo "$OUTPUT" | tail -1)"
+        DEPLOY_ERRORS=$((DEPLOY_ERRORS + 1))
+      fi
     done
-    echo "  ✓ Supabase deploy tamamlandı."
-  else
-    echo "  ⚠ Supabase functions dizini bulunamadı: $SUPA_FUNCS"
+
+    cd "$WORKSPACE"
+
+    echo ""
+    if [ $DEPLOY_ERRORS -eq 0 ]; then
+      echo "  ✓ Supabase Edge Functions deploy tamamlandı ($DEPLOY_OK fonksiyon)."
+    else
+      echo "  ⚠ Deploy tamamlandı — $DEPLOY_OK başarılı, $DEPLOY_ERRORS hatalı."
+    fi
   fi
 fi
