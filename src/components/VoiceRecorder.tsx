@@ -24,12 +24,14 @@ const ensureBucket = async (): Promise<boolean> => {
     if (!listErr && buckets?.some(b => b.id === BUCKET)) return true;
 
     // Bucket yok — oluşturmayı dene
+    // NOT: Supabase Storage, "audio/ogg;codecs=opus" gibi parameterized MIME tiplerini
+    //      desteklemiyor — sadece base MIME tipleri kullanılmalı.
     const { error: createErr } = await supabase.storage.createBucket(BUCKET, {
       public: true,
       fileSizeLimit: 10485760,
       allowedMimeTypes: [
-        'audio/webm', 'audio/mp4', 'audio/ogg',
-        'audio/mpeg', 'audio/wav', 'audio/ogg;codecs=opus',
+        'audio/webm', 'audio/ogg', 'audio/mp4',
+        'audio/mpeg', 'audio/wav', 'audio/aac',
       ],
     });
 
@@ -122,6 +124,9 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
 
     const mimeType = mr.mimeType || 'audio/webm';
     const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
+    // Supabase Storage parameterized MIME tiplerini reddeder (415 invalid_mime_type).
+    // "audio/ogg;codecs=opus" → "audio/ogg" şeklinde base MIME tipine indir.
+    const uploadMime = mimeType.split(';')[0].trim();
 
     const blob = await new Promise<Blob>((resolve) => {
       mr.onstop = () => resolve(new Blob(chunksRef.current, { type: mimeType }));
@@ -136,7 +141,7 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
       const path = `${user?.id ?? 'anon'}/voice_${Date.now()}.${ext}`;
       const { data, error } = await supabase.storage
         .from(BUCKET)
-        .upload(path, blob, { contentType: mimeType, upsert: false });
+        .upload(path, blob, { contentType: uploadMime, upsert: false });
 
       if (error) {
         // Bucket bulunamadı hatası
@@ -149,7 +154,7 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
             // Yeniden yükle
             const { data: retryData, error: retryErr } = await supabase.storage
               .from(BUCKET)
-              .upload(path, blob, { contentType: mimeType, upsert: false });
+              .upload(path, blob, { contentType: uploadMime, upsert: false });
 
             if (!retryErr && retryData) {
               const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(retryData.path);

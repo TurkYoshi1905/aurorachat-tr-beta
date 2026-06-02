@@ -11,6 +11,9 @@
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- ─── 1. voice-notes bucket ──────────────────────────────────────────────────
+-- NOT: Supabase Storage parameterized MIME tiplerini desteklemiyor.
+-- "audio/ogg;codecs=opus" veya "audio/webm;codecs=opus" gibi değerler
+-- 415 invalid_mime_type hatasına yol açar. Sadece base MIME tipleri kullanılmalı.
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'voice-notes',
@@ -19,17 +22,16 @@ VALUES (
   10485760,   -- 10 MB
   ARRAY[
     'audio/webm',
-    'audio/webm;codecs=opus',
-    'audio/mp4',
     'audio/ogg',
-    'audio/ogg;codecs=opus',
+    'audio/mp4',
     'audio/mpeg',
-    'audio/wav'
+    'audio/wav',
+    'audio/aac'
   ]
 )
 ON CONFLICT (id) DO UPDATE SET
-  public            = EXCLUDED.public,
-  file_size_limit   = EXCLUDED.file_size_limit,
+  public             = EXCLUDED.public,
+  file_size_limit    = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 
