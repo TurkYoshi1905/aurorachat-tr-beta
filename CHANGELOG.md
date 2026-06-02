@@ -1,5 +1,25 @@
 # AuroraChat Değişiklik Günlüğü
 
+## [1.2.8] - 2026-06-01
+
+### Yeni Özellikler
+- **Premium Sesli Mesajlar** — Sunucu kanalları, direkt mesajlar ve grup DM'lerin tümünde mikrofon butonu ile ses kaydı ve gönderimi. Kayıt sırasında canlı süre sayacı ve iptal desteği.
+- **VoicePlayerCard** — Discord/WhatsApp tarzı waveform ses oynatıcı kart. Oynat/Duraklat, seek çubuğu ve süre göstergesi ile her chat alanında sesli mesajları görüntüleme.
+- **Skeleton Yükleme Ekranları** — Chat alanları yüklenirken dönen spinner yerine animasyonlu iskelet (skeleton) bloklar gösterilir. Grup DM dahil tüm chat alanlarında uygulandı.
+- **Android DownloadManager Köprüsü** — ImageLightbox bileşeninde `window.Android?.downloadFile()` kontrolü eklendi. AuroraChat Android WebView içinden açıldığında dosya indirme işlemleri sistem DownloadManager'ına yönlendirilir.
+
+### Teknik
+- Sesli mesajlar mevcut tabloların `content` alanında JSON olarak saklanır: `{"__vn":1,"url":"...","dur":42}` — şema değişikliği gerekmez.
+- `voice_notes_migration.sql` — Supabase `voice-notes` storage bucket kurulumu ve 3 RLS politikası (yükleme, okuma, silme). Supabase SQL Editor'da bir kez çalıştırılmalı.
+- `github-sync.sh` v2 (Flat Deploy) — Replit monorepo yapısı yerine yalnızca uygulama dosyaları GitHub'a gönderilir. Clone → temizlik → flat kopyalama → push akışı ile Vercel dağıtım hatası kalıcı olarak çözüldü.
+- GitHub depo kök hiyerarşisi Vercel uyumlu flat yapıya döndürüldü.
+
+### İyileştirmeler
+- Sürüm numarası v1.2.8 olarak güncellendi (ReleaseNotesModal, Landing, Settings, changelogData).
+- Tüm sürüm rozeti ve indirme bağlantıları v1.2.8 ile uyumlu hale getirildi.
+
+---
+
 ## [0.8.8] - 2026-04-16
 
 ### Yeni Özellikler
