@@ -195,6 +195,9 @@ if [ "$MODE" = "push" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
     DEPLOY_ERRORS=0
     DEPLOY_OK=0
 
+    # set -e'yi geçici olarak kapat — deploy hataları scripti durdurmasın
+    set +e
+
     for fn_dir in "$SUPA_FUNCS"/*/; do
       fn_name=$(basename "$fn_dir")
       fn_file="$fn_dir/index.ts"
@@ -208,6 +211,7 @@ if [ "$MODE" = "push" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
       OUTPUT=$(SUPABASE_ACCESS_TOKEN="$SUPABASE_ACCESS_TOKEN" "$SUPA_BIN" functions deploy "$fn_name" \
         --project-ref ktittqaubkaylprxnoya \
         --no-verify-jwt \
+        --use-api \
         2>&1)
       EXIT_CODE=$?
 
@@ -215,11 +219,12 @@ if [ "$MODE" = "push" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
         echo "     ✓ $fn_name deploy edildi."
         DEPLOY_OK=$((DEPLOY_OK + 1))
       else
-        echo "     ✗ $fn_name hata: $(echo "$OUTPUT" | tail -1)"
+        echo "     ✗ $fn_name hata: $(echo "$OUTPUT" | grep -E "Error|error|failed" | head -1)"
         DEPLOY_ERRORS=$((DEPLOY_ERRORS + 1))
       fi
     done
 
+    set -e
     cd "$WORKSPACE"
 
     echo ""
