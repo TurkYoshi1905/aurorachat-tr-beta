@@ -100,12 +100,17 @@ if [ "$MODE" = "push" ]; then
   cp "$AURORACHAT/components.json" "$DEPLOY_TMP/components.json"
   echo "  ✓ components.json güncellendi."
 
-  # v1.2.9 SQL migration
-  SQL_MIGRATION="$WORKSPACE/supabase/migrations/20260604000000_v129_voice_notes_rls.sql"
-  if [ -f "$SQL_MIGRATION" ]; then
-    mkdir -p "$DEPLOY_TMP/supabase/migrations"
-    cp "$SQL_MIGRATION" "$DEPLOY_TMP/supabase/migrations/20260604000000_v129_voice_notes_rls.sql"
-    echo "  ✓ SQL migration v1.2.9 eklendi (voice-notes RLS)."
+  # v1.2.9 SQL migrations
+  mkdir -p "$DEPLOY_TMP/supabase/migrations"
+  SQL_MIG0="$WORKSPACE/supabase/migrations/20260604000000_v129_voice_notes_rls.sql"
+  if [ -f "$SQL_MIG0" ]; then
+    cp "$SQL_MIG0" "$DEPLOY_TMP/supabase/migrations/20260604000000_v129_voice_notes_rls.sql"
+    echo "  ✓ SQL migration 000 eklendi (voice-notes RLS orijinal)."
+  fi
+  SQL_MIG1="$WORKSPACE/supabase/migrations/20260604000001_v129_voice_notes_rls_fix.sql"
+  if [ -f "$SQL_MIG1" ]; then
+    cp "$SQL_MIG1" "$DEPLOY_TMP/supabase/migrations/20260604000001_v129_voice_notes_rls_fix.sql"
+    echo "  ✓ SQL migration 001 eklendi (voice-notes RLS FIX — public bucket)."
   fi
 
   # github-sync.sh (bu scriptin kendi güncel kopyası)
