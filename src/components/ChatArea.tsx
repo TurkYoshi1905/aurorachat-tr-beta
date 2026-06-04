@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { renderMessageContent, type ServerEmoji } from '@/utils/messageRenderer';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { useTranslation } from '@/i18n';
 import MessageAttachments from './MessageAttachments';
 import FileUploadPreview from './FileUploadPreview';
@@ -688,8 +689,9 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
             (new Date(msg.insertedAt).getTime() - new Date(prevMsg.insertedAt).getTime()) < 5 * 60 * 1000
           );
           return (
+            <ContextMenu key={msg.id}>
+              <ContextMenuTrigger asChild>
             <div
-              key={msg.id}
               id={`msg-${msg.id}`}
               className={`flex gap-3 group hover:bg-secondary/30 -mx-2 px-2 rounded-md transition-colors relative ${isGrouped ? 'py-px mt-0.5' : `py-1 ${msgIndex === 0 ? 'mt-0' : 'mt-4'}`} ${msg.status === 'sending' ? 'opacity-50' : ''} ${msg.status === 'failed' ? 'border border-destructive/40 bg-destructive/5' : ''}`}
               onTouchStart={isMobileDevice ? () => handleTouchStart(msg) : undefined}
@@ -885,6 +887,49 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                 </div>
               )}
             </div>
+            </ContextMenuTrigger>
+            {!isMobileDevice && (
+              <ContextMenuContent className="w-52">
+                <ContextMenuItem onClick={() => { navigator.clipboard.writeText(msg.content || '').then(() => toast.success('Mesaj kopyalandı')); }}>
+                  <Copy className="w-4 h-4 mr-2" /> Mesajı Kopyala
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => { setReplyingTo(msg); inputRef.current?.focus(); }}>
+                  <Reply className="w-4 h-4 mr-2" /> {t('chat.reply')}
+                </ContextMenuItem>
+                {onOpenThread && (
+                  <ContextMenuItem onClick={() => onOpenThread(msg.id, msg.author, msg.content, null)}>
+                    <MessageSquare className="w-4 h-4 mr-2" /> {t('thread.startThread')}
+                  </ContextMenuItem>
+                )}
+                {(isOwner || userPermissions?.pin_messages) && onPinMessage && onUnpinMessage && (
+                  <ContextMenuItem onClick={() => msg.isPinned ? onUnpinMessage(msg.id) : onPinMessage(msg.id)}>
+                    <Pin className="w-4 h-4 mr-2" /> {msg.isPinned ? t('chat.unpin') : t('chat.pin')}
+                  </ContextMenuItem>
+                )}
+                {msg.userId === user?.id && onEditMessage && (
+                  <ContextMenuItem onClick={() => startEdit(msg)}>
+                    <Pencil className="w-4 h-4 mr-2" /> {t('chat.editMessage')}
+                  </ContextMenuItem>
+                )}
+                {(msg.userId === user?.id || isOwner || userPermissions?.manage_messages) && onDeleteMessage && (
+                  <>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem onClick={(e) => requestDeleteMessage(msg, e)} className="text-destructive focus:text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" /> {t('chat.deleteMessage')}
+                    </ContextMenuItem>
+                  </>
+                )}
+                {msg.userId !== user?.id && (
+                  <>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem onClick={() => setReportMsg(msg)} className="text-red-500 focus:text-red-500">
+                      <Flag className="w-4 h-4 mr-2" /> Mesajı Bildir
+                    </ContextMenuItem>
+                  </>
+                )}
+              </ContextMenuContent>
+            )}
+          </ContextMenu>
           );
         })}
         <div ref={bottomRef} />
@@ -894,6 +939,24 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
       <Sheet open={!!longPressMsg} onOpenChange={(open) => { if (!open) setLongPressMsg(null); }}>
         <SheetContent side="bottom" className="rounded-t-2xl px-2 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
           <SheetHeader className="pb-2">
+            {longPressMsg && (
+              <UserProfileCard userId={longPressMsg.userId} serverId={serverId} isBot={longPressMsg.isBot} botId={longPressMsg.botId} botName={longPressMsg.isBot ? longPressMsg.author : undefined} botAvatarUrl={longPressMsg.isBot ? (longPressMsg.avatarUrl || undefined) : undefined}>
+                <div className="flex items-center gap-3 px-2 pb-3 mb-1 border-b border-border cursor-pointer hover:bg-secondary/30 rounded-lg transition-colors" onClick={() => setLongPressMsg(null)}>
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary shrink-0">
+                    {longPressMsg.avatarUrl
+                      ? <img src={longPressMsg.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center text-lg font-semibold">{longPressMsg.avatar}</div>
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-semibold text-foreground truncate">{longPressMsg.author}</p>
+                    {longPressMsg.content && (
+                      <p className="text-xs text-muted-foreground truncate">{longPressMsg.content.slice(0, 80)}{longPressMsg.content.length > 80 ? '…' : ''}</p>
+                    )}
+                  </div>
+                </div>
+              </UserProfileCard>
+            )}
             <SheetTitle className="text-sm text-muted-foreground">{t('chat.messageActions')}</SheetTitle>
           </SheetHeader>
           <div className="space-y-1">

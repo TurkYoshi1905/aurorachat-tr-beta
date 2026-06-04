@@ -172,9 +172,11 @@ const ImageLightbox = ({ images, currentIndex, open, onOpenChange, onIndexChange
       } catch { /* standart indirmeye geç */ }
     }
 
-    // Standart tarayıcı indirme
+    // Standart tarayıcı indirme — blob stream dene, başarısız olursa yeni sekme/intent
+    const isAndroidWebView = /Android/.test(navigator.userAgent) && !/Chrome\/\d/.test(navigator.userAgent);
     try {
-      const resp = await fetch(url);
+      const resp = await fetch(url, { mode: 'cors' });
+      if (!resp.ok) throw new Error('fetch failed');
       const blob = await resp.blob();
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -183,8 +185,18 @@ const ImageLightbox = ({ images, currentIndex, open, onOpenChange, onIndexChange
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch { window.open(url, '_blank'); }
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+    } catch {
+      if (isAndroidWebView) {
+        // Android WebView: intent URL ile indirmeye zorla
+        try {
+          const intent = `intent:${url}#Intent;action=android.intent.action.VIEW;end`;
+          window.location.href = intent;
+        } catch { window.open(url, '_blank'); }
+      } else {
+        window.open(url, '_blank');
+      }
+    }
   };
 
   return (

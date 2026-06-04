@@ -16,6 +16,51 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.2.9',
+    date: '04 Haziran 2026',
+    summary: 'Masaüstü sağ-tık bağlam menüsü, mobil çekmece profil kartı, sürüm notları kaydırma düzeltmesi, Supabase profil önbelleği, ses kaydı RLS düzeltmesi ve Android WebView üç kademeli indirme.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Masaüstü Premium Bağlam Menüsü: Mesajlara sağ tıklayınca Discord tarzı bağlam menüsü açılır — Kopyala, Yanıtla, İş Parçacığı Başlat, Sabitle/Kaldır, Düzenle, Sil ve Bildir seçenekleri.',
+          'Mobil Mesaj Çekmecesi Profil Kartı: Uzun basma ile açılan alt çekmecenin başında mesaj yazarının avatarı, adı ve mesaj önizlemesi gösterilir.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Sürüm Notları Modal Kaydırma: Küçük ekranlarda içerik kaydırma alanı kesilip "Anladım" butonu gizleniyordu. ScrollArea flex-1 + shrink-0 yapısıyla onarıldı.',
+          'Ses Kaydı RLS Hatası: voice-notes Supabase Storage bucket\'ına kimliği doğrulanmış kullanıcıların yükleme yapamaması sorunu ek RLS politikasıyla giderildi.',
+        ],
+      },
+      {
+        title: 'İyileştirmeler',
+        icon: Sparkles,
+        color: 'text-cyan-400',
+        items: [
+          'Supabase Profil Önbelleği (profileCache.ts): UserProfileCard 60 saniyelik bellek içi önbellek kullanarak aynı kullanıcıya ait tekrar eden DB sorgularını engelliyor.',
+          'Android WebView İndirme: Yerel DownloadManager köprüsü → blob fetch → yeni sekme/intent açma şeklinde üç kademeli geri dönüş stratejisi.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'SQL migration 20260604000000_v129_voice_notes_rls.sql: voice-notes bucket INSERT/SELECT/DELETE politikaları.',
+          'src/lib/profileCache.ts: getCachedProfile, invalidateProfileCache, prefetchProfiles yardımcı fonksiyonları.',
+          'GitHub sync tetikleyicisi v1.2.9 için güncellendi.',
+          'Tüm versiyon referansları 1.2.8\'den 1.2.9\'a güncellendi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.8',
     date: '01 Haziran 2026',
     summary: 'Premium Sesli Mesajlar (Voice Notes), Android DownloadManager Köprüsü, Skeleton yükleme ekranları ve GitHub sync v2.',

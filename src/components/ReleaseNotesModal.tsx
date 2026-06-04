@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Bug, Shield, GripVertical, Globe, Bot, Puzzle, SlidersHorizontal } from 'lucide-react';
+import { Sparkles, Wrench, Bug, Shield, GripVertical, Globe, Bot, Puzzle, SlidersHorizontal, MousePointer2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.8';
+const RELEASE_VERSION = '1.2.9';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,38 +18,52 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Sparkles,
+    icon: MousePointer2,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Sesli Mesaj (Voice Notes): Sunucu kanalları ve DM ekranlarında mikrofon ikonu ile ses kaydı yapılabilir. Canlı süre sayacı, iptal ve gönder butonları bulunur.',
+    label: 'Masaüstü Premium Bağlam Menüsü: Mesajlara sağ tıklayınca kopyala, yanıtla, iş parçacığı, sabitle, düzenle, sil ve bildir seçeneklerini içeren Discord tarzı bağlam menüsü açılır.',
     badge: 'Yeni',
+  },
+  {
+    icon: SlidersHorizontal,
+    iconBg: 'bg-cyan-500/15',
+    iconColor: 'text-cyan-400',
+    label: 'Mobil Mesaj Çekmecesi — Kullanıcı Profil Kartı: Uzun basma çekmecesinin üstünde mesaj yazarının avatarı ve adı gösterilir; profile gitmek için dokunulabilir.',
+    badge: 'İyileştirme',
+  },
+  {
+    icon: GripVertical,
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Sürüm Notları Modal Kaydırma Düzeltmesi: Küçük ekranlarda içerik kaydırma alanı kesilip buton gizleniyordu. Tam flex düzeni onarıldı.',
+    badge: 'Düzeltme',
   },
   {
     icon: Bot,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Premium Ses Oynatıcı Kartı: Sesli mesajlar Discord/WhatsApp tarzı özel kart olarak render edilir — Play/Pause, waveform çubuğu ve süre göstergesi içerir.',
-    badge: 'Yeni',
-  },
-  {
-    icon: GripVertical,
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    label: 'Skeleton Yükleme: Sohbet geçmişi açılırken boş ekran yerine animasyonlu iskelet blokları görünür; veri gelince akıcı geçiş yapılır.',
-    badge: 'İyileştirme',
+    label: 'Supabase Profil Önbelleği: UserProfileCard artık 60 saniyelik bellek içi önbellek kullanıyor; aynı kullanıcıya ait tekrar eden sorgular engelleniyor.',
+    badge: 'Teknik',
   },
   {
     icon: Shield,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Android DownloadManager Köprüsü: WebView/PWA üzerinden resim ve GIF indirilirken Android\'in native DownloadManager\'ı devreye alınır.',
+    iconBg: 'bg-amber-500/15',
+    iconColor: 'text-amber-400',
+    label: 'Ses Kaydı RLS Düzeltmesi: voice-notes Supabase Storage bucket\'ı için eksik politikalar eklendi; kayıt yüklemeleri artık tüm kimliği doğrulanmış kullanıcılarda çalışıyor.',
+    badge: 'Düzeltme',
+  },
+  {
+    icon: Globe,
+    iconBg: 'bg-blue-500/15',
+    iconColor: 'text-blue-400',
+    label: 'Android WebView İndirme İyileştirmesi: Yerel köprü yoksa blob akışı denemesi, o da başarısız olursa URL\'yi yeni sekme ya da intents ile açma — üç kademeli geri dönüş stratejisi.',
     badge: 'İyileştirme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'voice-notes Supabase Storage bucket\'ı + RLS politikaları oluşturuldu. GitHub sync v2 (push/pull modu). Tüm versiyon referansları 1.2.8\'e güncellendi.',
+    label: 'SQL migration v1.2.9: voice-notes RLS politikaları. GitHub sync tetikleyicisi güncellendi. Tüm versiyon referansları 1.2.9\'a güncellendi.',
     badge: 'Teknik',
   },
 ];
@@ -80,7 +94,7 @@ const ReleaseNotesModal = () => {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent className="max-w-md w-[calc(100%-1.5rem)] p-0 overflow-hidden flex flex-col max-h-[90dvh]">
-        <div className="relative px-6 pt-6 pb-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border">
+        <div className="relative px-6 pt-6 pb-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-b border-border shrink-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2.5 text-base">
               <div className="w-8 h-8 rounded-xl bg-primary/15 flex items-center justify-center">
@@ -95,7 +109,7 @@ const ReleaseNotesModal = () => {
           <p className="text-xs text-muted-foreground mt-2">Bu sürümdeki yeni özellikler ve iyileştirmeler</p>
         </div>
 
-        <ScrollArea className="max-h-[420px] sm:max-h-[420px] flex-1 min-h-0">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="space-y-1.5 p-4">
             {features.map((f, i) => (
               <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors">
@@ -115,7 +129,7 @@ const ReleaseNotesModal = () => {
           </div>
         </ScrollArea>
 
-        <div className="px-4 pb-4 pt-2 border-t border-border">
+        <div className="px-4 pb-4 pt-2 border-t border-border shrink-0">
           <Button onClick={handleClose} className="w-full">
             {t('releaseNotes.understood')}
           </Button>

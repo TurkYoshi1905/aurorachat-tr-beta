@@ -10,7 +10,7 @@
 #    1) Repo /tmp altına klonlanır — git geçmişi korunur.
 #    2) Klonun içi temizlenir (git rm -rf .)
 #    3) .migration-backup/ flat yapı kopyalanır (Vercel/GitHub uyumlu).
-#    4) artifacts/aurorachat/src/ en güncel v1.2.8 kodlarıyla üzerine yazılır.
+#    4) artifacts/aurorachat/src/ en güncel v1.2.9 kodlarıyla üzerine yazılır.
 #    5) Commit + push → GitHub düz (flat) yapıyla güncellenir.
 #
 #  ÖNEMLİ: Bu script Replit monorepo yapısını GitHub'a GÖNDERMEZ.
@@ -20,7 +20,7 @@
 set -e
 
 MODE="${1:-push}"
-COMMIT_MSG="${2:-Otomatik guncelleme: $(date '+%Y-%m-%d %H:%M')}"
+COMMIT_MSG="${2:-v1.2.9: context menu, mobile drawer profil kartı, RLS düzeltmeleri}"
 BRANCH="main"
 WORKSPACE="/home/runner/workspace"
 MIGRATION_BACKUP="$WORKSPACE/.migration-backup"
@@ -70,7 +70,6 @@ if [ "$MODE" = "push" ]; then
     [ "$base" = ".git" ] && continue
     [ "$base" = ".agents" ] && continue
     [ "$base" = "package-lock.json" ] && continue
-    [ "$base" = "replit.md" ] && continue
     if [ -d "$item" ]; then
       cp -r "$item" "$DEPLOY_TMP/$base"
     else
@@ -80,13 +79,13 @@ if [ "$MODE" = "push" ]; then
   echo "  ✓ Temel yapı kopyalandı (electron/, supabase/, scripts/, src-tauri/, vite.config.ts, vercel.json, ...)."
 
   echo ""
-  echo "▶ [4/5] En güncel v1.2.8 kaynak kodları üzerine yazılıyor..."
+  echo "▶ [4/5] En güncel v1.2.9 kaynak kodları üzerine yazılıyor..."
 
-  # src/ → artifacts/aurorachat/src/ ile tamamen değiştir (v1.2.8)
+  # src/ → artifacts/aurorachat/src/ ile tamamen değiştir (v1.2.9)
   rm -rf "$DEPLOY_TMP/src"
   cp -r "$AURORACHAT/src" "$DEPLOY_TMP/src"
   COMP_COUNT=$(ls "$DEPLOY_TMP/src/components/" 2>/dev/null | wc -l | tr -d ' ')
-  echo "  ✓ src/ güncellendi ($COMP_COUNT bileşen, VoiceRecorder + VoicePlayerCard + MessageSkeleton dahil)."
+  echo "  ✓ src/ güncellendi ($COMP_COUNT bileşen, ContextMenu + profileCache + VoiceRecorder dahil)."
 
   # public/
   rm -rf "$DEPLOY_TMP/public"
@@ -101,15 +100,23 @@ if [ "$MODE" = "push" ]; then
   cp "$AURORACHAT/components.json" "$DEPLOY_TMP/components.json"
   echo "  ✓ components.json güncellendi."
 
-  # voice_notes_migration.sql (v1.2.8 storage setup)
-  if [ -f "$WORKSPACE/voice_notes_migration.sql" ]; then
-    cp "$WORKSPACE/voice_notes_migration.sql" "$DEPLOY_TMP/voice_notes_migration.sql"
-    echo "  ✓ voice_notes_migration.sql eklendi."
+  # v1.2.9 SQL migration
+  SQL_MIGRATION="$WORKSPACE/supabase/migrations/20260604000000_v129_voice_notes_rls.sql"
+  if [ -f "$SQL_MIGRATION" ]; then
+    mkdir -p "$DEPLOY_TMP/supabase/migrations"
+    cp "$SQL_MIGRATION" "$DEPLOY_TMP/supabase/migrations/20260604000000_v129_voice_notes_rls.sql"
+    echo "  ✓ SQL migration v1.2.9 eklendi (voice-notes RLS)."
   fi
 
   # github-sync.sh (bu scriptin kendi güncel kopyası)
-  cp "$WORKSPACE/github-sync.sh" "$DEPLOY_TMP/github-sync.sh"
+  cp "$MIGRATION_BACKUP/github-sync.sh" "$DEPLOY_TMP/github-sync.sh"
   echo "  ✓ github-sync.sh güncellendi."
+
+  # replit.md (proje dokümantasyonu)
+  if [ -f "$WORKSPACE/replit.md" ]; then
+    cp "$WORKSPACE/replit.md" "$DEPLOY_TMP/replit.md"
+    echo "  ✓ replit.md eklendi."
+  fi
 
   echo ""
   echo "▶ [5/5] Commit & Push yapılıyor..."
@@ -188,14 +195,11 @@ if [ "$MODE" = "push" ] && [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
   elif [ ! -d "$SUPA_FUNCS" ]; then
     echo "  ⚠ Supabase functions dizini bulunamadı: $SUPA_FUNCS — deploy atlandı."
   else
-    # CLI'ın 'supabase/functions/<fn>/index.ts' yolunu doğru çözmesi için
-    # .migration-backup/ kökünden çalıştır (config.toml ve functions/ burada)
     cd "$MIGRATION_BACKUP"
 
     DEPLOY_ERRORS=0
     DEPLOY_OK=0
 
-    # set -e'yi geçici olarak kapat — deploy hataları scripti durdurmasın
     set +e
 
     for fn_dir in "$SUPA_FUNCS"/*/; do
