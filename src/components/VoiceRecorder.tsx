@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Mic, Trash2, Send, AlertCircle } from 'lucide-react';
+import { Mic, Trash2, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -9,75 +9,65 @@ interface VoiceRecorderProps {
   disabled?: boolean;
 }
 
-const BUCKET = 'voice-notes';
+const SUPABASE_URL = 'https://ktittqaubkaylprxnoya.supabase.co';
+const EDGE_FN_URL = `${SUPABASE_URL}/functions/v1/upload-voice-note`;
 
 const formatTime = (s: number) => {
   const m = Math.floor(s / 60);
   return `${m}:${String(s % 60).padStart(2, '0')}`;
 };
 
-/** Bucket yoksa oluşturmayı dene (anon key ile çalışmayabilir — SQL fallback'e yönlendir) */
-const ensureBucket = async (): Promise<boolean> => {
-  try {
-    // Önce bucket listesini kontrol et
-    const { data: buckets, error: listErr } = await supabase.storage.listBuckets();
-    if (!listErr && buckets?.some(b => b.id === BUCKET)) return true;
+/**
+ * Ses dosyasını Edge Function üzerinden yükler.
+ * Service role key ile RLS tamamen bypass edilir — bucket politikası gerekmez.
+ */
+const uploadViaEdgeFunction = async (
+  blob: Blob,
+  userId: string,
+  mimeType: string,
+  accessToken: string
+): Promise<string> => {
+  const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
+  const path = `${userId}/voice_${Date.now()}.${ext}`;
+  const baseMime = mimeType.split(';')[0].trim();
 
-    // Bucket yok — oluşturmayı dene
-    // NOT: Supabase Storage, "audio/ogg;codecs=opus" gibi parameterized MIME tiplerini
-    //      desteklemiyor — sadece base MIME tipleri kullanılmalı.
-    const { error: createErr } = await supabase.storage.createBucket(BUCKET, {
-      public: true,
-      fileSizeLimit: 10485760,
-      allowedMimeTypes: [
-        'audio/webm', 'audio/ogg', 'audio/mp4',
-        'audio/mpeg', 'audio/wav', 'audio/aac',
-      ],
-    });
+  const form = new FormData();
+  form.append('audio', blob, `voice.${ext}`);
+  form.append('path', path);
+  form.append('mime', baseMime);
 
-    if (createErr) {
-      // Service role olmadan oluşturulamaz — kullanıcıyı yönlendir
-      toast.error(
-        'Sesli mesaj deposu bulunamadı. Lütfen Supabase SQL Editor\'da voice_notes_migration.sql dosyasını çalıştırın.',
-        { duration: 8000, icon: '🗄️' }
-      );
-      return false;
-    }
+  const res = await fetch(EDGE_FN_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  });
 
-    return true;
-  } catch {
-    return false;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error ?? 'Yükleme başarısız');
   }
+
+  const { url } = await res.json();
+  return url as string;
 };
 
 const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [bucketReady, setBucketReady] = useState<boolean | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { user } = useAuth();
 
-  // Bileşen mount olunca bucket varlığını kontrol et
   useEffect(() => {
-    ensureBucket().then(setBucketReady);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
   const startRecording = useCallback(async () => {
-    // Bucket hazır değilse önce kontrol et
-    if (bucketReady === false) {
-      const ready = await ensureBucket();
-      setBucketReady(ready);
-      if (!ready) return;
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Tarayıcıya göre format seç
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : MediaRecorder.isTypeSupported('audio/webm')
@@ -100,7 +90,7 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
         toast.error('Mikrofona erişilemiyor. Başka bir uygulama kullanıyor olabilir.');
       }
     }
-  }, [bucketReady]);
+  }, []);
 
   const cancelRecording = useCallback(() => {
     const mr = mediaRecorderRef.current;
@@ -123,10 +113,6 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
     setUploading(true);
 
     const mimeType = mr.mimeType || 'audio/webm';
-    const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
-    // Supabase Storage parameterized MIME tiplerini reddeder (415 invalid_mime_type).
-    // "audio/ogg;codecs=opus" → "audio/ogg" şeklinde base MIME tipine indir.
-    const uploadMime = mimeType.split(';')[0].trim();
 
     const blob = await new Promise<Blob>((resolve) => {
       mr.onstop = () => resolve(new Blob(chunksRef.current, { type: mimeType }));
@@ -138,60 +124,33 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
     chunksRef.current = [];
 
     try {
-      const path = `${user?.id ?? 'anon'}/voice_${Date.now()}.${ext}`;
-      const { data, error } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, blob, { contentType: uploadMime, upsert: false });
-
-      if (error) {
-        // Bucket bulunamadı hatası
-        if (error.message?.toLowerCase().includes('bucket not found') ||
-            (error as { statusCode?: string }).statusCode === '404') {
-          // Tekrar oluşturmayı dene
-          const ready = await ensureBucket();
-          setBucketReady(ready);
-          if (ready) {
-            // Yeniden yükle
-            const { data: retryData, error: retryErr } = await supabase.storage
-              .from(BUCKET)
-              .upload(path, blob, { contentType: uploadMime, upsert: false });
-
-            if (!retryErr && retryData) {
-              const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(retryData.path);
-              onVoiceNoteSend(publicUrl, duration);
-            } else {
-              toast.error('Ses dosyası yüklenemedi. Lütfen tekrar deneyin.');
-            }
-          }
-        } else {
-          toast.error('Ses dosyası yüklenirken hata oluştu: ' + error.message);
-        }
-      } else if (data) {
-        const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(data.path);
-        onVoiceNoteSend(publicUrl, duration);
+      // Oturum token'ını al
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
+        setUploading(false);
+        setRecording(false);
+        setSeconds(0);
+        return;
       }
-    } catch {
-      toast.error('Ses dosyası gönderilemedi. İnternet bağlantınızı kontrol edin.');
+
+      const publicUrl = await uploadViaEdgeFunction(
+        blob,
+        user?.id ?? 'anon',
+        mimeType,
+        session.access_token
+      );
+
+      onVoiceNoteSend(publicUrl, duration);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      toast.error(`Ses dosyası gönderilemedi: ${msg}`);
     }
 
     setUploading(false);
     setRecording(false);
     setSeconds(0);
   }, [seconds, user, onVoiceNoteSend]);
-
-  // Bucket hazır değil — uyarı ikonu göster
-  if (bucketReady === false) {
-    return (
-      <button
-        onClick={() => ensureBucket().then(setBucketReady)}
-        disabled={disabled}
-        className="text-amber-400 hover:text-amber-300 transition-colors p-1 shrink-0"
-        title="Sesli mesaj deposu bulunamadı — tıklayarak tekrar dene"
-      >
-        <AlertCircle className="w-5 h-5" />
-      </button>
-    );
-  }
 
   if (recording) {
     return (
@@ -224,7 +183,7 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
   return (
     <button
       onClick={startRecording}
-      disabled={disabled || bucketReady === null}
+      disabled={disabled}
       className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 p-1 shrink-0"
       title="Sesli mesaj kaydet"
     >
