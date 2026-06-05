@@ -7,6 +7,7 @@ import { MessageSkeletonList } from './MessageSkeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import { renderMessageContent, type ServerEmoji } from '@/utils/messageRenderer';
+import { getMessagePreview } from '@/utils/messagePreview';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/components/ui/context-menu';
@@ -547,7 +548,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
       onDeleteMessage(msg.id);
       return;
     }
-    setPendingDelete({ id: msg.id, preview: (msg.content || '').toString() });
+    setPendingDelete({ id: msg.id, preview: getMessagePreview(msg.content || '', (msg as any).attachments, true) });
   }, [onDeleteMessage]);
 
   // Mobile long-press context menu

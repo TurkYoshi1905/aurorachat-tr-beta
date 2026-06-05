@@ -8,10 +8,6 @@ import VoiceRecorder from './VoiceRecorder';
 import VoicePlayerCard, { parseVoiceNote } from './VoicePlayerCard';
 import UserProfileCard from '@/components/UserProfileCard';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useTranslation } from '@/i18n';
 import { renderMessageContent } from '@/utils/messageRenderer';
 import MessageAttachments from './MessageAttachments';
@@ -23,6 +19,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useVoiceContext } from '@/contexts/VoiceContext';
 import VoiceMeetingRoom from './VoiceMeetingRoom';
 import ReportMessageModal from './ReportMessageModal';
+import DeleteMessageConfirmModal from './DeleteMessageConfirmModal';
+import { getMessagePreview } from '@/utils/messagePreview';
 
 const MAX_FILES = 3;
 const FREE_FILE_SIZE  = 10 * 1024 * 1024;
@@ -97,7 +95,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
   const [input, setInput] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; preview: string } | null>(null);
   const [reportMsgDM, setReportMsgDM] = useState<DMMessage | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -551,9 +549,9 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
   };
 
   const handleDelete = async () => {
-    if (!deleteId) return;
-    const id = deleteId;
-    setDeleteId(null);
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
+    setPendingDelete(null);
     setMessages((prev) => prev.filter((m) => m.id !== id));
     await supabase.from('direct_messages').delete().eq('id', id);
   };
@@ -807,11 +805,10 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                       <button
                         onClick={async (e) => {
                           if (e.shiftKey) {
-                            // v1.0.3: Shift+Click ile onaysız sil
                             const id = msg.id;
                             await (supabase.from('direct_messages') as any).delete().eq('id', id);
                           } else {
-                            setDeleteId(msg.id);
+                            setPendingDelete({ id: msg.id, preview: getMessagePreview(msg.content, msg.attachments, true) });
                           }
                         }}
                         className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
@@ -949,18 +946,12 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
         )}
       </div>
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('dm.deleteTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('dm.deleteDesc')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('dm.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('dm.delete')}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteMessageConfirmModal
+        open={!!pendingDelete}
+        preview={pendingDelete?.preview ?? null}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={handleDelete}
+      />
 
       {reportMsgDM && (
         <ReportMessageModal

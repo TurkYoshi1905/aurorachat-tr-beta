@@ -16,6 +16,53 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.3.0',
+    date: '04 Haziran 2026',
+    summary: 'DM listesinde medya önizlemeleri (resim, GIF, sesli mesaj, dosya), mesaj silme modalında temiz önizleme, karşı taraftan gelen medya bildirimleri ve DM/Grup DM\'de sesli mesaj desteği.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'DM Listesi Medya Önizleme: Resim, GIF, sesli mesaj ve dosya gönderildiğinde DM listesinde URL yerine "Bir Resim Gönderdin / Gönderildi.", "Bir Gif Gönderdin.", "Bir Sesli Mesaj Gönderildi." gibi okunabilir metin gösterilir.',
+          'Medya Bildirimleri: Karşı taraftan resim, GIF, sesli mesaj veya dosya geldiğinde uygulama içi ve masaüstü bildirim "Resim gönderdi / Gif gönderdi / Sesli mesaj gönderdi" şeklinde görünür.',
+          'Sesli Mesaj — DM & Grup DM: Ses kaydı özelliği artık DMChatArea ve GroupDMChatArea\'da da çalışıyor; Edge Function (upload-voice-note) üzerinden RLS bypass ile yükleniyor.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltmeleri',
+        icon: Bug,
+        color: 'text-red-400',
+        items: [
+          'Mesaj Silme Modalında URL Taşması: Sesli mesaj veya resim silinirken modalda ham JSON/URL gösterilmesi düzeltildi; artık "Bir Sesli Mesaj Gönderdin." gibi temiz metin görünür.',
+          'Voice-Notes RLS 403 Hatası: Supabase Storage INSERT politikası path kısıtlaması kaldırılarak Edge Function (service role) üzerinden yükleme yapıldı; RLS tamamen bypass edildi.',
+        ],
+      },
+      {
+        title: 'İyileştirmeler',
+        icon: Sparkles,
+        color: 'text-cyan-400',
+        items: [
+          'messagePreview.ts: Tüm uygulamada mesaj önizleme için merkezi yardımcı modül — getMessagePreview() ve getNotificationPreview() fonksiyonları.',
+          'Bildirim Gövdesi: Index.tsx\'teki DM bildirimlerinde ham URL yerine okunabilir metin gösterilir.',
+          'upload-voice-note Edge Function: Supabase service role key ile Storage\'a yükleme yapan yeni Deno fonksiyonu; bucket otomatik oluşturulur.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'src/utils/messagePreview.ts: GIF domain listesi, ses notu JSON tespiti, ek dosya türü ayrımı.',
+          'DMChatArea: AlertDialog → DeleteMessageConfirmModal ile değiştirildi; preview prop temiz metin alıyor.',
+          'DMDashboard: lastMessage sorgusu attachments alanını da seçiyor; 3 yerde getMessagePreview() kullanılıyor.',
+          'supabase/functions/upload-voice-note: RLS bypass Eden yeni Edge Function; 11. fonksiyon olarak deploy edildi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.2.9',
     date: '04 Haziran 2026',
     summary: 'Masaüstü sağ-tık bağlam menüsü, mobil çekmece profil kartı, sürüm notları kaydırma düzeltmesi, Supabase profil önbelleği, ses kaydı RLS düzeltmesi ve Android WebView üç kademeli indirme.',

@@ -193,9 +193,12 @@ const Index = () => {
             5 * 60 * 1000 // cache for 5 minutes
           );
           const senderName = (senderProfile as any)?.display_name || (senderProfile as any)?.username || 'Biri';
-          const body: string = msg.content || '';
+          const rawBody: string = msg.content || '';
           const notifTitle = `${senderName} sana mesaj gönderdi`;
-          const notifBody = body.length > 100 ? body.slice(0, 100) + '…' : body || '📎 Dosya';
+          const cleanBody = rawBody.startsWith('{"__vn"') ? '🎙 Sesli mesaj gönderdi'
+            : /^https?:\/\//i.test(rawBody.trim()) ? (/\.gif(\?|#|$)/i.test(rawBody) || ['klipy.co','giphy.com','tenor.com','c.tenor.com'].some(d => rawBody.includes(d)) ? '🖼 Gif gönderdi' : /\.(jpe?g|png|webp)(\?|#|$)/i.test(rawBody) ? '🖼 Resim gönderdi' : '📎 Dosya gönderdi')
+            : rawBody;
+          const notifBody = cleanBody.length > 100 ? cleanBody.slice(0, 100) + '…' : cleanBody || '📎 Dosya';
           const { error } = await supabase.from('notifications').insert({
             user_id: user.id,
             type: 'dm',
@@ -244,7 +247,11 @@ const Index = () => {
         shownNotifIds.current.add(dedupKey);
         setTimeout(() => shownNotifIds.current.delete(dedupKey), 10000);
         const notifTitle = `${senderName || 'Biri'} sana mesaj gönderdi`;
-        const notifBody = (body || '📎 Dosya').slice(0, 100);
+        const rawBodyB: string = body || '';
+        const cleanBodyB = rawBodyB.startsWith('{"__vn"') ? '🎙 Sesli mesaj gönderdi'
+          : /^https?:\/\//i.test(rawBodyB.trim()) ? (/\.gif(\?|#|$)/i.test(rawBodyB) || ['klipy.co','giphy.com','tenor.com','c.tenor.com'].some(d => rawBodyB.includes(d)) ? '🖼 Gif gönderdi' : /\.(jpe?g|png|webp)(\?|#|$)/i.test(rawBodyB) ? '🖼 Resim gönderdi' : '📎 Dosya gönderdi')
+          : rawBodyB;
+        const notifBody = (cleanBodyB || '📎 Dosya').slice(0, 100);
         showInAppNotification({ id: dedupKey, type: 'dm', title: notifTitle, body: notifBody, conversationId, messageId });
         if ('Notification' in window && Notification.permission === 'granted') {
           if ('serviceWorker' in navigator) {

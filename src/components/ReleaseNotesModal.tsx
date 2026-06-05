@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Bug, Shield, GripVertical, Globe, Bot, Puzzle, SlidersHorizontal, MousePointer2 } from 'lucide-react';
+import { Sparkles, Wrench, Shield, Bell, Mic, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.2.9';
+const RELEASE_VERSION = '1.3.0';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -18,52 +18,45 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: MousePointer2,
+    icon: Sparkles,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Masaüstü Premium Bağlam Menüsü: Mesajlara sağ tıklayınca kopyala, yanıtla, iş parçacığı, sabitle, düzenle, sil ve bildir seçeneklerini içeren Discord tarzı bağlam menüsü açılır.',
+    label: 'DM Listesi Medya Önizleme: Resim, GIF, sesli mesaj veya dosya gönderildiğinde URL yerine "Bir Resim Gönderdin / Gönderildi." gibi okunabilir metin görünür.',
     badge: 'Yeni',
   },
   {
-    icon: SlidersHorizontal,
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    label: 'Mobil Mesaj Çekmecesi — Kullanıcı Profil Kartı: Uzun basma çekmecesinin üstünde mesaj yazarının avatarı ve adı gösterilir; profile gitmek için dokunulabilir.',
-    badge: 'İyileştirme',
+    icon: Bell,
+    iconBg: 'bg-amber-500/15',
+    iconColor: 'text-amber-400',
+    label: 'Medya Bildirimleri: Karşı taraftan resim, GIF, sesli mesaj veya dosya geldiğinde uygulama içi ve masaüstü bildirimde "Resim gönderdi / Sesli mesaj gönderdi" metni görünür.',
+    badge: 'Yeni',
   },
   {
-    icon: GripVertical,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Sürüm Notları Modal Kaydırma Düzeltmesi: Küçük ekranlarda içerik kaydırma alanı kesilip buton gizleniyordu. Tam flex düzeni onarıldı.',
-    badge: 'Düzeltme',
-  },
-  {
-    icon: Bot,
+    icon: Mic,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Supabase Profil Önbelleği: UserProfileCard artık 60 saniyelik bellek içi önbellek kullanıyor; aynı kullanıcıya ait tekrar eden sorgular engelleniyor.',
-    badge: 'Teknik',
+    label: 'Sesli Mesaj — DM & Grup DM: Ses kaydı artık tüm sohbet ekranlarında çalışır; Edge Function aracılığıyla RLS bypass ile güvenli yükleme yapılır.',
+    badge: 'Yeni',
+  },
+  {
+    icon: Trash2,
+    iconBg: 'bg-red-500/15',
+    iconColor: 'text-red-400',
+    label: 'Mesaj Silme Modalı Düzeltmesi: Sesli mesaj veya resim silinirken ham JSON/URL yerine "Bir Sesli Mesaj Gönderdin." gibi temiz önizleme gösterilir.',
+    badge: 'Düzeltme',
   },
   {
     icon: Shield,
-    iconBg: 'bg-amber-500/15',
-    iconColor: 'text-amber-400',
-    label: 'Ses Kaydı RLS Düzeltmesi: voice-notes Supabase Storage bucket\'ı için eksik politikalar eklendi; kayıt yüklemeleri artık tüm kimliği doğrulanmış kullanıcılarda çalışıyor.',
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Voice-Notes RLS 403 Düzeltmesi: Edge Function service role ile Storage\'a yükleme yapılır; hiç manuel SQL gerektirmez.',
     badge: 'Düzeltme',
-  },
-  {
-    icon: Globe,
-    iconBg: 'bg-blue-500/15',
-    iconColor: 'text-blue-400',
-    label: 'Android WebView İndirme İyileştirmesi: Yerel köprü yoksa blob akışı denemesi, o da başarısız olursa URL\'yi yeni sekme ya da intents ile açma — üç kademeli geri dönüş stratejisi.',
-    badge: 'İyileştirme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'SQL migration v1.2.9: voice-notes RLS politikaları. GitHub sync tetikleyicisi güncellendi. Tüm versiyon referansları 1.2.9\'a güncellendi.',
+    label: 'messagePreview.ts: getMessagePreview() ve getNotificationPreview() merkezi yardımcı modülü. upload-voice-note Edge Function (11. fonksiyon) deploy edildi.',
     badge: 'Teknik',
   },
 ];

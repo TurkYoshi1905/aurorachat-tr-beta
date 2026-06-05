@@ -25,6 +25,7 @@ import {
   restoreDMFromHistory,
   type DMHistoryEntry,
 } from '@/lib/dmHistory';
+import { getMessagePreview } from '@/utils/messagePreview';
 import DMChatArea from './DMChatArea';
 import GroupDMChatArea from './GroupDMChatArea';
 import {
@@ -191,7 +192,7 @@ const DMDashboard = ({ onOpenDM, onStartCall, currentUserStatus = 'online', onSt
       const { data: messages } = convIds.length > 0
         ? await supabase
             .from('direct_messages')
-            .select('conversation_id, content, inserted_at, sender_id')
+            .select('conversation_id, content, inserted_at, sender_id, attachments')
             .in('conversation_id', convIds)
             .order('inserted_at', { ascending: false })
         : { data: [] as any[] };
@@ -212,7 +213,7 @@ const DMDashboard = ({ onOpenDM, onStartCall, currentUserStatus = 'online', onSt
         const latestMsg = latestMsgByConv.get(conv.id);
         dmUsers.push({
           userId: otherId,
-          lastMessage: latestMsg?.content || '',
+          lastMessage: getMessagePreview(latestMsg?.content || '', latestMsg?.attachments, latestMsg?.sender_id === user.id),
           lastAt: latestMsg?.inserted_at || conv.created_at,
         });
       }
@@ -317,7 +318,7 @@ const DMDashboard = ({ onOpenDM, onStartCall, currentUserStatus = 'online', onSt
               displayName: g.name || autoName,
               username: `${memberCountByGroup.get(g.id) || memberIds.length} üye`,
               avatarUrl: g.icon_url || null,
-              lastMessage: latest?.content || 'Henüz mesaj yok',
+              lastMessage: latest ? getMessagePreview(latest.content || '', latest.attachments, latest.sender_id === user.id) : 'Henüz mesaj yok',
               lastAt: latest?.inserted_at || g.last_message_at || g.created_at,
               memberCount: memberCountByGroup.get(g.id) || memberIds.length,
             };
@@ -440,7 +441,7 @@ const DMDashboard = ({ onOpenDM, onStartCall, currentUserStatus = 'online', onSt
           if (existing) {
             updated = prev.map(d =>
               d.userId === partnerId
-                ? { ...d, lastMessage: msg.content || d.lastMessage, lastAt: msg.inserted_at || d.lastAt }
+                ? { ...d, lastMessage: getMessagePreview(msg.content || '', msg.attachments, msg.sender_id === user.id) || d.lastMessage, lastAt: msg.inserted_at || d.lastAt }
                 : d
             );
           } else {
