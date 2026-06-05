@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Wrench, Shield, Bell, Mic, Trash2 } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTranslation } from '@/i18n';
 
 const RELEASE_VERSION = '1.3.0';
@@ -102,7 +101,10 @@ const ReleaseNotesModal = () => {
           <p className="text-xs text-muted-foreground mt-2">Bu sürümdeki yeni özellikler ve iyileştirmeler</p>
         </div>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <div
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           <div className="space-y-1.5 p-4">
             {features.map((f, i) => (
               <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-secondary/20 hover:bg-secondary/40 transition-colors">
@@ -120,7 +122,7 @@ const ReleaseNotesModal = () => {
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
 
         <div className="px-4 pb-4 pt-2 border-t border-border shrink-0">
           <Button onClick={handleClose} className="w-full">
