@@ -40,6 +40,15 @@ export const changelogData: ChangelogRelease[] = [
         ],
       },
       {
+        title: 'Hata Düzeltme',
+        icon: Bug,
+        color: 'text-destructive',
+        items: [
+          'Ses notu silinince uygulama donuyordu: Sunucu kanallarında, DM\'lerde ve Grup DM\'lerde ses notu mesajı silindiğinde arayüz tamamen yanıt vermez hale geliyordu. Sorun giderildi.',
+          'Mobil ve masaüstünde ses notu silme artık anlık — mesaj arayüzden hemen kaldırılır, arka planda veritabanı işlemi sessizce tamamlanır.',
+        ],
+      },
+      {
         title: 'Teknik',
         icon: Wrench,
         color: 'text-muted-foreground',
@@ -47,6 +56,8 @@ export const changelogData: ChangelogRelease[] = [
           'FileUploadPreview.tsx: URL.createObjectURL ile gerçek resim küçük resimleri; object URL\'ler useEffect cleanup ile hafıza sızıntısı önlenir.',
           'VoiceRecorder.tsx: CODEC_PRIORITY listesi (opus/webm önce), audioBitsPerSecond: 128000, getUserMedia sampleRate: 48000.',
           'ChatArea & DMChatArea: Popover yerine vaul Drawer ile Android galeri çekmecesi.',
+          'VoicePlayerCard: Ses elementi unmount edilirken tüm event handler\'lar temizlenir; React concurrent mode\'da render döngüsü önlenir.',
+          'handleDeleteMessage (Index, DMChatArea, GroupDMChatArea): Optimistic silme RPC\'den önce yapılır; try/catch ile hata yönetimi eklendi.',
         ],
       },
     ],

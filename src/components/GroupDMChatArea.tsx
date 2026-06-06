@@ -437,7 +437,11 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
   };
 
   const deleteMessage = async (id: string) => {
-    await (supabase.from('group_dm_messages' as any).delete().eq('id', id) as any);
+    // Optimistic update first — unmounts VoicePlayerCard immediately.
+    setMessages(prev => prev.filter(m => m.id !== id));
+    try {
+      await (supabase.from('group_dm_messages' as any).delete().eq('id', id) as any);
+    } catch { /* Message already removed from UI; ignore DB errors silently. */ }
   };
 
   const handleLeaveGroup = async () => {

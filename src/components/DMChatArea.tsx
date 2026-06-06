@@ -556,8 +556,11 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
     if (!pendingDelete) return;
     const id = pendingDelete.id;
     setPendingDelete(null);
+    // Optimistic update first — unmounts VoicePlayerCard immediately.
     setMessages((prev) => prev.filter((m) => m.id !== id));
-    await supabase.from('direct_messages').delete().eq('id', id);
+    try {
+      await supabase.from('direct_messages').delete().eq('id', id);
+    } catch { /* Message already removed from UI; ignore DB errors silently. */ }
   };
 
   const handleRetrySend = useCallback(async (msg: DMMessage) => {

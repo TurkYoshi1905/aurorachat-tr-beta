@@ -45,13 +45,23 @@ const VoicePlayerCard = ({ url, duration, isOwn }: VoicePlayerCardProps) => {
   const activeBars = Math.floor(progress * BAR_COUNT);
 
   useEffect(() => {
+    let mounted = true;
     const audio = new Audio(url);
     audioRef.current = audio;
-    audio.onloadedmetadata = () => { if (isFinite(audio.duration)) setTotalDuration(audio.duration); };
-    audio.ontimeupdate = () => setCurrentTime(audio.currentTime);
-    audio.onended = () => { setPlaying(false); setCurrentTime(0); };
+    audio.onloadedmetadata = () => { if (mounted && isFinite(audio.duration)) setTotalDuration(audio.duration); };
+    audio.ontimeupdate = () => { if (mounted) setCurrentTime(audio.currentTime); };
+    audio.onended = () => { if (mounted) { setPlaying(false); setCurrentTime(0); } };
     audio.load();
-    return () => { audio.pause(); audio.src = ''; };
+    return () => {
+      mounted = false;
+      audio.onloadedmetadata = null;
+      audio.ontimeupdate = null;
+      audio.onended = null;
+      audio.onerror = null;
+      try { audio.pause(); } catch { /* ignore */ }
+      try { audio.src = ''; } catch { /* ignore */ }
+      audioRef.current = null;
+    };
   }, [url]);
 
   const togglePlay = useCallback(() => {

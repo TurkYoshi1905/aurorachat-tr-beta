@@ -1548,11 +1548,8 @@ const Index = () => {
 
   const handleDeleteMessage = useCallback(async (messageId: string) => {
     const message = messages.find((m) => m.id === messageId);
-    const { error } = await supabase.rpc('delete_server_message' as any, { p_message_id: messageId });
-    if (error) {
-      toast.error(error.message || 'Mesaj silinemedi');
-      return;
-    }
+    // Optimistic UI update FIRST — unmounts VoicePlayerCard immediately,
+    // stopping audio event handlers before the async RPC is awaited.
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
     setReactions((prev) => {
       if (!prev[messageId]) return prev;
@@ -1560,17 +1557,26 @@ const Index = () => {
       delete next[messageId];
       return next;
     });
-    await messagesRealtimeChannelRef.current?.send({
-      type: 'broadcast',
-      event: 'message_deleted',
-      payload: {
-        messageId,
-        channelId: activeChannel,
-        serverId: activeServer,
-        authorId: message?.userId,
-        deletedBy: user?.id,
-      },
-    });
+    try {
+      const { error } = await supabase.rpc('delete_server_message' as any, { p_message_id: messageId });
+      if (error) {
+        toast.error(error.message || 'Mesaj silinemedi');
+        return;
+      }
+      await messagesRealtimeChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'message_deleted',
+        payload: {
+          messageId,
+          channelId: activeChannel,
+          serverId: activeServer,
+          authorId: message?.userId,
+          deletedBy: user?.id,
+        },
+      });
+    } catch {
+      toast.error('Mesaj silinemedi');
+    }
   }, [messages, activeChannel, activeServer, user?.id]);
 
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
