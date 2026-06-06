@@ -6,6 +6,7 @@ import UserProfileCard from './UserProfileCard';
 import {
   ArrowLeft, Send, Users, Pencil, Trash2, Check, X, Loader2, LogOut,
   UserPlus, Search, AlertTriangle, Circle, Moon, MinusCircle, Phone, PhoneOff, PhoneCall, Mic, Copy,
+  PlusCircle, ImagePlus, Paperclip,
 } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import VoiceRecorder from './VoiceRecorder';
@@ -123,9 +124,12 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
   const [addingUserId, setAddingUserId] = useState<string | null>(null);
 
   const [longPressMsg, setLongPressMsg] = useState<GroupMessage | null>(null);
+  const [galleryDrawerOpen, setGalleryDrawerOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const profileMap = useRef<Map<string, GroupMember>>(new Map());
 
   const isOwner = !!(group && user && group.ownerId === user.id);
@@ -415,6 +419,13 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !showMentionPopup) { e.preventDefault(); sendMessage(); }
     if (e.key === 'Escape') { setShowMentionPopup(false); }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setPendingFiles(prev => [...prev, ...files].slice(0, 5));
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleLongPressStart = (msg: GroupMessage) => {
@@ -898,8 +909,28 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
                 position={{ bottom: 56, left: 16 }}
               />
             )}
+            <input type="file" ref={fileInputRef} accept="*" multiple className="hidden" onChange={handleFileSelect} />
+            {pendingFiles.length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-2">
+                {pendingFiles.map((f, i) => (
+                  <div key={i} className="relative group flex items-center gap-1.5 bg-[#383a40] rounded-lg px-2 py-1 text-xs text-[#dbdee1]">
+                    <Paperclip className="w-3 h-3 text-[#b5bac1] shrink-0" />
+                    <span className="max-w-[100px] truncate">{f.name}</span>
+                    <button onClick={() => setPendingFiles(p => p.filter((_, idx) => idx !== i))} className="text-[#6d6f78] hover:text-[#ed4245] transition-colors ml-0.5">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="relative">
             <div className="bg-[#383a40] rounded-xl px-3 py-2 flex items-end gap-2">
+              <button
+                onClick={() => setGalleryDrawerOpen(true)}
+                className="text-[#b5bac1] hover:text-white transition-colors shrink-0 p-0.5"
+              >
+                <PlusCircle className="w-5 h-5" />
+              </button>
               <EmojiPicker onEmojiSelect={(e: string) => { setInput(p => p + e); textareaRef.current?.focus(); }} />
               <textarea
                 ref={textareaRef}
@@ -911,10 +942,10 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
                 className="flex-1 bg-transparent text-[#dbdee1] text-sm placeholder-[#6d6f78] resize-none outline-none min-h-[24px] max-h-[160px] overflow-y-auto leading-6"
               />
               <GifPicker onGifSelect={(url: string) => { setInput(p => (p + ' ' + url).trim()); }} />
-              {!input.trim() && <VoiceRecorder onVoiceNoteSend={sendVoiceNote} />}
+              {!input.trim() && pendingFiles.length === 0 && <VoiceRecorder onVoiceNoteSend={sendVoiceNote} />}
               <button
                 onClick={sendMessage}
-                disabled={!input.trim() || sending}
+                disabled={(!input.trim() && pendingFiles.length === 0) || sending}
                 className="p-1.5 rounded-lg text-[#b5bac1] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
@@ -1043,6 +1074,64 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
           </div>
         )}
       </div>
+
+      {/* Android-Style Gallery Drawer */}
+      <Drawer open={galleryDrawerOpen} onOpenChange={setGalleryDrawerOpen} shouldScaleBackground={false}>
+        <DrawerContent className="px-2 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
+          <DrawerHeader className="pb-1">
+            <DrawerTitle className="text-sm font-semibold text-[#dbdee1] text-left">Medya Ekle</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-1 px-2 pb-3">
+            <button
+              onClick={() => {
+                if (fileInputRef.current) {
+                  fileInputRef.current.accept = 'image/*,video/*';
+                  fileInputRef.current.click();
+                }
+                setGalleryDrawerOpen(false);
+              }}
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm text-[#dbdee1] hover:bg-[#35373c] transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#5865f2]/20 flex items-center justify-center shrink-0">
+                <ImagePlus className="w-5 h-5 text-[#5865f2]" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Resim / Video Ekle</p>
+                <p className="text-xs text-[#b5bac1]">Galeriden resim veya video seç</p>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                if (fileInputRef.current) {
+                  fileInputRef.current.accept = '*';
+                  fileInputRef.current.click();
+                }
+                setGalleryDrawerOpen(false);
+              }}
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm text-[#dbdee1] hover:bg-[#35373c] transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                <Paperclip className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Dosya Ekle</p>
+                <p className="text-xs text-[#b5bac1]">Herhangi bir dosyayı paylaş</p>
+              </div>
+            </button>
+            <GifPicker onGifSelect={(url: string) => { setInput(p => (p + ' ' + url).trim()); setGalleryDrawerOpen(false); }}>
+              <button className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm text-[#dbdee1] hover:bg-[#35373c] transition-colors active:scale-[0.98]">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-black text-emerald-400">GIF</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-medium">GIF Gönder</p>
+                  <p className="text-xs text-[#b5bac1]">Tenor'dan animasyonlu GIF seç</p>
+                </div>
+              </button>
+            </GifPicker>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Mobile Long-Press Message Drawer */}
       <Drawer open={!!longPressMsg} onOpenChange={(v) => { if (!v) setLongPressMsg(null); }} shouldScaleBackground={false}>

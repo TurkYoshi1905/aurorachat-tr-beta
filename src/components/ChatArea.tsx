@@ -1202,14 +1202,20 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
           <div className="space-y-1 px-2 pb-3">
             {canAttachFiles && (
               <button
-                onClick={() => { handlePickFiles(); setGalleryDrawerOpen(false); }}
+                onClick={() => {
+                  if (fileInputRef.current) {
+                    fileInputRef.current.accept = 'image/*,video/*';
+                    fileInputRef.current.click();
+                  }
+                  setGalleryDrawerOpen(false);
+                }}
                 className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm text-foreground hover:bg-secondary transition-colors active:scale-[0.98]"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
                   <ImagePlus className="w-5 h-5 text-primary" />
                 </div>
                 <div className="text-left">
-                  <p className="font-medium">Resim Ekle</p>
+                  <p className="font-medium">Resim / Video Ekle</p>
                   <p className="text-xs text-muted-foreground">Galeriden resim veya video seç</p>
                 </div>
               </button>

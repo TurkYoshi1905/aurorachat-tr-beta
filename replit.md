@@ -11,8 +11,8 @@ AuroraChat; kullanıcıların kendi sunucularını kurmasına, metin/ses/görün
 ## Run & Operate
 
 ```bash
-pnpm --filter @workspace/aurorachat run dev   # frontend (port otomatik atanır)
-pnpm --filter @workspace/api-server run dev   # API sunucusu
+pnpm --filter @workspace/aurorachat run dev   # frontend (workflow: artifacts/aurorachat: web)
+pnpm --filter @workspace/api-server run dev   # API sunucusu (yardımcı rol)
 pnpm run build                                 # tüm paketleri derle
 pnpm run typecheck                             # tip kontrolü
 ```
@@ -196,7 +196,7 @@ artifacts/aurorachat/
 - **`useEffect + fetch` ile Supabase sorgusu** — TanStack Query kullan
 - **`console.log` bırakma** — production'a taşımadan önce temizle
 - **`server_bot_roles` tablosu** — `IF NOT EXISTS` ile oluşturulmalı (prod/dev farkı)
-- **Changelog & Sürüm Notu Güvenliği** — Halka açık changelog (ReleaseNotesModal, changelogData, Landing, GitHub) içine SQL migration dosya adı, tablo adı, sütun adı, RLS politika detayı veya güvenlik açıklarını açıklayan teknik bilgi YAZMA. Yalnızca kullanıcıya yönelik özet yaz ("veritabanı şeması güncellendi" gibi). Teknik ayrıntılar yalnızca bu `replit.md` ve commit geçmişinde tutulabilir.
+- **Changelog & Sürüm Notu Güvenliği** — Halka açık changelog içine SQL migration dosya adı, tablo adı, sütun adı, RLS politika detayı veya güvenlik açıklarını açıklayan teknik bilgi YAZMA. Yalnızca kullanıcıya yönelik özet yaz. Teknik ayrıntılar yalnızca bu `replit.md` ve commit geçmişinde tutulabilir.
 - **Supabase Presence** — `onlineStatus` alanı kullanılır, `status` değil (profil durumuyla çakışır)
 - **SQL migration'lar** — Supabase prod'a **manuel** uygulanır, otomatik migration yoktur
 - **GroupDM presence** — `group-dm-presence-{groupId}` channel + 30 sn polling fallback
