@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Shield, ImagePlus, Mic, Smartphone } from 'lucide-react';
+import { Sparkles, Wrench, Shield, ImagePlus, Mic, Smartphone, Monitor, Database, PlusCircle } from 'lucide-react';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.3.1';
+const RELEASE_VERSION = '1.3.2';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -17,38 +17,38 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Smartphone,
+    icon: Monitor,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Android Galeri Çekmecesi: Mobilde "+" butonuna basınca ekranın altından Android tarzı akıcı bir çekmece açılır; Resim Ekle ve GIF Gönder seçenekleri sunar.',
+    label: 'Masaüstü Medya Menüsü: "+" butonuna tıklanınca ikonlu premium açılır menü gösterilir — Resim/Video Ekle ve Dosya Ekle seçenekleriyle hızlı medya paylaşımı.',
     badge: 'Yeni',
+  },
+  {
+    icon: Smartphone,
+    iconBg: 'bg-cyan-500/15',
+    iconColor: 'text-cyan-400',
+    label: 'Grup DM Galeri Çekmecesi: Grup sohbetlerine de "+" butonu ve Android galeri çekmecesi eklendi; Resim, Dosya ve GIF paylaşımı desteklenir.',
+    badge: 'Yeni',
+  },
+  {
+    icon: Database,
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-400',
+    label: 'Supabase Performans İyileştirmesi: Yoğun sorgu tablolarına index eklendi, bağlantı zaman aşımı azaltıldı; genel sorgu hızı artırıldı.',
+    badge: 'İyileştirme',
   },
   {
     icon: ImagePlus,
     iconBg: 'bg-amber-500/15',
     iconColor: 'text-amber-400',
-    label: 'Discord Tarzı Resim Önizleme: Mesaj göndermeden önce seçilen resimler gerçek küçük resimlerle şık kartlar halinde gösterilir; her birini ayrı ayrı kaldırabilirsin.',
-    badge: 'Yeni',
-  },
-  {
-    icon: Mic,
-    iconBg: 'bg-emerald-500/15',
-    iconColor: 'text-emerald-400',
-    label: 'Yüksek Kaliteli Ses Kayıtları: Sesli mesajlar artık 128 kbps, 48 kHz örnekleme hızı, gürültü engelleme ve eko iptali ile çok daha net iletilir.',
-    badge: 'İyileştirme',
-  },
-  {
-    icon: Shield,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: 'Depolama Altyapısı Güncellemesi: Medya yüklemelerinde RLS politikaları güçlendirildi; yüksek kaliteli ses ve görsel dosyalar sorunsuz iletilir.',
-    badge: 'İyileştirme',
+    label: 'Resim/Video filtresi düzeltildi: "+" → Resim Ekle tüm platformlarda doğru accept="image/*,video/*" kullanarak native galeriyi açar.',
+    badge: 'Düzeltme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'Mobil giriş çubuğu emoji hizalaması düzeltildi; FileUploadPreview görsel önizleme ile tamamen yenilendi; VoiceRecorder codec seçim önceliği optimize edildi.',
+    label: 'Sürüm senkronizasyonu: Settings, Landing, Hakkında sayfası ve ReleaseNotesModal v1.3.2 ile güncellendi.',
     badge: 'Teknik',
   },
 ];
@@ -69,6 +69,7 @@ const ReleaseNotesModal = () => {
       const timer = setTimeout(() => setOpen(true), 1500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, []);
 
   const handleClose = () => {

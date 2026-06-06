@@ -923,9 +923,39 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
           /* ===== DESKTOP DM INPUT BAR ===== */
           <div className="bg-input rounded-2xl flex items-center px-2 md:px-3 gap-1.5 min-h-[48px] ring-1 ring-border focus-within:ring-primary/40 transition-all">
             <input type="file" ref={fileInputRef} accept="image/*" multiple className="hidden" onChange={handleFileSelect} />
-            <button onClick={() => fileInputRef.current?.click()} className="text-muted-foreground hover:text-foreground transition-colors shrink-0 p-1" disabled={dmBlocked}>
-              <PlusCircle className="w-5 h-5" />
-            </button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="text-muted-foreground hover:text-foreground hover:bg-secondary/60 p-1 rounded-md transition-all shrink-0 disabled:opacity-40 disabled:cursor-not-allowed" disabled={dmBlocked}>
+                  <PlusCircle className="w-5 h-5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="top" align="start" sideOffset={8} className="w-56 p-1.5 space-y-0.5 shadow-xl border border-white/[0.08] bg-card/95 backdrop-blur-xl">
+                <button
+                  onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'image/*,video/*'; fileInputRef.current.click(); } }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/25 transition-colors">
+                    <ImagePlus className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-sm leading-tight">Resim / Video Ekle</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">Galeriden seç</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = '*'; fileInputRef.current.click(); } }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 group-hover:bg-amber-500/25 transition-colors">
+                    <Paperclip className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-sm leading-tight">Dosya Ekle</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">Herhangi bir dosya</p>
+                  </div>
+                </button>
+              </PopoverContent>
+            </Popover>
             <input
               type="text"
               value={input}
@@ -935,7 +965,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
               className="flex-1 bg-transparent py-2.5 text-sm outline-none text-foreground placeholder:text-muted-foreground"
             />
             <div className="flex items-center gap-1 text-muted-foreground shrink-0">
-              <button onClick={() => fileInputRef.current?.click()} className="hover:text-foreground transition-colors p-1">
+              <button onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'image/*,video/*'; fileInputRef.current.click(); } }} className="hover:text-foreground transition-colors p-1">
                 <ImagePlus className="w-5 h-5" />
               </button>
               <GifPicker onGifSelect={(url) => handleSend(url)} />

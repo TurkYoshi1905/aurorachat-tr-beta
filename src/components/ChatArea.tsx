@@ -1168,12 +1168,44 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
           <div className="bg-input rounded-xl flex items-center px-4 gap-2 ring-1 ring-border focus-within:ring-primary/40 transition-all">
             <input type="file" ref={fileInputRef} accept="*" multiple className="hidden" onChange={handleFileSelect} />
             {canAttachFiles && (
-              <button onClick={handlePickFiles} className="text-muted-foreground hover:text-foreground transition-colors"><PlusCircle className="w-5 h-5" /></button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="text-muted-foreground hover:text-foreground hover:bg-secondary/60 p-1 rounded-md transition-all shrink-0">
+                    <PlusCircle className="w-5 h-5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="top" align="start" sideOffset={8} className="w-56 p-1.5 space-y-0.5 shadow-xl border border-white/[0.08] bg-card/95 backdrop-blur-xl">
+                  <button
+                    onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'image/*,video/*'; fileInputRef.current.click(); } }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/25 transition-colors">
+                      <ImagePlus className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-sm leading-tight">Resim / Video Ekle</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">Galeriden seç</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = '*'; fileInputRef.current.click(); } }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 group-hover:bg-amber-500/25 transition-colors">
+                      <Paperclip className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-sm leading-tight">Dosya Ekle</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">Herhangi bir dosya</p>
+                    </div>
+                  </button>
+                </PopoverContent>
+              </Popover>
             )}
             <input ref={inputRef} type="text" value={input} onChange={handleInputChange} onKeyDown={(e) => { if (e.key === 'Enter' && !showMentionPopup && !showSlashPopup) handleSend(); }} placeholder={t('chat.messagePlaceholder', { channel: channelName })} className="flex-1 bg-transparent py-3 text-sm outline-none text-foreground placeholder:text-muted-foreground" />
             <div className="flex items-center gap-2 text-muted-foreground">
               {canAttachFiles && (
-                <button onClick={handlePickFiles} className="hover:text-foreground transition-colors"><ImagePlus className="w-5 h-5" /></button>
+                <button onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'image/*,video/*'; fileInputRef.current.click(); } }} className="hover:text-foreground transition-colors"><ImagePlus className="w-5 h-5" /></button>
               )}
               <GifPicker onGifSelect={(url: string) => { if (isOnCooldown) { setShowCooldownBlock(true); return; } onSendMessage(url); }}><button className="hover:text-foreground transition-colors text-xs font-bold">GIF</button></GifPicker>
               <EmojiPicker onEmojiSelect={(emoji) => setInput(prev => prev + emoji)} serverEmojis={serverEmojis} />

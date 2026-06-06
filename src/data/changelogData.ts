@@ -16,6 +16,50 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.3.2',
+    date: '06 Haziran 2026',
+    summary: 'Masaüstünde "+" butonu ikonlu premium açılır menüye dönüştürüldü, Grup DM\'e galeri çekmecesi eklendi, Supabase performans indeksleri güçlendirildi ve tüm sürüm numaraları senkronize edildi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Masaüstü Medya Menüsü: Sunucu kanalları ve DM\'lerde masaüstü giriş alanındaki "+" butonuna tıklanınca artık ikonlu premium bir açılır menü gösterilir. Menüde "Resim / Video Ekle" (mavi ikon) ve "Dosya Ekle" (turuncu ikon) seçenekleri yer alır; alt açıklamalarla net kullanım rehberliği sunar.',
+          'Grup DM Galeri Çekmecesi: Grup sohbet ekranına da "+" butonu ve Android tarzı galeri çekmecesi eklendi. Resim/Video, Dosya ve GIF Gönder seçeneklerini destekler; seçilen dosyalar giriş alanı üzerinde önizleme kartlarıyla gösterilir.',
+        ],
+      },
+      {
+        title: 'İyileştirmeler',
+        icon: Sparkles,
+        color: 'text-cyan-400',
+        items: [
+          'Supabase Performans İndeksleri: messages, direct_messages, group_dm_messages, server_members ve profiles tablolarına yoğun sorgu sütunları üzerine index eklendi; genel veritabanı yanıt süresi iyileştirildi.',
+          'Resim/Video filtre düzeltmesi: "+" → Resim/Video Ekle tüm platformlarda (sunucu, DM, Grup DM) doğru accept="image/*,video/*" değeriyle native galeriyi açar; önceki sürümde genel dosya seçici açılıyordu.',
+          'Sürüm Senkronizasyonu: Settings > Hakkında, indirme isimleri, Landing footer ve ReleaseNotesModal v1.3.2 ile uyumlu hale getirildi.',
+        ],
+      },
+      {
+        title: 'Hata Düzeltme',
+        icon: Bug,
+        color: 'text-destructive',
+        items: [
+          'Supabase bağlantı zaman aşımı azaltıldı: Yoğun sorgularda statement_timeout aşımı ve bağlantı sıfırlama sorunları için indeks optimizasyonu uygulandı.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'ChatArea & DMChatArea: Desktop "+" butonu Popover bileşeni içinde ikonlu menüye taşındı (Radix UI Popover, side=top, align=start, backdrop-blur).',
+          'GroupDMChatArea: PlusCircle, ImagePlus, Paperclip import edildi; fileInputRef, galleryDrawerOpen, pendingFiles state eklendi; gallery drawer ve dosya önizleme eklendi.',
+          'SQL Migration: 20260606000001_v132_performance_indexes.sql — messages(channel_id, created_at), dm_messages(conversation_id, inserted_at), server_members(server_id, user_id) indeksleri.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.3.1',
     date: '06 Haziran 2026',
     summary: 'Mobil giriş alanı Android tarzı galeri çekmecesi, Discord benzeri premium resim önizleme kartları, yüksek kaliteli ses kayıtları (128 kbps / 48 kHz) ve depolama altyapısı güncellemesi.',

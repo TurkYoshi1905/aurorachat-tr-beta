@@ -203,7 +203,7 @@ artifacts/aurorachat/
 - **Race Condition** — Eş zamanlı işlemleri `useRef` guard ile önle (örn. `joiningRef`)
 - **Do NOT run `pnpm dev` at workspace root** — artifacts need workflow-provided env vars (PORT, BASE_PATH)
 
-## Mevcut Sürüm: v1.3.0
+## Mevcut Sürüm: v1.3.2
 
 Detaylı değişiklik geçmişi için uygulama içi `/changelog` sayfasını ziyaret edin.
 
