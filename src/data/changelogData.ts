@@ -16,6 +16,42 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.3.1',
+    date: '06 Haziran 2026',
+    summary: 'Mobil giriş alanı Android tarzı galeri çekmecesi, Discord benzeri premium resim önizleme kartları, yüksek kaliteli ses kayıtları (128 kbps / 48 kHz) ve depolama altyapısı güncellemesi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Android Galeri Çekmecesi: Mobilde "+" butonuna basınca vaul Drawer ile ekranın altından Android tarzı akıcı çekmece açılır; Resim Ekle ve GIF Gönder seçenekleri sunar.',
+          'Discord Tarzı Resim Önizleme: Mesaj göndermeden önce seçilen resimler gerçek küçük resimlerle premium kartlar halinde giriş alanı üzerinde görünür; tek tek kaldırılabilir.',
+        ],
+      },
+      {
+        title: 'İyileştirmeler',
+        icon: Sparkles,
+        color: 'text-cyan-400',
+        items: [
+          'Yüksek Kaliteli Ses Kayıtları: MediaRecorder 128 kbps audioBitsPerSecond, 48 kHz örnekleme hızı, gürültü engelleme (noiseSuppression) ve eko iptali (echoCancellation) ile çok daha net ses iletimi.',
+          'Depolama Altyapısı: Medya yüklemelerinde RLS politikaları güçlendirildi; yüksek kaliteli ses ve görsel dosyalar sorunsuz iletilir.',
+          'Mobil giriş çubuğu emoji ikonu dikey/yatay hizalaması düzeltildi.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'FileUploadPreview.tsx: URL.createObjectURL ile gerçek resim küçük resimleri; object URL\'ler useEffect cleanup ile hafıza sızıntısı önlenir.',
+          'VoiceRecorder.tsx: CODEC_PRIORITY listesi (opus/webm önce), audioBitsPerSecond: 128000, getUserMedia sampleRate: 48000.',
+          'ChatArea & DMChatArea: Popover yerine vaul Drawer ile Android galeri çekmecesi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.3.0',
     date: '04 Haziran 2026',
     summary: 'DM listesinde medya önizlemeleri (resim, GIF, sesli mesaj, dosya), mesaj silme modalında temiz önizleme, karşı taraftan gelen medya bildirimleri ve DM/Grup DM\'de sesli mesaj desteği.',

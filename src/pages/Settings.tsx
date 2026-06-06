@@ -2463,8 +2463,8 @@ const Settings = () => {
                       <Monitor className="w-5 h-5 text-blue-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">AuroraChat_1.3.0_x64-setup.exe</p>
-                      <p className="text-xs text-muted-foreground">Windows 10/11 · 64-bit · ~8MB · v1.3.0</p>
+                      <p className="text-sm font-medium text-foreground">AuroraChat_1.3.1_x64-setup.exe</p>
+                      <p className="text-xs text-muted-foreground">Windows 10/11 · 64-bit · ~8MB · v1.3.1</p>
                     </div>
                   </div>
                   <a
@@ -2486,8 +2486,8 @@ const Settings = () => {
                       <Monitor className="w-5 h-5 text-purple-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">AuroraChat_1.3.0_x86-setup.exe</p>
-                      <p className="text-xs text-muted-foreground">Windows 7/8/10/11 · 32-bit · ~7MB · v1.3.0</p>
+                      <p className="text-sm font-medium text-foreground">AuroraChat_1.3.1_x86-setup.exe</p>
+                      <p className="text-xs text-muted-foreground">Windows 7/8/10/11 · 32-bit · ~7MB · v1.3.1</p>
                     </div>
                   </div>
                   <a
@@ -2533,7 +2533,7 @@ const Settings = () => {
                       <Smartphone className="w-5 h-5 text-emerald-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">AuroraChat v1.3.0</p>
+                      <p className="text-sm font-medium text-foreground">AuroraChat v1.3.1</p>
                       <p className="text-xs text-muted-foreground">GitHub üzerinden doğrudan indirme · ~7.6 MB</p>
                     </div>
                   </div>
@@ -2630,7 +2630,7 @@ const Settings = () => {
                     <h3 className="text-2xl font-bold tracking-tight text-foreground">AuroraChat</h3>
                     <div className="flex items-center justify-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-bold">
-                        <Sparkles className="w-3 h-3" /> v1.3.0
+                        <Sparkles className="w-3 h-3" /> v1.3.1
                       </span>
                       <span className="text-xs text-muted-foreground">04 Haziran 2026</span>
                     </div>

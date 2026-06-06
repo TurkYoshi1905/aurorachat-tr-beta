@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { restoreDMFromHistory } from '@/lib/dmHistory';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, PlusCircle, Pencil, Trash2, Check, X, ImagePlus, Phone, PhoneOff, Video, ChevronDown, ChevronUp, Maximize2, Minimize2, Loader2, SendHorizontal, Flag, Mic, Copy } from 'lucide-react';
+import { ArrowLeft, Send, PlusCircle, Pencil, Trash2, Check, X, ImagePlus, Phone, PhoneOff, Video, ChevronDown, ChevronUp, Maximize2, Minimize2, Loader2, SendHorizontal, Flag, Mic, Copy, Paperclip } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import VoiceRecorder from './VoiceRecorder';
 import VoicePlayerCard, { parseVoiceNote } from './VoicePlayerCard';
@@ -113,6 +113,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
   const [voiceFullscreen, setVoiceFullscreen] = useState(false);
   const [isCallOutgoing, setIsCallOutgoing] = useState(false);
   const [plusMenuOpen, setPlusMenuOpen] = useState(false);
+  const [galleryDrawerOpen, setGalleryDrawerOpen] = useState(false);
   const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null);
   const [longPressMsg, setLongPressMsg] = useState<DMMessage | null>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -883,25 +884,13 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
         ) : isMobile ? (
           /* ===== MOBILE DM INPUT BAR ===== */
           <div className="flex items-center gap-2">
-            <Popover open={plusMenuOpen} onOpenChange={setPlusMenuOpen}>
-              <PopoverTrigger asChild>
-                <button className="text-muted-foreground hover:text-foreground transition-colors shrink-0 p-1" disabled={dmBlocked}>
-                  <PlusCircle className="w-6 h-6" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="top" align="start" className="w-48 p-1.5 bg-popover border-border">
-                <button onClick={() => { fileInputRef.current?.click(); setPlusMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors">
-                  <ImagePlus className="w-4 h-4" /> Resim Ekle
-                </button>
-                <div className="w-full">
-                  <GifPicker onGifSelect={(url) => { handleSend(url); setPlusMenuOpen(false); }}>
-                    <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors">
-                      <span className="text-xs font-bold opacity-70">GIF</span> GIF Gönder
-                    </button>
-                  </GifPicker>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <button
+              onClick={() => setGalleryDrawerOpen(true)}
+              disabled={dmBlocked}
+              className="text-muted-foreground hover:text-foreground transition-colors shrink-0 p-1 flex items-center justify-center disabled:opacity-40"
+            >
+              <PlusCircle className="w-6 h-6" />
+            </button>
             <input type="file" ref={fileInputRef} accept="image/*" multiple className="hidden" onChange={handleFileSelect} />
             <div className="flex-1 relative">
               <input
@@ -912,7 +901,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                 placeholder={isBlockedByOther ? 'Mesaj gönderemezsiniz' : t('dm.messagePlaceholder', { user: dmUser.displayName })}
                 className="w-full bg-input rounded-2xl py-3 pl-4 pr-10 text-[16px] outline-none text-foreground placeholder:text-muted-foreground ring-1 ring-border focus:ring-primary/40 transition-all min-h-[44px]"
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10">
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
                 <EmojiPicker onEmojiSelect={(emoji) => setInput(prev => prev + emoji)} />
               </div>
             </div>
@@ -976,6 +965,55 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
           dmConversationId={conversationId || undefined}
         />
       )}
+
+      {/* Android-Style Gallery Drawer */}
+      <Drawer open={galleryDrawerOpen} onOpenChange={setGalleryDrawerOpen} shouldScaleBackground={false}>
+        <DrawerContent className="px-2 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
+          <DrawerHeader className="pb-1">
+            <DrawerTitle className="text-sm font-semibold text-foreground text-left">Medya Ekle</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-1 px-2 pb-3">
+            <button
+              onClick={() => { fileInputRef.current?.click(); setGalleryDrawerOpen(false); }}
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm text-foreground hover:bg-secondary transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <ImagePlus className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Resim Ekle</p>
+                <p className="text-xs text-muted-foreground">Galeriden resim seç</p>
+              </div>
+            </button>
+            <button
+              onClick={() => {
+                if (fileInputRef.current) { fileInputRef.current.accept = '*'; fileInputRef.current.click(); }
+                setGalleryDrawerOpen(false);
+              }}
+              className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm text-foreground hover:bg-secondary transition-colors active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                <Paperclip className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Dosya Ekle</p>
+                <p className="text-xs text-muted-foreground">Herhangi bir dosyayı paylaş</p>
+              </div>
+            </button>
+            <GifPicker onGifSelect={(url) => { handleSend(url); setGalleryDrawerOpen(false); }}>
+              <button className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm text-foreground hover:bg-secondary transition-colors active:scale-[0.98]">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-black text-emerald-400">GIF</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-medium">GIF Gönder</p>
+                  <p className="text-xs text-muted-foreground">Tenor'dan animasyonlu GIF seç</p>
+                </div>
+              </button>
+            </GifPicker>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Mobile Long-Press Message Drawer */}
       <Drawer open={!!longPressMsg} onOpenChange={(v) => { if (!v) setLongPressMsg(null); }} shouldScaleBackground={false}>

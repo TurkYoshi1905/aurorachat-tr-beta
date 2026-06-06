@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Wrench, Shield, Bell, Mic, Trash2 } from 'lucide-react';
+import { Sparkles, Wrench, Shield, ImagePlus, Mic, Smartphone } from 'lucide-react';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.3.0';
+const RELEASE_VERSION = '1.3.1';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -17,45 +17,38 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Sparkles,
+    icon: Smartphone,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'DM Listesi Medya Önizleme: Resim, GIF, sesli mesaj veya dosya gönderildiğinde URL yerine "Bir Resim Gönderdin / Gönderildi." gibi okunabilir metin görünür.',
+    label: 'Android Galeri Çekmecesi: Mobilde "+" butonuna basınca ekranın altından Android tarzı akıcı bir çekmece açılır; Resim Ekle ve GIF Gönder seçenekleri sunar.',
     badge: 'Yeni',
   },
   {
-    icon: Bell,
+    icon: ImagePlus,
     iconBg: 'bg-amber-500/15',
     iconColor: 'text-amber-400',
-    label: 'Medya Bildirimleri: Karşı taraftan resim, GIF, sesli mesaj veya dosya geldiğinde uygulama içi ve masaüstü bildirimde "Resim gönderdi / Sesli mesaj gönderdi" metni görünür.',
+    label: 'Discord Tarzı Resim Önizleme: Mesaj göndermeden önce seçilen resimler gerçek küçük resimlerle şık kartlar halinde gösterilir; her birini ayrı ayrı kaldırabilirsin.',
     badge: 'Yeni',
   },
   {
     icon: Mic,
     iconBg: 'bg-emerald-500/15',
     iconColor: 'text-emerald-400',
-    label: 'Sesli Mesaj — DM & Grup DM: Ses kaydı artık tüm sohbet ekranlarında çalışır; Edge Function aracılığıyla RLS bypass ile güvenli yükleme yapılır.',
-    badge: 'Yeni',
-  },
-  {
-    icon: Trash2,
-    iconBg: 'bg-red-500/15',
-    iconColor: 'text-red-400',
-    label: 'Mesaj Silme Modalı Düzeltmesi: Sesli mesaj veya resim silinirken ham JSON/URL yerine "Bir Sesli Mesaj Gönderdin." gibi temiz önizleme gösterilir.',
-    badge: 'Düzeltme',
+    label: 'Yüksek Kaliteli Ses Kayıtları: Sesli mesajlar artık 128 kbps, 48 kHz örnekleme hızı, gürültü engelleme ve eko iptali ile çok daha net iletilir.',
+    badge: 'İyileştirme',
   },
   {
     icon: Shield,
     iconBg: 'bg-violet-500/15',
     iconColor: 'text-violet-400',
-    label: 'Voice-Notes RLS 403 Düzeltmesi: Edge Function service role ile Storage\'a yükleme yapılır; hiç manuel SQL gerektirmez.',
-    badge: 'Düzeltme',
+    label: 'Depolama Altyapısı Güncellemesi: Medya yüklemelerinde RLS politikaları güçlendirildi; yüksek kaliteli ses ve görsel dosyalar sorunsuz iletilir.',
+    badge: 'İyileştirme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'messagePreview.ts: getMessagePreview() ve getNotificationPreview() merkezi yardımcı modülü. upload-voice-note Edge Function (11. fonksiyon) deploy edildi.',
+    label: 'Mobil giriş çubuğu emoji hizalaması düzeltildi; FileUploadPreview görsel önizleme ile tamamen yenilendi; VoiceRecorder codec seçim önceliği optimize edildi.',
     badge: 'Teknik',
   },
 ];

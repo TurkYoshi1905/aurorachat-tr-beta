@@ -17,10 +17,6 @@ const formatTime = (s: number) => {
   return `${m}:${String(s % 60).padStart(2, '0')}`;
 };
 
-/**
- * Ses dosyasını Edge Function üzerinden yükler.
- * Service role key ile RLS tamamen bypass edilir — bucket politikası gerekmez.
- */
 const uploadViaEdgeFunction = async (
   blob: Blob,
   userId: string,
@@ -51,6 +47,16 @@ const uploadViaEdgeFunction = async (
   return url as string;
 };
 
+const CODEC_PRIORITY = [
+  'audio/webm;codecs=opus',
+  'audio/ogg;codecs=opus',
+  'audio/webm',
+  'audio/ogg',
+];
+
+const getBestCodec = () =>
+  CODEC_PRIORITY.find(t => MediaRecorder.isTypeSupported(t)) ?? '';
+
 const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -66,15 +72,22 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
 
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 48000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
 
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : 'audio/ogg;codecs=opus';
+      const mimeType = getBestCodec();
 
-      const mr = new MediaRecorder(stream, { mimeType });
+      const mr = new MediaRecorder(stream, {
+        ...(mimeType ? { mimeType } : {}),
+        audioBitsPerSecond: 128000,
+      });
       chunksRef.current = [];
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mr.start(250);
@@ -124,7 +137,6 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
     chunksRef.current = [];
 
     try {
-      // Oturum token'ını al
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         toast.error('Oturum bulunamadı. Lütfen tekrar giriş yapın.');
@@ -184,7 +196,7 @@ const VoiceRecorder = ({ onVoiceNoteSend, disabled }: VoiceRecorderProps) => {
     <button
       onClick={startRecording}
       disabled={disabled}
-      className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 p-1 shrink-0"
+      className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 p-1 shrink-0 flex items-center justify-center"
       title="Sesli mesaj kaydet"
     >
       <Mic className="w-5 h-5" />
