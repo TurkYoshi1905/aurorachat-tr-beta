@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { restoreDMFromHistory } from '@/lib/dmHistory';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, PlusCircle, Pencil, Trash2, Check, X, ImagePlus, Phone, PhoneOff, Video, ChevronDown, ChevronUp, Maximize2, Minimize2, Loader2, SendHorizontal, Flag, Mic } from 'lucide-react';
+import { ArrowLeft, Send, PlusCircle, Pencil, Trash2, Check, X, ImagePlus, Phone, PhoneOff, Video, ChevronDown, ChevronUp, Maximize2, Minimize2, Loader2, SendHorizontal, Flag, Mic, Copy } from 'lucide-react';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import VoiceRecorder from './VoiceRecorder';
 import VoicePlayerCard, { parseVoiceNote } from './VoicePlayerCard';
 import UserProfileCard from '@/components/UserProfileCard';
@@ -113,6 +114,8 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
   const [isCallOutgoing, setIsCallOutgoing] = useState(false);
   const [plusMenuOpen, setPlusMenuOpen] = useState(false);
   const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null);
+  const [longPressMsg, setLongPressMsg] = useState<DMMessage | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastTypingSentRef = useRef<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -571,6 +574,13 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
     if (e.target.value.trim()) sendTypingEvent(); else stopTypingEvent();
   };
 
+  const handleLongPressStart = (msg: DMMessage) => {
+    longPressTimer.current = setTimeout(() => setLongPressMsg(msg), 500);
+  };
+  const handleLongPressEnd = () => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+  };
+
   const isOwnMessage = (msg: DMMessage) => msg.senderId === user?.id;
 
   const shouldShowAvatar = (msg: DMMessage, idx: number) => {
@@ -727,6 +737,9 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
               key={msg.id}
               id={`dm-msg-${msg.id}`}
               onClick={() => { if (isMobile) setSelectedMsgId(prev => prev === msg.id ? null : msg.id); }}
+              onTouchStart={() => handleLongPressStart(msg)}
+              onTouchEnd={handleLongPressEnd}
+              onTouchMove={handleLongPressEnd}
               className={`group flex gap-2.5 py-0.5 px-2 rounded-lg transition-colors ${
                 showAvatar ? 'mt-3' : 'mt-0.5'
               } ${msg.status === 'sending' ? 'opacity-50' : ''
@@ -963,6 +976,68 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
           dmConversationId={conversationId || undefined}
         />
       )}
+
+      {/* Mobile Long-Press Message Drawer */}
+      <Drawer open={!!longPressMsg} onOpenChange={(v) => { if (!v) setLongPressMsg(null); }} shouldScaleBackground={false}>
+        <DrawerContent className="px-2 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] max-h-[80dvh] overflow-y-auto">
+          <DrawerHeader className="pb-2">
+            {longPressMsg && (
+              <div className="flex items-center gap-3 px-2 pb-3 mb-1 border-b border-border">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-secondary shrink-0">
+                  {longPressMsg.senderAvatar
+                    ? <img src={longPressMsg.senderAvatar} alt="" className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex items-center justify-center text-base font-semibold text-foreground">{longPressMsg.senderName.charAt(0).toUpperCase()}</div>
+                  }
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold text-foreground truncate">{longPressMsg.senderName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{getMessagePreview(longPressMsg.content, longPressMsg.attachments, isOwnMessage(longPressMsg))}</p>
+                </div>
+              </div>
+            )}
+            <DrawerTitle className="text-sm text-muted-foreground text-left">Mesaj İşlemleri</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-1 px-2 pb-2">
+            <button
+              onClick={() => {
+                if (longPressMsg) navigator.clipboard.writeText(longPressMsg.content || '').then(() => toast.success('Mesaj kopyalandı'));
+                setLongPressMsg(null);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-foreground hover:bg-secondary transition-colors"
+            >
+              <Copy className="w-5 h-5 text-muted-foreground" />
+              Mesajı Kopyala
+            </button>
+            {longPressMsg && isOwnMessage(longPressMsg) && (
+              <button
+                onClick={() => { if (longPressMsg) { setEditingId(longPressMsg.id); setEditValue(longPressMsg.content); } setLongPressMsg(null); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-foreground hover:bg-secondary transition-colors"
+              >
+                <Pencil className="w-5 h-5 text-muted-foreground" />
+                Mesajı Düzenle
+              </button>
+            )}
+            {longPressMsg && isOwnMessage(longPressMsg) && (
+              <button
+                onClick={() => { const m = longPressMsg; setLongPressMsg(null); setPendingDelete({ id: m.id, preview: getMessagePreview(m.content, m.attachments, true) }); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <Trash2 className="w-5 h-5" />
+                Mesajı Sil
+              </button>
+            )}
+            {longPressMsg && !isOwnMessage(longPressMsg) && (
+              <button
+                onClick={() => { const m = longPressMsg; setLongPressMsg(null); setReportMsgDM(m); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+              >
+                <Flag className="w-5 h-5" />
+                Mesajı Bildir
+              </button>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };

@@ -457,6 +457,37 @@ const DMDashboard = ({ onOpenDM, onStartCall, currentUserStatus = 'online', onSt
     return () => { supabase.removeChannel(ch); };
   }, [user, fetchDMHistory]);
 
+  // Real-time: group_dm_messages — update GroupDM last message preview in the DM list
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel('dm-dashboard-group-messages-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'group_dm_messages' as any }, (payload) => {
+        const msg = payload.new as any;
+        if (!msg.group_id) return;
+        const groupUserId = `group:${msg.group_id}`;
+        if (msg.sender_id !== user.id) {
+          setActiveDM(current => {
+            if (current !== groupUserId) markDMUnread(groupUserId);
+            return current;
+          });
+        }
+        setDmHistory(prev => {
+          if (!prev.find(d => d.userId === groupUserId)) return prev;
+          const updated = prev.map(d =>
+            d.userId === groupUserId
+              ? { ...d, lastMessage: getMessagePreview(msg.content || '', msg.attachments, msg.sender_id === user.id) || d.lastMessage, lastAt: msg.inserted_at || d.lastAt }
+              : d
+          );
+          return [...updated].sort((a, b) =>
+            new Date(b.lastAt || 0).getTime() - new Date(a.lastAt || 0).getTime()
+          );
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user]);
+
   // Status izleme: presence channel (Index.tsx presenceStatuses prop'u) birincil kaynak.
   // Ayrı bir global profiles subscription açmak tüm kullanıcıların profil güncellemelerini
   // her aboneye iletir — yüksek yük ve statement timeout'a yol açar.

@@ -5,8 +5,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import UserProfileCard from './UserProfileCard';
 import {
   ArrowLeft, Send, Users, Pencil, Trash2, Check, X, Loader2, LogOut,
-  UserPlus, Search, AlertTriangle, Circle, Moon, MinusCircle, Phone, PhoneOff, PhoneCall, Mic,
+  UserPlus, Search, AlertTriangle, Circle, Moon, MinusCircle, Phone, PhoneOff, PhoneCall, Mic, Copy,
 } from 'lucide-react';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import VoiceRecorder from './VoiceRecorder';
 import VoicePlayerCard, { parseVoiceNote } from './VoicePlayerCard';
 import { MessageSkeletonList } from './MessageSkeleton';
@@ -121,6 +122,8 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
   const [loadingFriends, setLoadingFriends] = useState(false);
   const [addingUserId, setAddingUserId] = useState<string | null>(null);
 
+  const [longPressMsg, setLongPressMsg] = useState<GroupMessage | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const profileMap = useRef<Map<string, GroupMember>>(new Map());
@@ -412,6 +415,13 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !showMentionPopup) { e.preventDefault(); sendMessage(); }
     if (e.key === 'Escape') { setShowMentionPopup(false); }
+  };
+
+  const handleLongPressStart = (msg: GroupMessage) => {
+    longPressTimer.current = setTimeout(() => setLongPressMsg(msg), 500);
+  };
+  const handleLongPressEnd = () => {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   };
 
   const startEdit = (msg: GroupMessage) => { setEditingId(msg.id); setEditValue(msg.content); };
@@ -797,7 +807,12 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
                       <div className="flex-1 h-px bg-[#3f4147]" />
                     </div>
                   )}
-                  <div className={`group flex gap-3 px-1 py-0.5 rounded-md hover:bg-[#2e3035] transition-colors ${showHeader ? 'mt-3' : ''} ${msg.status === 'sending' ? 'opacity-60' : ''}`}>
+                  <div
+                    className={`group flex gap-3 px-1 py-0.5 rounded-md hover:bg-[#2e3035] transition-colors ${showHeader ? 'mt-3' : ''} ${msg.status === 'sending' ? 'opacity-60' : ''}`}
+                    onTouchStart={() => handleLongPressStart(msg)}
+                    onTouchEnd={handleLongPressEnd}
+                    onTouchMove={handleLongPressEnd}
+                  >
                     <div className="w-10 shrink-0 flex justify-center">
                       {showHeader ? (
                         <UserProfileCard userId={msg.senderId || ''} status={members.find(m => m.userId === msg.senderId)?.status} side="right">
@@ -1024,6 +1039,59 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
           </div>
         )}
       </div>
+
+      {/* Mobile Long-Press Message Drawer */}
+      <Drawer open={!!longPressMsg} onOpenChange={(v) => { if (!v) setLongPressMsg(null); }} shouldScaleBackground={false}>
+        <DrawerContent className="px-2 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] max-h-[80dvh] overflow-y-auto">
+          <DrawerHeader className="pb-2">
+            {longPressMsg && (
+              <div className="flex items-center gap-3 px-2 pb-3 mb-1 border-b border-[#3f4147]">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-[#3f4147] shrink-0">
+                  {longPressMsg.senderAvatar
+                    ? <img src={longPressMsg.senderAvatar} alt="" className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex items-center justify-center text-base font-semibold text-white">{longPressMsg.senderName.charAt(0).toUpperCase()}</div>
+                  }
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold text-white truncate">{longPressMsg.senderName}</p>
+                  <p className="text-xs text-[#b5bac1] truncate">{longPressMsg.content?.slice(0, 80) || 'Mesaj'}</p>
+                </div>
+              </div>
+            )}
+            <DrawerTitle className="text-sm text-[#b5bac1] text-left">Mesaj İşlemleri</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-1 px-2 pb-2">
+            <button
+              onClick={() => {
+                if (longPressMsg) navigator.clipboard.writeText(longPressMsg.content || '').then(() => toast.success('Mesaj kopyalandı'));
+                setLongPressMsg(null);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-[#dbdee1] hover:bg-[#35373c] transition-colors"
+            >
+              <Copy className="w-5 h-5 text-[#b5bac1]" />
+              Mesajı Kopyala
+            </button>
+            {longPressMsg && longPressMsg.senderId === user?.id && (
+              <button
+                onClick={() => { if (longPressMsg) startEdit(longPressMsg); setLongPressMsg(null); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-[#dbdee1] hover:bg-[#35373c] transition-colors"
+              >
+                <Pencil className="w-5 h-5 text-[#b5bac1]" />
+                Mesajı Düzenle
+              </button>
+            )}
+            {longPressMsg && longPressMsg.senderId === user?.id && (
+              <button
+                onClick={() => { const id = longPressMsg.id; setLongPressMsg(null); deleteMessage(id); }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-[#ed4245] hover:bg-[#ed4245]/10 transition-colors"
+              >
+                <Trash2 className="w-5 h-5" />
+                Mesajı Sil
+              </button>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };

@@ -22,7 +22,7 @@ import SlashCommandPopup from './SlashCommandPopup';
 import EmojiAutocompletePopup from './EmojiAutocompletePopup';
 import UserProfileCard from './UserProfileCard';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import NotificationSettingsPopover from './NotificationSettingsPopover';
 import { executeBotCommand, checkAfkMention, checkBotCooldown, resetBotCooldown } from '@/utils/botCommands';
 import { pickFiles } from '@/lib/fileHelper';
@@ -937,9 +937,9 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
       </div>
 
       {/* Mobile Long-Press Context Menu */}
-      <Sheet open={!!longPressMsg} onOpenChange={(open) => { if (!open) setLongPressMsg(null); }}>
-        <SheetContent side="bottom" className="rounded-t-2xl px-2 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
-          <SheetHeader className="pb-2">
+      <Drawer open={!!longPressMsg} onOpenChange={(open) => { if (!open) setLongPressMsg(null); }} shouldScaleBackground={false}>
+        <DrawerContent className="px-2 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] max-h-[85dvh] overflow-y-auto">
+          <DrawerHeader className="pb-2">
             {longPressMsg && (
               <UserProfileCard userId={longPressMsg.userId} serverId={serverId} isBot={longPressMsg.isBot} botId={longPressMsg.botId} botName={longPressMsg.isBot ? longPressMsg.author : undefined} botAvatarUrl={longPressMsg.isBot ? (longPressMsg.avatarUrl || undefined) : undefined}>
                 <div className="flex items-center gap-3 px-2 pb-3 mb-1 border-b border-border cursor-pointer hover:bg-secondary/30 rounded-lg transition-colors" onClick={() => setLongPressMsg(null)}>
@@ -958,8 +958,8 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                 </div>
               </UserProfileCard>
             )}
-            <SheetTitle className="text-sm text-muted-foreground">{t('chat.messageActions')}</SheetTitle>
-          </SheetHeader>
+            <DrawerTitle className="text-sm text-muted-foreground">{t('chat.messageActions')}</DrawerTitle>
+          </DrawerHeader>
           <div className="space-y-1">
             {/* Quick reactions */}
             {onToggleReaction && longPressMsg && (
@@ -1037,8 +1037,8 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
               </button>
             )}
           </div>
-        </SheetContent>
-      </Sheet>
+        </DrawerContent>
+      </Drawer>
 
       {reportMsg && (
         <ReportMessageModal
