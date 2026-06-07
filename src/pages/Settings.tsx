@@ -1544,18 +1544,18 @@ const Settings = () => {
   const tabs = [
     { id: 'account', label: t('settings.account'), icon: User },
     { id: 'privacy', label: t('settings.privacy'), icon: Shield },
-    { id: 'devices', label: 'Bağlı Cihazlar', icon: Laptop },
-    { id: 'reports', label: 'Bildirilerim', icon: Flag },
+    { id: 'devices', label: t('settings.devices'), icon: Laptop },
+    { id: 'reports', label: t('settings.reports'), icon: Flag },
     { id: 'appearance', label: t('settings.appearance'), icon: Globe },
-    { id: 'notifications', label: 'Bildirimler', icon: Bell },
-    { id: 'connections', label: 'Bağlantılar', icon: Link2 },
+    { id: 'notifications', label: t('settings.notifications'), icon: Bell },
+    { id: 'connections', label: t('settings.connections'), icon: Link2 },
     { id: 'premium', label: 'AuroraChat Premium', icon: Crown },
-    { id: 'download', label: 'Uygulamayı İndir', icon: Download },
+    { id: 'download', label: t('settings.download'), icon: Download },
     { id: 'changelog', label: t('settings.changelog'), icon: Megaphone },
-    { id: 'plugins', label: 'Eklentiler', icon: Puzzle },
-    { id: 'announcements', label: 'Duyurular', icon: Bell },
-    { id: 'about', label: 'Hakkında', icon: Info },
-    ...(isMobile ? [{ id: 'qr-scanner', label: 'QR Kod Okut', icon: QrCode }] : []),
+    { id: 'plugins', label: t('settings.plugins'), icon: Puzzle },
+    { id: 'announcements', label: t('settings.announcements'), icon: Bell },
+    { id: 'about', label: t('settings.about'), icon: Info },
+    ...(isMobile ? [{ id: 'qr-scanner', label: t('settings.qrScanner'), icon: QrCode }] : []),
   ];
 
   const handleTabClick = (tabId: string) => {
@@ -1565,15 +1565,15 @@ const Settings = () => {
 
   const sidebarGroups = [
     {
-      label: 'KULLANICI AYARLARI',
+      label: t('settings.groupUser'),
       items: tabs.filter(t => ['account', 'privacy', 'devices', 'reports'].includes(t.id)),
     },
     {
-      label: 'UYGULAMA AYARLARI',
+      label: t('settings.groupApp'),
       items: tabs.filter(t => ['appearance', 'notifications', 'connections'].includes(t.id)),
     },
     {
-      label: 'AURORAChat',
+      label: 'AURORACHAT',
       items: tabs.filter(t => ['premium', 'download', 'changelog', 'plugins', 'announcements'].includes(t.id)),
     },
   ];
@@ -1887,10 +1887,21 @@ const Settings = () => {
   };
 
   const themeOptions = [
-    { value: 'dark', label: 'Koyu', icon: MoonIcon },
-    { value: 'light', label: 'Açık', icon: Sun },
-    { value: 'system', label: 'Sistem', icon: Monitor },
+    { value: 'dark', label: t('settings.themeDark'), icon: MoonIcon },
+    { value: 'light', label: t('settings.themeLight'), icon: Sun },
+    { value: 'system', label: t('settings.themeSystem'), icon: Monitor },
   ];
+
+  const LANG_NAMES_BY_UI: Record<string, Record<string, string>> = {
+    tr: { tr: 'Türkçe', en: 'İngilizce', az: 'Azerbaycanca', ru: 'Rusça', ja: 'Japonca', de: 'Almanca' },
+    en: { tr: 'Turkish', en: 'English', az: 'Azerbaijani', ru: 'Russian', ja: 'Japanese', de: 'German' },
+    az: { tr: 'Türk dili', en: 'İngilis dili', az: 'Azərbaycan dili', ru: 'Rus dili', ja: 'Yapon dili', de: 'Alman dili' },
+    ru: { tr: 'Турецкий', en: 'Английский', az: 'Азербайджанский', ru: 'Русский', ja: 'Японский', de: 'Немецкий' },
+    ja: { tr: 'トルコ語', en: '英語', az: 'アゼルバイジャン語', ru: 'ロシア語', ja: '日本語', de: 'ドイツ語' },
+    de: { tr: 'Türkisch', en: 'Englisch', az: 'Aserbaidschanisch', ru: 'Russisch', ja: 'Japanisch', de: 'Deutsch' },
+  };
+  const currentUiLang = profile?.language || 'tr';
+  const langNamesForUI = LANG_NAMES_BY_UI[currentUiLang] || LANG_NAMES_BY_UI.tr;
 
   // Mobile: Discord-style vertical list + sub-page
   if (isMobile && activeTab === '__menu__') {
@@ -2126,8 +2137,8 @@ const Settings = () => {
               {/* Change Gender (max 2 / week) */}
               <ProfileFieldChangeCard
                 field="gender"
-                title="Cinsiyetimi Değiştir"
-                description="Profilinizdeki cinsiyet bilgisini güncelleyin. Haftada en fazla 2 değişiklik yapabilirsiniz."
+                title={t('settings.changeGender')}
+                description={t('settings.changeGenderDesc')}
                 icon={User2}
                 currentValue={(profile as any)?.gender || null}
                 onSaved={refreshProfile}
@@ -2136,8 +2147,8 @@ const Settings = () => {
               {/* Change Birth Date (max 2 / week) */}
               <ProfileFieldChangeCard
                 field="birth_date"
-                title="Doğum Tarihimi Değiştir"
-                description="Profilinizdeki doğum tarihini güncelleyin. Haftada en fazla 2 değişiklik yapabilirsiniz."
+                title={t('settings.changeBirthDate')}
+                description={t('settings.changeBirthDateDesc')}
                 icon={Cake}
                 currentValue={(profile as any)?.birth_date || null}
                 onSaved={refreshProfile}
@@ -2146,26 +2157,26 @@ const Settings = () => {
               {/* Gender visibility */}
               <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Cinsiyetinizi kimler görebilir?</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Profil kartınızda cinsiyet bilginizin kimler tarafından görüleceğini seçin</p>
+                  <p className="text-sm font-semibold text-foreground">{t('settings.genderVisibilityTitle')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('settings.genderVisibilityDesc')}</p>
                 </div>
                 <RadioGroup value={privacyGenderVisibility} onValueChange={handlePrivacyGenderVisibilityChange} className="space-y-2">
-                  <div className="flex items-center gap-3"><RadioGroupItem value="everyone" id="gv-everyone" disabled={savingPrivacy} /><Label htmlFor="gv-everyone" className="text-sm cursor-pointer">Herkes</Label></div>
-                  <div className="flex items-center gap-3"><RadioGroupItem value="friends" id="gv-friends" disabled={savingPrivacy} /><Label htmlFor="gv-friends" className="text-sm cursor-pointer">Arkadaşlar</Label></div>
-                  <div className="flex items-center gap-3"><RadioGroupItem value="nobody" id="gv-nobody" disabled={savingPrivacy} /><Label htmlFor="gv-nobody" className="text-sm cursor-pointer">Kimse</Label></div>
+                  <div className="flex items-center gap-3"><RadioGroupItem value="everyone" id="gv-everyone" disabled={savingPrivacy} /><Label htmlFor="gv-everyone" className="text-sm cursor-pointer">{t('settings.everyone')}</Label></div>
+                  <div className="flex items-center gap-3"><RadioGroupItem value="friends" id="gv-friends" disabled={savingPrivacy} /><Label htmlFor="gv-friends" className="text-sm cursor-pointer">{t('settings.friends')}</Label></div>
+                  <div className="flex items-center gap-3"><RadioGroupItem value="nobody" id="gv-nobody" disabled={savingPrivacy} /><Label htmlFor="gv-nobody" className="text-sm cursor-pointer">{t('settings.nobody')}</Label></div>
                 </RadioGroup>
               </div>
 
               {/* Birth date visibility */}
               <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Doğum tarihinizi kimler görebilir?</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Profil kartınızda doğum tarihi ve yaşınızın kimler tarafından görüleceğini seçin</p>
+                  <p className="text-sm font-semibold text-foreground">{t('settings.birthDateVisibilityTitle')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('settings.birthDateVisibilityDesc')}</p>
                 </div>
                 <RadioGroup value={privacyBirthDateVisibility} onValueChange={handlePrivacyBirthDateVisibilityChange} className="space-y-2">
-                  <div className="flex items-center gap-3"><RadioGroupItem value="everyone" id="bv-everyone" disabled={savingPrivacy} /><Label htmlFor="bv-everyone" className="text-sm cursor-pointer">Herkes</Label></div>
-                  <div className="flex items-center gap-3"><RadioGroupItem value="friends" id="bv-friends" disabled={savingPrivacy} /><Label htmlFor="bv-friends" className="text-sm cursor-pointer">Arkadaşlar</Label></div>
-                  <div className="flex items-center gap-3"><RadioGroupItem value="nobody" id="bv-nobody" disabled={savingPrivacy} /><Label htmlFor="bv-nobody" className="text-sm cursor-pointer">Kimse</Label></div>
+                  <div className="flex items-center gap-3"><RadioGroupItem value="everyone" id="bv-everyone" disabled={savingPrivacy} /><Label htmlFor="bv-everyone" className="text-sm cursor-pointer">{t('settings.everyone')}</Label></div>
+                  <div className="flex items-center gap-3"><RadioGroupItem value="friends" id="bv-friends" disabled={savingPrivacy} /><Label htmlFor="bv-friends" className="text-sm cursor-pointer">{t('settings.friends')}</Label></div>
+                  <div className="flex items-center gap-3"><RadioGroupItem value="nobody" id="bv-nobody" disabled={savingPrivacy} /><Label htmlFor="bv-nobody" className="text-sm cursor-pointer">{t('settings.nobody')}</Label></div>
                 </RadioGroup>
               </div>
 
@@ -2174,8 +2185,8 @@ const Settings = () => {
               {/* Data Export */}
               <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-3">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Verilerimi İndir</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Profil bilgilerini ve gizlilik ayarlarını PDF olarak indir</p>
+                  <p className="text-sm font-semibold text-foreground">{t('settings.exportData')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('settings.exportDataButton')}</p>
                 </div>
                 <button
                   onClick={() => {
@@ -2188,7 +2199,7 @@ const Settings = () => {
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20 text-sm font-medium hover:bg-primary/20 transition-colors w-full"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                  Tüm Verilerimi İndir (PDF)
+                  {t('settings.exportDataButton')}
                 </button>
               </div>
 
@@ -2200,7 +2211,7 @@ const Settings = () => {
                 <div className="h-px bg-border/60" />
                 <button onClick={() => navigate('/rules')} className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 hover:underline w-full text-left">
                   <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                  Topluluk Kurallarını Görüntüle
+                  {t('settings.viewCommunityRules')}
                 </button>
               </div>
             </div>
@@ -2338,7 +2349,7 @@ const Settings = () => {
                         <span className="text-xl leading-none shrink-0">{lang.flag}</span>
                         <span className="font-medium flex-1 text-left">{lang.label}</span>
                         <span className={`text-xs shrink-0 ${isActive ? 'text-primary/70' : 'text-muted-foreground'}`}>
-                          {lang.native}
+                          {langNamesForUI[lang.code] || lang.label}
                         </span>
                         {isActive && <Check className="w-4 h-4 shrink-0" />}
                       </button>
@@ -2363,7 +2374,7 @@ const Settings = () => {
             <div className="space-y-6">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <Bell className="w-5 h-5" />
-                Bildirimler
+                {t('settings.notifications')}
               </h2>
               <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-4">
                 <p className="text-sm font-semibold text-foreground">Masaüstü Bildirimleri</p>
@@ -2650,11 +2661,11 @@ const Settings = () => {
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-                    Discord'dan esinlenerek geliştirilen gerçek zamanlı sohbet platformu. Sunucular, kanallar, doğrudan mesajlar, sesli/görüntülü odalar ve daha fazlası.
+                    {t('settings.aboutDesc')}
                   </p>
                   <div className="flex items-center gap-2 pt-1">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs text-emerald-400 font-medium">Tüm sistemler aktif</span>
+                    <span className="text-xs text-emerald-400 font-medium">{t('settings.allSystemsActive')}</span>
                   </div>
                 </div>
               </div>
@@ -2662,16 +2673,16 @@ const Settings = () => {
               {/* Tech Stack */}
               <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-3">
                 <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Code2 className="w-4 h-4 text-primary" /> Teknoloji Yığını
+                  <Code2 className="w-4 h-4 text-primary" /> {t('settings.techStack')}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { icon: Code2, label: 'Frontend', value: 'React 19 + TypeScript', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-                    { icon: Database, label: 'Veritabanı', value: 'Supabase PostgreSQL', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                    { icon: Database, label: t('settings.dbLabel'), value: 'Supabase PostgreSQL', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
                     { icon: Server, label: 'Realtime', value: 'Supabase Realtime', color: 'text-orange-400', bg: 'bg-orange-500/10' },
                     { icon: ShieldCheck, label: 'Auth', value: 'Supabase Auth + MFA', color: 'text-violet-400', bg: 'bg-violet-500/10' },
-                    { icon: Video, label: 'Ses / Video', value: 'LiveKit WebRTC', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-                    { icon: Palette, label: 'Arayüz', value: 'Tailwind + Radix UI', color: 'text-pink-400', bg: 'bg-pink-500/10' },
+                    { icon: Video, label: t('settings.voiceVideo'), value: 'LiveKit WebRTC', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+                    { icon: Palette, label: t('settings.uiLabel'), value: 'Tailwind + Radix UI', color: 'text-pink-400', bg: 'bg-pink-500/10' },
                   ].map(({ icon: Icon, label, value, color, bg }) => (
                     <div key={label} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-secondary/50">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${bg}`}>
@@ -2690,10 +2701,10 @@ const Settings = () => {
               <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <GitBranch className="w-4 h-4 text-primary" /> Son Güncellemeler
+                    <GitBranch className="w-4 h-4 text-primary" /> {t('settings.recentUpdates')}
                   </p>
                   <button onClick={() => setActiveTab('changelog')} className="text-xs text-primary hover:underline flex items-center gap-0.5">
-                    Tümünü gör <ExternalLink className="w-3 h-3 ml-0.5" />
+                    {t('settings.viewAll')} <ExternalLink className="w-3 h-3 ml-0.5" />
                   </button>
                 </div>
                 <div className="relative space-y-0">
@@ -2730,10 +2741,17 @@ const Settings = () => {
                 </div>
               </div>
 
+              {/* Founded date */}
+              <div className="rounded-xl border border-border bg-card/50 px-4 py-3 flex items-center gap-3">
+                <Activity className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <span className="text-xs text-muted-foreground">{t('settings.foundedLabel')}</span>
+                <span className="text-xs font-semibold text-foreground">{t('settings.foundedDate')}</span>
+              </div>
+
               {/* Developer Tools */}
               <div className="rounded-xl border border-border bg-card p-4 md:p-5 space-y-3">
                 <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-primary" /> Geliştirici Araçları
+                  <Bot className="w-4 h-4 text-primary" /> {t('settings.devTools')}
                 </p>
                 <div className="space-y-2">
                   <button
@@ -2744,8 +2762,8 @@ const Settings = () => {
                       <Bot className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">Bot Geliştirici Merkezi</p>
-                      <p className="text-xs text-muted-foreground">Bot oluştur, yönet ve sunuculara ekle</p>
+                      <p className="text-sm font-semibold text-foreground">{t('settings.botDevCenter')}</p>
+                      <p className="text-xs text-muted-foreground">{t('settings.botDevCenterDesc')}</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
                   </button>
@@ -2757,8 +2775,8 @@ const Settings = () => {
                       <Puzzle className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">Eklenti Sistemi</p>
-                      <p className="text-xs text-muted-foreground">CSS/JS eklentileri oluştur ve mağazaya gönder</p>
+                      <p className="text-sm font-semibold text-foreground">{t('settings.pluginSystem')}</p>
+                      <p className="text-xs text-muted-foreground">{t('settings.pluginSystemDesc')}</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
                   </button>
