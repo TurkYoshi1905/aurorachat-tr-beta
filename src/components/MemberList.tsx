@@ -246,7 +246,7 @@ const MemberList = ({ members, isMobile, onBack, serverId, premiumUsers, current
       <div className="px-3 pt-3 pb-2 border-b border-[#1e1f22]/60">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#6d6f78]">Üyeler</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#6d6f78]">{t('members.title')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] text-[#6d6f78] flex items-center gap-1">
@@ -261,7 +261,7 @@ const MemberList = ({ members, isMobile, onBack, serverId, premiumUsers, current
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#6d6f78]" />
           <input
             type="text"
-            placeholder="Üye ara..."
+            placeholder={t('members.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             data-testid="input-member-search"
@@ -274,7 +274,7 @@ const MemberList = ({ members, isMobile, onBack, serverId, premiumUsers, current
         {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-8 text-center px-4">
             <Search className="w-6 h-6 text-[#4a4d54] mb-2" />
-            <p className="text-xs text-[#6d6f78]">Sonuç bulunamadı</p>
+            <p className="text-xs text-[#6d6f78]">{t('members.noResults')}</p>
           </div>
         )}
 

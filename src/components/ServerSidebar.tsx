@@ -214,7 +214,7 @@ const ServerSidebar = ({ activeServer, onServerChange, servers, onServerCreated 
               <Compass className="w-5 h-5" />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right"><p>Keşfet</p></TooltipContent>
+          <TooltipContent side="right"><p>{t('server.discover')}</p></TooltipContent>
         </Tooltip>
 
         {/* Add / Join buttons */}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from '@/i18n';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,15 +20,15 @@ interface CommunityServer {
 }
 
 const CATEGORIES = [
-  { id: null,        label: 'Tümü',       emoji: '🌐', Icon: Globe },
-  { id: 'gaming',   label: 'Oyun',        emoji: '🎮', Icon: Gamepad2 },
-  { id: 'tech',     label: 'Teknoloji',   emoji: '💻', Icon: Cpu },
-  { id: 'music',    label: 'Müzik',       emoji: '🎵', Icon: Music },
-  { id: 'art',      label: 'Sanat',       emoji: '🎨', Icon: Palette },
-  { id: 'sports',   label: 'Spor',        emoji: '⚽', Icon: Dumbbell },
-  { id: 'science',  label: 'Bilim',       emoji: '🔬', Icon: FlaskConical },
-  { id: 'education',label: 'Eğitim',      emoji: '📚', Icon: BookOpen },
-  { id: 'other',    label: 'Diğer',       emoji: '✨', Icon: Sparkles },
+  { id: null,        key: 'all',       label: 'Tümü',       emoji: '🌐', Icon: Globe },
+  { id: 'gaming',   key: 'games',     label: 'Oyun',        emoji: '🎮', Icon: Gamepad2 },
+  { id: 'tech',     key: 'tech',      label: 'Teknoloji',   emoji: '💻', Icon: Cpu },
+  { id: 'music',    key: 'music',     label: 'Müzik',       emoji: '🎵', Icon: Music },
+  { id: 'art',      key: 'art',       label: 'Sanat',       emoji: '🎨', Icon: Palette },
+  { id: 'sports',   key: 'sports',    label: 'Spor',        emoji: '⚽', Icon: Dumbbell },
+  { id: 'science',  key: 'science',   label: 'Bilim',       emoji: '🔬', Icon: FlaskConical },
+  { id: 'education',key: 'education', label: 'Eğitim',      emoji: '📚', Icon: BookOpen },
+  { id: 'other',    key: 'other',     label: 'Diğer',       emoji: '✨', Icon: Sparkles },
 ];
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
@@ -43,6 +44,7 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
 
 const Communities = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -110,11 +112,11 @@ const Communities = () => {
           setJoinedIds(prev => new Set([...prev, server.id]));
           navigate('/');
         } else {
-          toast.error('Sunucuya katılınamadı');
+          toast.error(t('communities.joinError'));
         }
       } else {
         setJoinedIds(prev => new Set([...prev, server.id]));
-        toast.success(`${server.name} sunucusuna katıldın!`);
+        toast.success(t('communities.joinedServer', { name: server.name }));
         navigate('/');
       }
     } finally {
@@ -145,8 +147,8 @@ const Communities = () => {
               <Compass className="w-4 h-4 text-primary" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-base font-bold text-foreground leading-tight">Sunucuları Keşfet</h1>
-              <p className="text-[11px] text-muted-foreground hidden sm:block">{servers.length > 0 ? `${servers.length} topluluk listeleniyor` : 'Topluluklara göz at'}</p>
+              <h1 className="text-base font-bold text-foreground leading-tight">{t('communities.title')}</h1>
+              <p className="text-[11px] text-muted-foreground hidden sm:block">{servers.length > 0 ? t('communities.listingCount', { n: servers.length }) : t('communities.browse')}</p>
             </div>
           </div>
           {/* Search inline */}
@@ -155,7 +157,7 @@ const Communities = () => {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Sunucu ara..."
+              placeholder={t('communities.searchPlaceholder')}
               className="w-full h-8 text-sm bg-secondary/50 border border-border/50 rounded-xl px-3 pl-8 outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
             />
           </div>
@@ -169,7 +171,7 @@ const Communities = () => {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Sunucu ara..."
+            placeholder={t('communities.searchPlaceholder')}
             className="w-full h-10 text-sm bg-secondary/50 border border-border/50 rounded-xl px-3 pl-9 outline-none focus:ring-1 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
           />
         </div>
@@ -189,7 +191,7 @@ const Communities = () => {
                 }`}
               >
                 <span className="text-sm leading-none">{cat.emoji}</span>
-                <span>{cat.label}</span>
+                <span>{t(`communities.${cat.key}`) || cat.label}</span>
               </button>
             );
           })}
@@ -201,7 +203,7 @@ const Communities = () => {
             <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Loader2 className="w-7 h-7 text-primary animate-spin" />
             </div>
-            <p className="text-sm text-muted-foreground animate-pulse">Topluluklar yükleniyor...</p>
+            <p className="text-sm text-muted-foreground animate-pulse">{t('communities.loading')}</p>
           </div>
         ) : servers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
@@ -209,9 +211,9 @@ const Communities = () => {
               <Compass className="w-8 h-8 text-muted-foreground/40" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-muted-foreground">Topluluk bulunamadı</p>
+              <p className="text-sm font-semibold text-muted-foreground">{t('communities.notFound')}</p>
               <p className="text-xs text-muted-foreground/60 max-w-xs">
-                {search ? 'Farklı bir arama terimi dene.' : 'Henüz herkese açık sunucu yok. Sunucu sahipleri ayarlardan topluluklarını açabilir.'}
+                {search ? t('communities.tryDifferent') : t('communities.noPublicServers')}
               </p>
             </div>
           </div>
@@ -244,7 +246,7 @@ const Communities = () => {
                       <div className="absolute top-2 right-2">
                         <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-background/30 backdrop-blur-sm text-foreground/70 border border-border/30 flex items-center gap-1">
                           <span className="text-xs">{catInfo.emoji}</span>
-                          {catInfo.label}
+                          {t(`communities.${catInfo.key}`) || catInfo.label}
                         </span>
                       </div>
                     )}
@@ -266,7 +268,7 @@ const Communities = () => {
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <p className="font-bold text-sm text-foreground leading-tight truncate">{server.name}</p>
                       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                        {server.community_description || 'Açıklama eklenmemiş.'}
+                        {server.community_description || t('communities.noDescription')}
                       </p>
                     </div>
 
@@ -277,13 +279,13 @@ const Communities = () => {
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Users className="w-3 h-3" />
                           <span className="font-medium text-foreground">{server.member_count.toLocaleString('tr-TR')}</span>
-                          <span>üye</span>
+                          <span>{t('communities.members')}</span>
                         </span>
                       </div>
 
                       {isJoined ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
-                          <CheckCircle2 className="w-3 h-3" /> Katıldın
+                          <CheckCircle2 className="w-3 h-3" /> {t('communities.joined')}
                         </span>
                       ) : (
                         <button
@@ -294,7 +296,7 @@ const Communities = () => {
                           {isJoining ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
                           ) : (
-                            'Katıl'
+                            t('communities.join')
                           )}
                         </button>
                       )}

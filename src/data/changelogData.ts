@@ -16,6 +16,43 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.3.3',
+    date: '07 Haziran 2026',
+    summary: 'Tüm bileşenlerdeki sabit Türkçe dizeler i18n sistemine taşındı; dmDashboard ve communities için yeni çeviri bölümleri eklendi; 6 dil dosyası eş zamanlı güncellendi.',
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Tam Çeviri Kapsamı: ChatArea (CollapsibleMessageContent dahil), DMChatArea, MemberList, NotificationHistory ve Communities bileşenlerindeki tüm sabit Türkçe dizeler artık t() ile çevriliyor.',
+          'Yeni i18n Bölümleri: dmDashboard (31 anahtar) ve communities (20 anahtar) bölümleri 6 dil dosyasına eklendi.',
+          'Genişletilmiş Anahtar Seti: chat, dm, status, members, notifications, common, server bölümlerine 80+ yeni çeviri anahtarı eklendi.',
+        ],
+      },
+      {
+        title: 'İyileştirmeler',
+        icon: Sparkles,
+        color: 'text-cyan-400',
+        items: [
+          '6 Dil Eş Zamanlı Güncelleme: tr/en/az/ru/ja/de dil dosyaları tek seferde güncellendi; tüm yeni anahtarlar 6 dilde tam çeviri ile yayında.',
+          'NotificationHistory: getRelativeTime ve groupByDate fonksiyonları i18n desteğine kavuştu; artık kullanıcının diline göre zaman bilgisi gösteriyor.',
+          'Communities: CATEGORIES dizisindeki tüm kategori etiketleri t() ile render ediliyor.',
+          'DMChatArea: STATUS_LABEL sabit nesnesi kaldırıldı; durum etiketleri artık t(status.*) ile dinamik çevriliyor.',
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'Node.js toplu i18n güncelleme scripti ile 6 dosya eş zamanlı işlendi.',
+          'ReleaseNotesModal, Landing.tsx ve Settings.tsx v1.3.3 ile senkronize edildi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.3.2',
     date: '06 Haziran 2026',
     summary: 'Masaüstünde "+" butonu ikonlu premium açılır menüye dönüştürüldü, Grup DM\'e galeri çekmecesi eklendi, Supabase performans indeksleri güçlendirildi ve tüm sürüm numaraları senkronize edildi.',

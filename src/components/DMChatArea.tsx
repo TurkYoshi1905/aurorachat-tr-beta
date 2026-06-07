@@ -77,12 +77,7 @@ const STATUS_COLOR: Record<string, string> = {
   dnd: 'bg-red-500',
   offline: 'bg-gray-500',
 };
-const STATUS_LABEL: Record<string, string> = {
-  online: 'Çevrimiçi',
-  idle: 'Boşta',
-  dnd: 'Rahatsız Etme',
-  offline: 'Çevrimdışı',
-};
+
 
 const SYSTEM_SENDER_ID = '__system__';
 
@@ -181,7 +176,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
       if (blockedByOther) {
         setIsBlockedByOther(true);
         setDmBlocked(true);
-        setDmDisabledReason('Bu kullanıcı tarafından engellendiniz.');
+        setDmDisabledReason(t('dm.blockedByUser'));
         return;
       }
 
@@ -200,7 +195,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
 
         if (!friendship) {
           setDmBlocked(true);
-          setDmDisabledReason('Bu kullanıcı direkt mesajlara izin vermiyor.');
+          setDmDisabledReason(t('dm.dmNotAllowed'));
           return;
         }
       }
@@ -607,7 +602,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
           <p className="text-xl font-semibold text-foreground mb-1">{dmUser.displayName}</p>
           <div className="flex items-center gap-2 text-muted-foreground mb-10">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">Aranıyor...</span>
+            <span className="text-sm">{t('dm.calling')}</span>
           </div>
           <button
             onClick={handleCancelCall}
@@ -636,11 +631,11 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
             <span className="font-semibold text-foreground text-sm block truncate">{dmUser.displayName}</span>
             <span className="text-[11px] text-muted-foreground block truncate">
               {isInVoiceCall ? (
-                <span className="text-[#3ba55d] font-medium">Sesli Görüşmede</span>
+                <span className="text-[#3ba55d] font-medium">{t('dm.inVoiceCall')}</span>
               ) : isCallOutgoing ? (
-                <span className="text-yellow-400 font-medium animate-pulse">Aranıyor...</span>
+                <span className="text-yellow-400 font-medium animate-pulse">{t('dm.calling')}</span>
               ) : (
-                <>{STATUS_LABEL[dmUserStatus] || 'Çevrimdışı'} · @{dmUser.username}</>
+                <>{(dmUserStatus ? t(`status.${dmUserStatus}`) : null) || t('status.offline')} · @{dmUser.username}</>
               )}
             </span>
           </div>
@@ -651,7 +646,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
               <button
                 onClick={() => setVoicePanelVisible(v => !v)}
                 className="p-2 rounded-lg text-[#3ba55d] hover:bg-[#3ba55d]/15 transition-colors"
-                title={voicePanelVisible ? 'Ses Panelini Gizle' : 'Ses Panelini Göster'}
+                title={voicePanelVisible ? t('dm.hideSoundPanel') : t('dm.showSoundPanel')}
                 data-testid="button-dm-voice-toggle"
               >
                 {voicePanelVisible ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -660,7 +655,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                 <button
                   onClick={() => setVoiceFullscreen(v => !v)}
                   className="p-2 rounded-lg text-[#3ba55d] hover:bg-[#3ba55d]/15 transition-colors"
-                  title={voiceFullscreen ? 'Küçük Ekran' : 'Tam Ekran'}
+                  title={voiceFullscreen ? t('dm.minimize') : t('dm.fullscreen')}
                   data-testid="button-dm-voice-fullscreen"
                 >
                   {voiceFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -669,7 +664,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
               <button
                 onClick={handleEndCall}
                 className="p-2 rounded-lg text-destructive hover:bg-destructive/15 transition-colors"
-                title="Aramayı Sonlandır"
+                title={t('dm.endCall')}
                 data-testid="button-dm-voice-end"
               >
                 <PhoneOff className="w-4 h-4" />
@@ -685,12 +680,12 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                     ? 'text-yellow-400 bg-yellow-400/10 cursor-not-allowed'
                     : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                 }`}
-                title={isCallOutgoing ? 'Aranıyor...' : 'Sesli Arama'}
+                title={isCallOutgoing ? t('dm.calling') : t('dm.voiceCall')}
                 data-testid="button-dm-voice-call"
               >
                 <Phone className="w-4 h-4" />
               </button>
-              <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors" title="Görüntülü Arama">
+              <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors" title={t('dm.videoCall')}>
                 <Video className="w-4 h-4" />
               </button>
             </>
@@ -839,7 +834,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                     <button
                       onClick={() => setReportMsgDM(msg)}
                       className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-red-500 transition-colors"
-                      title="Mesajı Bildir"
+                      title={t('dm.reportMessage')}
                     >
                       <Flag className="w-3.5 h-3.5" />
                     </button>
@@ -871,13 +866,13 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
       <div className={`px-3 md:px-4 pt-2 ${isMobile ? 'pb-[calc(0.75rem+env(safe-area-inset-bottom))] pr-4' : 'pb-5'} ${isInVoiceCall && voicePanelVisible && voiceFullscreen ? 'hidden' : ''}`}>
         {hasBlockedOther ? (
           <div className="bg-secondary/40 rounded-2xl flex items-center justify-between px-4 py-3 ring-1 ring-border gap-3">
-            <span className="text-sm text-muted-foreground">Engellediğin bir kullanıcıya mesaj gönderemezsin.</span>
+            <span className="text-sm text-muted-foreground">{t('dm.cantMessageBlocked')}</span>
             <button
               onClick={handleUnblockFromChat}
               disabled={unblocking}
               className="text-sm font-semibold text-destructive hover:text-destructive/80 transition-colors shrink-0 disabled:opacity-50"
             >
-              {unblocking ? '...' : 'Engeli kaldır'}
+              {unblocking ? '...' : t('dm.unblockUser')}
             </button>
           </div>
         ) : dmBlocked && !isBlockedByOther ? (
@@ -939,7 +934,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                   </div>
                   <div className="text-left">
                     <p className="font-semibold text-sm leading-tight">Resim / Video Ekle</p>
-                    <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">Galeriden seç</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{t('chat.selectFromGallery')}</p>
                   </div>
                 </button>
                 <button
@@ -1015,7 +1010,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
               </div>
               <div className="text-left">
                 <p className="font-medium">Resim Ekle</p>
-                <p className="text-xs text-muted-foreground">Galeriden resim seç</p>
+                <p className="text-xs text-muted-foreground">{t('dm.selectGalleryImage')}</p>
               </div>
             </button>
             <button
@@ -1030,7 +1025,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
               </div>
               <div className="text-left">
                 <p className="font-medium">Dosya Ekle</p>
-                <p className="text-xs text-muted-foreground">Herhangi bir dosyayı paylaş</p>
+                <p className="text-xs text-muted-foreground">{t('dm.shareAnyFile')}</p>
               </div>
             </button>
             <GifPicker onGifSelect={(url) => { handleSend(url); setGalleryDrawerOpen(false); }}>
@@ -1039,8 +1034,8 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                   <span className="text-sm font-black text-emerald-400">GIF</span>
                 </div>
                 <div className="text-left">
-                  <p className="font-medium">GIF Gönder</p>
-                  <p className="text-xs text-muted-foreground">Tenor'dan animasyonlu GIF seç</p>
+                  <p className="font-medium">{t('chat.sendGif')}</p>
+                  <p className="text-xs text-muted-foreground">{t('chat.selectGifTenor')}</p>
                 </div>
               </button>
             </GifPicker>
@@ -1066,7 +1061,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
                 </div>
               </div>
             )}
-            <DrawerTitle className="text-sm text-muted-foreground text-left">Mesaj İşlemleri</DrawerTitle>
+            <DrawerTitle className="text-sm text-muted-foreground text-left">{t('dm.messageActions')}</DrawerTitle>
           </DrawerHeader>
           <div className="space-y-1 px-2 pb-2">
             <button

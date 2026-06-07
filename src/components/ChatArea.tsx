@@ -80,6 +80,7 @@ interface ChatAreaProps {
 const LONG_MESSAGE_CHAR_THRESHOLD = 400;
 
 const CollapsibleMessageContent = memo(({ content, userId, serverEmojis }: { content: string; userId?: string; serverEmojis?: ServerEmoji[] }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const isLong = content.length > LONG_MESSAGE_CHAR_THRESHOLD;
 
@@ -102,7 +103,7 @@ const CollapsibleMessageContent = memo(({ content, userId, serverEmojis }: { con
         onClick={() => setExpanded(e => !e)}
         className="text-xs text-primary hover:text-primary/80 font-medium mt-1 transition-colors"
       >
-        {expanded ? '▲ Daha az göster' : '▼ Devamını göster'}
+        {expanded ? t('chat.showLess') : t('chat.showMore')}
       </button>
     </div>
   );
@@ -640,7 +641,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                   <Bell className="w-4 h-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom"><p>Bildirim Geçmişi</p></TooltipContent>
+              <TooltipContent side="bottom"><p>{t('chat.notificationHistory')}</p></TooltipContent>
             </Tooltip>
           )}
         </div>
@@ -659,10 +660,10 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
               {loadingMore ? (
                 <>
                   <div className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" />
-                  Yükleniyor...
+                  {t('common.loading')}
                 </>
               ) : (
-                <>↑ Eski mesajları yükle</>
+<>{t('chat.loadOlder')}</>
               )}
             </button>
           </div>
@@ -823,7 +824,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
               {editingId !== msg.id && !isMobileDevice && (
                 <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-all">
                   {/* Copy button */}
-                  <button onClick={() => { navigator.clipboard.writeText(msg.content || '').then(() => { /* silent */ }); }} className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-all" title="Mesajı Kopyala">
+                  <button onClick={() => { navigator.clipboard.writeText(msg.content || '').then(() => { /* silent */ }); }} className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-all" title={t('chat.copyMessage')}>
                     <Copy className="w-3.5 h-3.5" />
                   </button>
                   {/* Reply button */}
@@ -881,7 +882,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                     <button
                       onClick={() => setReportMsg(msg)}
                       className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-red-500 transition-all"
-                      title="Mesajı Bildir"
+                      title={t('chat.reportMessage')}
                     >
                       <Flag className="w-3.5 h-3.5" />
                     </button>
@@ -892,8 +893,8 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
             </ContextMenuTrigger>
             {!isMobileDevice && (
               <ContextMenuContent className="w-52">
-                <ContextMenuItem onClick={() => { navigator.clipboard.writeText(msg.content || '').then(() => toast.success('Mesaj kopyalandı')); }}>
-                  <Copy className="w-4 h-4 mr-2" /> Mesajı Kopyala
+                <ContextMenuItem onClick={() => { navigator.clipboard.writeText(msg.content || '').then(() => toast.success(t('chat.messageCopied'))); }}>
+                  <Copy className="w-4 h-4 mr-2" /> {t('chat.copyMessage')}
                 </ContextMenuItem>
                 <ContextMenuItem onClick={() => { setReplyingTo(msg); inputRef.current?.focus(); }}>
                   <Reply className="w-4 h-4 mr-2" /> {t('chat.reply')}
@@ -1083,7 +1084,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
       {slowModeCountdown > 0 && (
         <div className="px-4 py-1.5 bg-destructive/10 border-t border-destructive/20 flex items-center gap-2">
           <Clock className="w-3.5 h-3.5 text-destructive" />
-          <span className="text-xs text-destructive font-medium">Yavaş mod: {formatCountdown(slowModeCountdown)} bekleyin</span>
+          <span className="text-xs text-destructive font-medium">{t('chat.slowModeWait', { countdown: formatCountdown(slowModeCountdown) })}</span>
         </div>
       )}
 
@@ -1119,12 +1120,12 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
         {isLocked && !isOwner ? (
           <div className="bg-secondary/50 rounded-xl flex items-center justify-center px-4 py-3 gap-2 text-muted-foreground">
             <Lock className="w-4 h-4" />
-            <span className="text-sm">Bu kanal kilitli. Yalnızca sunucu sahibi mesaj gönderebilir.</span>
+            <span className="text-sm">{t('chat.channelLocked')}</span>
           </div>
         ) : !canSendMessages ? (
           <div className="bg-secondary/50 rounded-xl flex items-center justify-center px-4 py-3 gap-2 text-muted-foreground">
             <Lock className="w-4 h-4" />
-            <span className="text-sm">Bu kanalda mesaj gönderme yetkin yok.</span>
+            <span className="text-sm">{t('chat.noSendPermission')}</span>
           </div>
         ) : isMobileDevice ? (
           /* ===== MOBILE INPUT BAR ===== */
@@ -1184,7 +1185,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                     </div>
                     <div className="text-left">
                       <p className="font-semibold text-sm leading-tight">Resim / Video Ekle</p>
-                      <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">Galeriden seç</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{t('chat.selectFromGallery')}</p>
                     </div>
                   </button>
                   <button

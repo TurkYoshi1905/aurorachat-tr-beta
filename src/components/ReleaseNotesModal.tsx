@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Wrench, Shield, ImagePlus, Mic, Smartphone, Monitor, Database, PlusCircle } from 'lucide-react';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.3.2';
+const RELEASE_VERSION = '1.3.3';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -17,38 +17,31 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: Monitor,
+    icon: Sparkles,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Masaüstü Medya Menüsü: "+" butonuna tıklanınca ikonlu premium açılır menü gösterilir — Resim/Video Ekle ve Dosya Ekle seçenekleriyle hızlı medya paylaşımı.',
+    label: 'Tam Çeviri Desteği: ChatArea, DMChatArea, MemberList, NotificationHistory, Communities bileşenlerindeki tüm sabit Türkçe dizeler i18n sistemine taşındı.',
     badge: 'Yeni',
   },
   {
-    icon: Smartphone,
+    icon: Monitor,
     iconBg: 'bg-cyan-500/15',
     iconColor: 'text-cyan-400',
-    label: 'Grup DM Galeri Çekmecesi: Grup sohbetlerine de "+" butonu ve Android galeri çekmecesi eklendi; Resim, Dosya ve GIF paylaşımı desteklenir.',
+    label: 'Yeni i18n Anahtarları: dmDashboard ve communities için 50+ yeni çeviri anahtarı; chat, dm, status, members, notifications, common bölümlerine 30+ ek anahtar.',
     badge: 'Yeni',
   },
   {
     icon: Database,
     iconBg: 'bg-violet-500/15',
     iconColor: 'text-violet-400',
-    label: 'Supabase Performans İyileştirmesi: Yoğun sorgu tablolarına index eklendi, bağlantı zaman aşımı azaltıldı; genel sorgu hızı artırıldı.',
+    label: '6 Dil Desteği: tr/en/az/ru/ja/de dil dosyaları eş zamanlı güncellendi; tüm yeni anahtarlar 6 dilde de tam çeviri ile yayında.',
     badge: 'İyileştirme',
-  },
-  {
-    icon: ImagePlus,
-    iconBg: 'bg-amber-500/15',
-    iconColor: 'text-amber-400',
-    label: 'Resim/Video filtresi düzeltildi: "+" → Resim Ekle tüm platformlarda doğru accept="image/*,video/*" kullanarak native galeriyi açar.',
-    badge: 'Düzeltme',
   },
   {
     icon: Wrench,
     iconBg: 'bg-secondary',
     iconColor: 'text-muted-foreground',
-    label: 'Sürüm senkronizasyonu: Settings, Landing, Hakkında sayfası ve ReleaseNotesModal v1.3.2 ile güncellendi.',
+    label: 'Sürüm senkronizasyonu: Settings, Landing, Hakkında sayfası ve ReleaseNotesModal v1.3.3 ile güncellendi.',
     badge: 'Teknik',
   },
 ];

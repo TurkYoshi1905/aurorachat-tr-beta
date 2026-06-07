@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -24,16 +25,17 @@ interface NotificationHistoryProps {
 }
 
 const TYPE_CONFIG: Record<string, { icon: any; bg: string; color: string; label: string; bar: string }> = {
-  dm:      { icon: MessageSquare, bg: 'bg-indigo-500/15',  color: 'text-indigo-400',  label: 'Direkt Mesaj', bar: 'bg-indigo-500' },
-  mention: { icon: AtSign,        bg: 'bg-orange-500/15', color: 'text-orange-400',  label: 'Etiket',        bar: 'bg-orange-500' },
-  reply:   { icon: Reply,         bg: 'bg-cyan-500/15',   color: 'text-cyan-400',    label: 'Yanıt',         bar: 'bg-cyan-500' },
+  dm:      { icon: MessageSquare, bg: 'bg-indigo-500/15',  color: 'text-indigo-400',  label: 'dm',     bar: 'bg-indigo-500' },
+  mention: { icon: AtSign,        bg: 'bg-orange-500/15', color: 'text-orange-400',  label: 'mention', bar: 'bg-orange-500' },
+  reply:   { icon: Reply,         bg: 'bg-cyan-500/15',   color: 'text-cyan-400',    label: 'reply',   bar: 'bg-cyan-500' },
 };
 
 const getTypeConfig = (type: string) =>
-  TYPE_CONFIG[type] ?? { icon: Bell, bg: 'bg-primary/15', color: 'text-primary', label: 'Bildirim', bar: 'bg-primary' };
+  TYPE_CONFIG[type] ?? { icon: Bell, bg: 'bg-primary/15', color: 'text-primary', label: 'notification', bar: 'bg-primary' };
 
 const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage }: NotificationHistoryProps) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,14 +48,14 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
   const getRelativeTime = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const s = Math.floor(diff / 1000);
-    if (s < 60) return `${s}s önce`;
+    if (s < 60) return t('notifications.secondsAgoShort', { n: s });
     const m = Math.floor(s / 60);
-    if (m < 60) return `${m}dk önce`;
+    if (m < 60) return t('notifications.minutesAgoShort', { n: m });
     const h = Math.floor(m / 60);
-    if (h < 24) return `${h}sa önce`;
+    if (h < 24) return t('notifications.hoursAgoShort', { n: h });
     const days = Math.floor(h / 24);
-    if (days === 1) return 'Dün';
-    return `${days} gün önce`;
+    if (days === 1) return t('notifications.yesterday');
+    return t('notifications.daysAgo', { n: days });
   };
 
   const fetchNotifications = useCallback(async () => {
@@ -79,8 +81,11 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
     const ch = supabase
       .channel('notif-history-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, (payload) => {
-        setNotifications(prev => [payload.new as Notification, ...prev]);
-        onUnreadCountChange?.((c) => (c as any) + 1);
+        setNotifications(prev => {
+          const updated = [payload.new as Notification, ...prev];
+          onUnreadCountChange?.(updated.filter((n: Notification) => !n.read).length);
+          return updated;
+        });
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
@@ -152,9 +157,9 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
     const groups: { label: string; items: Notification[] }[] = [
-      { label: 'Bugün', items: [] },
-      { label: 'Dün', items: [] },
-      { label: 'Daha Eski', items: [] },
+      { label: t('notifications.today'), items: [] },
+      { label: t('notifications.yesterday'), items: [] },
+      { label: t('notifications.older') || 'Daha Eski', items: [] },
     ];
     for (const n of notifs) {
       const d = new Date(n.created_at); d.setHours(0, 0, 0, 0);
@@ -178,9 +183,9 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
               <Bell className="w-3.5 h-3.5 text-primary" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-foreground leading-none">Bildirimler</h2>
+              <h2 className="text-sm font-semibold text-foreground leading-none">{t('notifications.title')}</h2>
               {unreadCount > 0 && (
-                <p className="text-[10px] text-muted-foreground mt-0.5">{unreadCount} okunmamış</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t('notifications.unreadCount', { count: unreadCount })}</p>
               )}
             </div>
           </div>
@@ -227,7 +232,7 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Bildirimlerde ara..."
+              placeholder={t('notifications.searchPlaceholder')}
               className="w-full bg-secondary/40 border border-border rounded-lg pl-8 pr-8 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 focus:bg-secondary/60 transition-colors"
               data-testid="input-notif-search"
             />
@@ -242,21 +247,21 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
         {/* Filter panel */}
         {showFilters && (
           <div className="space-y-2 p-2 bg-secondary/20 rounded-lg border border-border/50">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tür</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t('notifications.typeFilter')}</p>
             <div className="flex flex-wrap gap-1">
-              {(['all', ...availableTypes] as string[]).map(t => {
-                const cfg = t === 'all' ? null : getTypeConfig(t);
+              {(['all', ...availableTypes] as string[]).map(typeKey => {
+                const cfg = typeKey === 'all' ? null : getTypeConfig(typeKey);
                 return (
                   <button
-                    key={t}
-                    onClick={() => setTypeFilter(t)}
+                    key={typeKey}
+                    onClick={() => setTypeFilter(typeKey)}
                     className={`px-2 py-1 rounded-md text-[10px] font-semibold transition-colors ${
-                      typeFilter === t
+                      typeFilter === typeKey
                         ? (cfg ? `${cfg.bg} ${cfg.color}` : 'bg-primary/15 text-primary')
                         : 'bg-secondary/60 text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    {t === 'all' ? 'Tümü' : cfg?.label ?? t}
+                    {typeKey === 'all' ? t('notifications.all') : (cfg?.label ? t(`notifications.type_${cfg.label}`) : typeKey)}
                   </button>
                 );
               })}
@@ -271,14 +276,14 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
             className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-colors ${filter === 'all' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             data-testid="tab-notif-all"
           >
-            Tümü {notifications.length > 0 && <span className="opacity-60">({notifications.length})</span>}
+            {t('notifications.all')} {notifications.length > 0 && <span className="opacity-60">({notifications.length})</span>}
           </button>
           <button
             onClick={() => setFilter('unread')}
             className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-colors ${filter === 'unread' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             data-testid="tab-notif-unread"
           >
-            Okunmamış {unreadCount > 0 && <span className={filter === 'unread' ? 'text-primary font-bold' : 'opacity-60'}>({unreadCount})</span>}
+            {t('notifications.unread')} {unreadCount > 0 && <span className={filter === 'unread' ? 'text-primary font-bold' : 'opacity-60'}>({unreadCount})</span>}
           </button>
         </div>
       </div>
@@ -287,7 +292,7 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
       {search.trim() && (
         <div className="px-3 py-1.5 bg-primary/5 border-b border-border/50 shrink-0">
           <p className="text-[10px] text-primary">
-            "<span className="font-semibold">{search}</span>" için {filtered.length} sonuç bulundu
+            {t('notifications.searchResults', { search, count: filtered.length })}
           </p>
         </div>
       )}
@@ -297,7 +302,7 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
             <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            <p className="text-xs text-muted-foreground">Yükleniyor...</p>
+            <p className="text-xs text-muted-foreground">{t('common.loading')}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -310,21 +315,21 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
             </div>
             <p className="text-sm font-semibold text-foreground">
               {search.trim()
-                ? 'Sonuç bulunamadı'
+                ? t('notifications.noResults')
                 : filter === 'unread'
-                ? 'Okunmamış bildirim yok'
-                : 'Henüz bildirim yok'}
+                ? t('notifications.noUnread')
+                : t('notifications.empty')}
             </p>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
               {search.trim()
-                ? 'Farklı anahtar kelimeler deneyin'
+                ? t('notifications.tryOtherKeywords')
                 : filter === 'unread'
-                ? 'Tüm bildirimler okundu!'
-                : 'Etiketlendiğinde veya mesaj aldığında burada görünür'}
+                ? t('notifications.allRead')
+                : t('notifications.notifyHint')}
             </p>
             {search.trim() && (
               <button onClick={() => setSearch('')} className="mt-3 text-xs text-primary hover:underline">
-                Aramayı temizle
+                {t('notifications.clearSearch')}
               </button>
             )}
           </div>
@@ -361,7 +366,7 @@ const NotificationHistory = ({ onClose, onUnreadCountChange, onNavigateToMessage
                         {/* Content */}
                         <div className="flex-1 min-w-0 pr-5">
                           <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className={`text-[10px] font-bold uppercase tracking-wide ${color}`}>{label}</span>
+                            <span className={`text-[10px] font-bold uppercase tracking-wide ${color}`}>{t(`notifications.type_${label}`) || label}</span>
                             {!n.read && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${bar}`} />}
                           </div>
                           {/* Highlight search term in title */}
