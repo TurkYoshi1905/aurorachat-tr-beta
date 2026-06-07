@@ -2315,21 +2315,35 @@ const Settings = () => {
                   <p className="text-xs text-muted-foreground mt-0.5">{t('settings.languageDesc')}</p>
                 </div>
                 <div className="space-y-1">
-                  {LANGUAGES.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => handleLanguageChange(lang.code)}
-                      disabled={savingLang}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                        profile?.language === lang.code
-                          ? 'bg-primary/10 text-primary border border-primary/30'
-                          : 'text-foreground hover:bg-secondary/50'
-                      }`}
-                    >
-                      <span className="font-medium">{lang.label}</span>
-                      {profile?.language === lang.code && <Check className="w-4 h-4" />}
-                    </button>
-                  ))}
+                  {([
+                    { code: 'tr', label: 'Türkçe', flag: '🇹🇷', native: 'Türkçe' },
+                    { code: 'en', label: 'English', flag: '🇬🇧', native: 'English' },
+                    { code: 'az', label: 'Azərbaycan', flag: '🇦🇿', native: 'Azərbaycan dili' },
+                    { code: 'ru', label: 'Русский', flag: '🇷🇺', native: 'Русский' },
+                    { code: 'ja', label: '日本語', flag: '🇯🇵', native: '日本語' },
+                    { code: 'de', label: 'Deutsch', flag: '🇩🇪', native: 'Deutsch' },
+                  ] as { code: string; label: string; flag: string; native: string }[]).map((lang) => {
+                    const isActive = profile?.language === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleLanguageChange(lang.code as any)}
+                        disabled={savingLang}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                          isActive
+                            ? 'bg-primary/10 text-primary border border-primary/30'
+                            : 'text-foreground hover:bg-secondary/50 border border-transparent'
+                        }`}
+                      >
+                        <span className="text-xl leading-none shrink-0">{lang.flag}</span>
+                        <span className="font-medium flex-1 text-left">{lang.label}</span>
+                        <span className={`text-xs shrink-0 ${isActive ? 'text-primary/70' : 'text-muted-foreground'}`}>
+                          {lang.native}
+                        </span>
+                        {isActive && <Check className="w-4 h-4 shrink-0" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -2538,7 +2552,7 @@ const Settings = () => {
                     </div>
                   </div>
                   <a
-                    href="https://github.com/TurkYoshi1905/aurorachat-tr-beta/raw/main/public/AuroraChat_V1.2.7.apk"
+                    href="https://github.com/TurkYoshi1905/aurorachat-tr-beta/raw/main/public/AuroraChat_V1.3.2.apk"
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="button-download-android"

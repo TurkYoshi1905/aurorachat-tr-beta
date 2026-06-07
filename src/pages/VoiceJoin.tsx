@@ -287,11 +287,11 @@ const VoiceJoin = () => {
           </div>
         )}
 
-        {/* Flip camera button — shown only when camera is on */}
+        {/* Flip camera overlay button — only when camera is on */}
         {cameraOn && (
           <button
             onClick={flipCamera}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95"
             style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }}
             data-testid="button-flip-camera"
           >
@@ -300,72 +300,102 @@ const VoiceJoin = () => {
         )}
       </div>
 
-      {/* Controls bar */}
-      <div className="shrink-0 flex items-center justify-center gap-5 px-6 py-5 border-t border-white/5"
-        style={{ background: 'rgba(15,15,15,0.98)', backdropFilter: 'blur(16px)' }}>
+      {/* ─── Controls bar ─── */}
+      <div
+        className="shrink-0 border-t border-white/5"
+        style={{ background: 'rgba(10,10,10,0.98)', backdropFilter: 'blur(20px)' }}
+      >
+        <div className="flex items-center justify-between px-4 py-4 gap-2">
 
-        {/* Mic */}
-        <button
-          onClick={toggleMic}
-          className="flex flex-col items-center gap-1.5"
-          data-testid="button-toggle-mic"
-        >
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 ${
-            micOn
-              ? 'bg-white/8 ring-1 ring-white/12'
-              : 'bg-red-500/20 ring-1 ring-red-500/50 shadow-[0_0_12px_rgba(239,68,68,0.25)]'
-          }`}>
-            {micOn
-              ? <Mic className="w-6 h-6 text-white/70" />
-              : <MicOff className="w-6 h-6 text-red-400" />}
-          </div>
-          <span className="text-[10px] font-medium text-white/40">{micOn ? 'Mikrofon' : 'Kapalı'}</span>
-        </button>
+          {/* Mic */}
+          <button
+            onClick={toggleMic}
+            data-testid="button-toggle-mic"
+            className="flex flex-col items-center gap-1.5 flex-1"
+          >
+            <div
+              className={`relative w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                micOn ? 'bg-white/10' : 'bg-red-500/20'
+              }`}
+              style={micOn
+                ? { boxShadow: '0 0 0 1px rgba(255,255,255,0.1)' }
+                : { boxShadow: '0 0 0 1px rgba(239,68,68,0.45), 0 0 16px rgba(239,68,68,0.25)' }}
+            >
+              {micOn
+                ? <Mic className="w-6 h-6 text-white/80" />
+                : <MicOff className="w-6 h-6 text-red-400" />}
+              {!micOn && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border border-black flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                </span>
+              )}
+            </div>
+            <span className={`text-[10px] font-semibold ${micOn ? 'text-white/50' : 'text-red-400'}`}>
+              {micOn ? 'Mikrofon' : 'Susturuldu'}
+            </span>
+          </button>
 
-        {/* Camera */}
-        <button
-          onClick={toggleCamera}
-          className="flex flex-col items-center gap-1.5"
-          data-testid="button-toggle-camera"
-        >
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 ${
-            cameraOn
-              ? 'bg-emerald-500/20 ring-1 ring-emerald-500/50 shadow-[0_0_12px_rgba(52,211,153,0.2)]'
-              : 'bg-white/8 ring-1 ring-white/12'
-          }`}>
-            {cameraOn
-              ? <Video className="w-6 h-6 text-emerald-400" />
-              : <VideoOff className="w-6 h-6 text-white/40" />}
-          </div>
-          <span className="text-[10px] font-medium text-white/40">{cameraOn ? 'Kamera' : 'Kapalı'}</span>
-        </button>
+          {/* Camera */}
+          <button
+            onClick={toggleCamera}
+            data-testid="button-toggle-camera"
+            className="flex flex-col items-center gap-1.5 flex-1"
+          >
+            <div
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-95 ${
+                cameraOn ? 'bg-emerald-500/25' : 'bg-white/10'
+              }`}
+              style={cameraOn
+                ? { boxShadow: '0 0 0 1px rgba(52,211,153,0.4), 0 0 16px rgba(52,211,153,0.2)' }
+                : { boxShadow: '0 0 0 1px rgba(255,255,255,0.1)' }}
+            >
+              {cameraOn
+                ? <Video className="w-6 h-6 text-emerald-400" />
+                : <VideoOff className="w-6 h-6 text-white/40" />}
+            </div>
+            <span className={`text-[10px] font-semibold ${cameraOn ? 'text-emerald-400' : 'text-white/50'}`}>
+              Kamera
+            </span>
+          </button>
 
-        {/* Flip (always visible, switches mode even when camera is off) */}
-        <button
-          onClick={flipCamera}
-          className="flex flex-col items-center gap-1.5"
-          data-testid="button-flip-camera-bar"
-        >
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-white/8 ring-1 ring-white/12 transition-all duration-200">
-            <RotateCcw className="w-6 h-6 text-white/50" />
-          </div>
-          <span className="text-[10px] font-medium text-white/40">
-            {facingMode === 'user' ? 'Ön Kam.' : 'Arka Kam.'}
-          </span>
-        </button>
+          {/* Flip */}
+          <button
+            onClick={flipCamera}
+            data-testid="button-flip-camera-bar"
+            className="flex flex-col items-center gap-1.5 flex-1"
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-95 bg-white/10"
+              style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.1)' }}
+            >
+              <RotateCcw className="w-5 h-5 text-white/60" />
+            </div>
+            <span className="text-[10px] font-semibold text-white/50">
+              {facingMode === 'user' ? 'Ön Kam.' : 'Arka Kam.'}
+            </span>
+          </button>
 
-        {/* Leave */}
-        <button
-          onClick={handleLeave}
-          className="flex flex-col items-center gap-1.5"
-          data-testid="button-leave-voice"
-        >
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200"
-            style={{ background: 'rgba(239,68,68,0.2)', boxShadow: '0 0 0 1px rgba(239,68,68,0.4)' }}>
-            <PhoneOff className="w-6 h-6 text-red-400" />
-          </div>
-          <span className="text-[10px] font-medium text-red-400">Ayrıl</span>
-        </button>
+          {/* Leave */}
+          <button
+            onClick={handleLeave}
+            data-testid="button-leave-voice"
+            className="flex flex-col items-center gap-1.5 flex-1"
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 active:scale-95"
+              style={{
+                background: 'rgba(239,68,68,0.18)',
+                boxShadow: '0 0 0 1.5px rgba(239,68,68,0.5), 0 0 18px rgba(239,68,68,0.2)',
+              }}
+            >
+              <PhoneOff className="w-6 h-6 text-red-400" />
+            </div>
+            <span className="text-[10px] font-bold text-red-400">Ayrıl</span>
+          </button>
+        </div>
+
+        {/* Safe-area bottom for mobile notch */}
+        <div style={{ height: 'env(safe-area-inset-bottom, 0px)' }} />
       </div>
     </div>
   );

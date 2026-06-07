@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Bot, Server, Plus, Check, Loader2, X, Command, Zap, Calendar, Hash } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Bot, Server, Plus, Check, Loader2, X, Command, Zap, Calendar, Hash, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -39,6 +40,7 @@ const BotProfileModal = ({ bot, open, onClose }: BotProfileModalProps) => {
   const [addingServer, setAddingServer] = useState<string | null>(null);
   const [botCommands, setBotCommands] = useState<any[]>([]);
   const [botServerCount, setBotServerCount] = useState<number>(0);
+  const [commandSearch, setCommandSearch] = useState('');
 
   useEffect(() => {
     if (!open || !bot) {
@@ -46,6 +48,7 @@ const BotProfileModal = ({ bot, open, onClose }: BotProfileModalProps) => {
       setServers([]);
       setAddedServers([]);
       setBotCommands([]);
+      setCommandSearch('');
     } else {
       loadBotExtra();
     }
@@ -141,6 +144,16 @@ const BotProfileModal = ({ bot, open, onClose }: BotProfileModalProps) => {
       loadServersForBot();
     }
   };
+
+  const filteredCommands = useMemo(() => {
+    if (!commandSearch.trim()) return botCommands;
+    const q = commandSearch.toLowerCase();
+    return botCommands.filter((cmd: any) =>
+      cmd.trigger?.toLowerCase().includes(q) ||
+      cmd.name?.toLowerCase().includes(q) ||
+      cmd.description?.toLowerCase().includes(q)
+    );
+  }, [botCommands, commandSearch]);
 
   if (!bot) return null;
 
@@ -239,7 +252,7 @@ const BotProfileModal = ({ bot, open, onClose }: BotProfileModalProps) => {
         </div>
 
         {/* Tab content */}
-        <div className="px-5 py-4 min-h-[120px]">
+        <div className="px-5 py-4 min-h-[140px]">
           {activeSection === 'info' && (
             <div className="space-y-3">
               {bot.description ? (
@@ -260,30 +273,56 @@ const BotProfileModal = ({ bot, open, onClose }: BotProfileModalProps) => {
           )}
 
           {activeSection === 'commands' && (
-            <div>
+            <div className="space-y-2">
               {botCommands.length === 0 ? (
                 <div className="text-center py-4">
                   <Hash className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
                   <p className="text-xs text-muted-foreground">Bu botun tanımlı komutu yok.</p>
                 </div>
               ) : (
-                <ScrollArea className="max-h-[180px]">
-                  <div className="space-y-1.5 pr-1">
-                    {botCommands.map((cmd: any, i: number) => (
-                      <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-secondary/30 border border-border/40 hover:bg-secondary/50 transition-colors">
-                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-primary/15 text-primary mt-0.5 shrink-0">
-                          /{cmd.trigger}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold text-foreground">{cmd.name || cmd.trigger}</p>
-                          {cmd.description && (
-                            <p className="text-[10px] text-muted-foreground truncate">{cmd.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                <>
+                  {/* Search input */}
+                  <div className="relative mb-2">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60 pointer-events-none" />
+                    <Input
+                      value={commandSearch}
+                      onChange={e => setCommandSearch(e.target.value)}
+                      placeholder="Komut ara..."
+                      className="pl-8 h-8 text-xs bg-secondary/40 border-border/50 focus:border-primary/50"
+                    />
+                    {commandSearch && (
+                      <button
+                        onClick={() => setCommandSearch('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
-                </ScrollArea>
+
+                  <ScrollArea className="h-[160px]">
+                    <div className="space-y-1.5 pr-1">
+                      {filteredCommands.length === 0 ? (
+                        <div className="text-center py-6">
+                          <Search className="w-6 h-6 text-muted-foreground/30 mx-auto mb-1.5" />
+                          <p className="text-xs text-muted-foreground">Komut bulunamadı.</p>
+                        </div>
+                      ) : filteredCommands.map((cmd: any, i: number) => (
+                        <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-secondary/30 border border-border/40 hover:bg-secondary/50 transition-colors">
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-primary/15 text-primary mt-0.5 shrink-0">
+                            /{cmd.trigger}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-foreground">{cmd.name || cmd.trigger}</p>
+                            {cmd.description && (
+                              <p className="text-[10px] text-muted-foreground truncate">{cmd.description}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </>
               )}
             </div>
           )}
@@ -300,7 +339,7 @@ const BotProfileModal = ({ bot, open, onClose }: BotProfileModalProps) => {
                   <p className="text-xs text-muted-foreground">Bot ekleme izniniz olan sunucu bulunamadı.</p>
                 </div>
               ) : (
-                <ScrollArea className="max-h-[180px]">
+                <ScrollArea className="h-[160px]">
                   <div className="space-y-1.5 pr-1">
                     {servers.map(srv => {
                       const isAdded = addedServers.includes(srv.id);
