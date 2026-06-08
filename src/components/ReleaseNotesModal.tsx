@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Wrench, Shield, ImagePlus, Mic, Smartphone, Monitor, Database, PlusCircle } from 'lucide-react';
 import { useTranslation } from '@/i18n';
 
-const RELEASE_VERSION = '1.3.3';
+const RELEASE_VERSION = '1.3.4';
 const STORAGE_KEY = `aurorachat_release_seen_${RELEASE_VERSION}`;
 
 interface Feature {
@@ -17,32 +17,32 @@ interface Feature {
 
 const features: Feature[] = [
   {
+    icon: Smartphone,
+    iconBg: 'bg-green-500/15',
+    iconColor: 'text-green-400',
+    label: 'Mobil Profil Çekmecesi: UserProfileCard mobilde artık alt çekmece (Drawer) ile açılıyor; daha native bir his veriyor.',
+    badge: 'Yeni',
+  },
+  {
     icon: Sparkles,
     iconBg: 'bg-primary/15',
     iconColor: 'text-primary',
-    label: 'Tam Çeviri Desteği: ChatArea, DMChatArea, MemberList, NotificationHistory, Communities bileşenlerindeki tüm sabit Türkçe dizeler i18n sistemine taşındı.',
+    label: 'Dinamik Durum Rozetleri: Mobil kullanıcılar için platform rozeti ve aktif durum (Çevrimiçi/Boşta/Rahatsız Etme) birlikte pill badge olarak gösteriliyor.',
     badge: 'Yeni',
   },
   {
     icon: Monitor,
     iconBg: 'bg-cyan-500/15',
     iconColor: 'text-cyan-400',
-    label: 'Yeni i18n Anahtarları: dmDashboard ve communities için 50+ yeni çeviri anahtarı; chat, dm, status, members, notifications, common bölümlerine 30+ ek anahtar.',
-    badge: 'Yeni',
+    label: 'i18n DM Anahtarları Tamamlandı: dm.messageActions, dm.selectGalleryImage ve 30+ eksik dm.* anahtarı artık doğru çevriliyor; ham anahtar görünümü giderildi.',
+    badge: 'Düzeltme',
   },
   {
-    icon: Database,
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    label: '6 Dil Desteği: tr/en/az/ru/ja/de dil dosyaları eş zamanlı güncellendi; tüm yeni anahtarlar 6 dilde de tam çeviri ile yayında.',
+    icon: ImagePlus,
+    iconBg: 'bg-emerald-500/15',
+    iconColor: 'text-emerald-400',
+    label: 'Klipy Güncellemesi: GIF seçici arayüzündeki "Tenor" etiketi tüm bileşenlerde ve 6 dil dosyasında "Klipy" olarak güncellendi.',
     badge: 'İyileştirme',
-  },
-  {
-    icon: Wrench,
-    iconBg: 'bg-secondary',
-    iconColor: 'text-muted-foreground',
-    label: 'Sürüm senkronizasyonu: Settings, Landing, Hakkında sayfası ve ReleaseNotesModal v1.3.3 ile güncellendi.',
-    badge: 'Teknik',
   },
 ];
 

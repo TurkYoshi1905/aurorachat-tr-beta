@@ -1125,7 +1125,7 @@ const GroupDMChatArea = ({ groupId, groupName, onBack }: Props) => {
                 </div>
                 <div className="text-left">
                   <p className="font-medium">GIF Gönder</p>
-                  <p className="text-xs text-[#b5bac1]">Tenor'dan animasyonlu GIF seç</p>
+                  <p className="text-xs text-[#b5bac1]">Klipy'den animasyonlu GIF seç</p>
                 </div>
               </button>
             </GifPicker>

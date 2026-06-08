@@ -1274,7 +1274,7 @@ const ChatArea = ({ channelName, channelId, messages, onSendMessage, onDeleteMes
                 </div>
                 <div className="text-left">
                   <p className="font-medium">GIF Gönder</p>
-                  <p className="text-xs text-muted-foreground">Tenor'dan animasyonlu GIF seç</p>
+                  <p className="text-xs text-muted-foreground">{t('chat.selectGifTenor')}</p>
                 </div>
               </button>
             </GifPicker>

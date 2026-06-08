@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from '@/i18n';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -768,24 +768,49 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
         <p className="text-[13px] text-muted-foreground mt-0.5">{profile?.username || '...'}</p>
 
         {/* Status label */}
-        <div className="flex items-center gap-1.5 mt-1.5">
-          {effectivePlatform === 'mobile' && userStatus !== 'offline' ? (
-            <Smartphone className="w-3 h-3 text-green-500 shrink-0" />
-          ) : effectivePlatform === 'tablet' && userStatus !== 'offline' ? (
-            <Tablet className="w-3 h-3 text-green-500 shrink-0" />
-          ) : userStatus === 'idle' ? (
-            <Moon className="w-3 h-3 text-status-idle fill-status-idle shrink-0" />
-          ) : userStatus === 'dnd' ? (
-            <CircleMinus className="w-3 h-3 text-red-500 shrink-0" />
-          ) : (
-            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusDotClass[userStatus]}`} />
-          )}
-          <span className="text-xs text-muted-foreground">
-            {userStatus !== 'offline' && effectivePlatform === 'mobile' ? 'Mobil İstemci' :
-             userStatus !== 'offline' && effectivePlatform === 'tablet' ? 'Tablet İstemci' :
-             statusLabel[userStatus] || 'Çevrimdışı'}
-          </span>
-        </div>
+        {/* Status + Platform Badge */}
+        {effectivePlatform === 'mobile' && userStatus !== 'offline' ? (
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
+              <Smartphone className="w-3 h-3 text-green-400 shrink-0" />
+              <span className="text-[11px] font-medium text-green-400">{t('dm.mobileClient')}</span>
+            </div>
+            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${
+              userStatus === 'idle' ? 'bg-yellow-500/10 border border-yellow-500/20' :
+              userStatus === 'dnd' ? 'bg-red-500/10 border border-red-500/20' :
+              'bg-green-500/10 border border-green-500/20'
+            }`}>
+              {userStatus === 'idle' ? <Moon className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400 shrink-0" /> :
+               userStatus === 'dnd' ? <CircleMinus className="w-2.5 h-2.5 text-red-400 shrink-0" /> :
+               <div className={`w-2 h-2 rounded-full shrink-0 ${statusDotClass[userStatus]}`} />}
+              <span className={`text-[10px] font-medium ${
+                userStatus === 'idle' ? 'text-yellow-400' :
+                userStatus === 'dnd' ? 'text-red-400' :
+                'text-green-400'
+              }`}>{statusLabel[userStatus]}</span>
+            </div>
+          </div>
+        ) : effectivePlatform === 'tablet' && userStatus !== 'offline' ? (
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+              <Tablet className="w-3 h-3 text-blue-400 shrink-0" />
+              <span className="text-[11px] font-medium text-blue-400">{t('dm.tabletClient')}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 mt-1.5">
+            {userStatus === 'idle' ? (
+              <Moon className="w-3 h-3 text-status-idle fill-status-idle shrink-0" />
+            ) : userStatus === 'dnd' ? (
+              <CircleMinus className="w-3 h-3 text-red-500 shrink-0" />
+            ) : (
+              <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusDotClass[userStatus]}`} />
+            )}
+            <span className="text-xs text-muted-foreground">
+              {statusLabel[userStatus] || 'Çevrimdışı'}
+            </span>
+          </div>
+        )}
 
         {/* Custom status */}
         {profile?.custom_status && (
@@ -1055,12 +1080,14 @@ const UserProfileCard = ({ userId, serverId, children, onSendMessage, status: ex
 
   if (isMobile) {
     return (
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>{children}</SheetTrigger>
-        <SheetContent side="bottom" className="p-0 bg-sidebar border-border overflow-y-auto max-h-[90vh] rounded-t-2xl" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
-          {profileContent}
-        </SheetContent>
-      </Sheet>
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>{children}</DrawerTrigger>
+        <DrawerContent className="p-0 bg-sidebar border-border max-h-[92vh] focus:outline-none">
+          <div className="overflow-y-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}>
+            {profileContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
     );
   }
 

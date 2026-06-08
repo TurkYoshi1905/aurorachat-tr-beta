@@ -16,6 +16,41 @@ export interface ChangelogRelease {
 
 export const changelogData: ChangelogRelease[] = [
   {
+    version: '1.3.4',
+    date: '08 Haziran 2026',
+    summary: "Mobil Profil Çekmecesi, Dinamik Durum Rozetleri, DM mobil platform takibi, eksik dm.* i18n anahtarları tamamlandı ve GIF sağlayıcısı Tenor'dan Klipy'ye güncellendi.",
+    sections: [
+      {
+        title: 'Yeni Özellikler',
+        icon: Sparkles,
+        color: 'text-primary',
+        items: [
+          'Mobil Profil Çekmecesi: UserProfileCard mobilde artık Sheet yerine Drawer (alt çekmece) kullanıyor; ekranın altından pürüzsüzce açılıyor.',
+          'Dinamik Durum Rozetleri: Mobil kullanıcılar için platform rozeti ve aktif durum (Çevrimiçi/Boşta/Rahatsız Etme) pill badge olarak birlikte gösteriliyor; MemberList ve UserProfileCard senkronize.',
+          'DM Mobil Platform Takibi: DM sohbet başlığında karşı kullanıcı mobil bağlıysa avatar üzerinde gerçek zamanlı telefon simgesi görünüyor.',
+        ],
+      },
+      {
+        title: 'Düzeltmeler',
+        icon: Bug,
+        color: 'text-yellow-400',
+        items: [
+          'i18n DM Anahtarları: dm.messageActions, dm.selectGalleryImage, dm.shareAnyFile ve 30+ eksik dm.* anahtarı 6 dil dosyasına eklendi; artık ham anahtar (dm.messageActions) gösterimi yok.',
+          "Klipy Yeniden Adlandırma: GIF seçici açıklamasındaki 'Tenor' etiketi tüm bileşenlerde ve 6 dil dosyasında 'Klipy' olarak güncellendi.",
+        ],
+      },
+      {
+        title: 'Teknik',
+        icon: Wrench,
+        color: 'text-muted-foreground',
+        items: [
+          'Sürüm Senkronizasyonu: Settings > Hakkında, indirme isimleri, Landing footer ve ReleaseNotesModal v1.3.4 ile uyumlu hale getirildi.',
+          'SQL Migration: v134_mobile_client_tracking.sql ile profiles tablosuna current_platform ve last_seen_platform alanları eklendi.',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.3.3',
     date: '07 Haziran 2026',
     summary: 'Tüm bileşenlerdeki sabit Türkçe dizeler i18n sistemine taşındı; dmDashboard ve communities için yeni çeviri bölümleri eklendi; 6 dil dosyası eş zamanlı güncellendi.',

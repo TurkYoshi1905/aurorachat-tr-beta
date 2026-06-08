@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { restoreDMFromHistory } from '@/lib/dmHistory';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Send, PlusCircle, Pencil, Trash2, Check, X, ImagePlus, Phone, PhoneOff, Video, ChevronDown, ChevronUp, Maximize2, Minimize2, Loader2, SendHorizontal, Flag, Mic, Copy, Paperclip } from 'lucide-react';
+import { ArrowLeft, Send, PlusCircle, Pencil, Trash2, Check, X, ImagePlus, Phone, PhoneOff, Video, ChevronDown, ChevronUp, Maximize2, Minimize2, Loader2, SendHorizontal, Flag, Mic, Copy, Paperclip, Smartphone } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import VoiceRecorder from './VoiceRecorder';
 import VoicePlayerCard, { parseVoiceNote } from './VoicePlayerCard';
@@ -98,6 +98,7 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
   const [uploading, setUploading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [dmUserStatus, setDmUserStatus] = useState<string>(onlineStatus || 'offline');
+  const [dmUserPlatform, setDmUserPlatform] = useState<string>('desktop');
   const [isBlockedByOther, setIsBlockedByOther] = useState(false);
   const [hasBlockedOther, setHasBlockedOther] = useState(false);
   const [blockRecordId, setBlockRecordId] = useState<string | null>(null);
@@ -327,6 +328,18 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
       if (cached && STATUS_COLOR[cached]) setDmUserStatus(cached);
     }
   }, [dmUser.userId, onlineStatus]);
+
+  // Fetch DM user platform + realtime tracking for mobile status indicator
+  useEffect(() => {
+    if (!dmUser.userId) return;
+    supabase.from('profiles').select('platform').eq('id', dmUser.userId).single()
+      .then(({ data }) => { if ((data as any)?.platform) setDmUserPlatform((data as any).platform); });
+    const ch = supabase.channel(`dm_plat_${dmUser.userId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${dmUser.userId}` },
+        (payload) => { if ((payload.new as any)?.platform) setDmUserPlatform((payload.new as any).platform); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [dmUser.userId]);
 
   // Fetch messages when conversation is ready
   useEffect(() => {
@@ -625,7 +638,13 @@ const DMChatArea = ({ dmUser, onBack, onlineStatus, autoStartVoice, initiateCall
               {dmUser.avatarUrl && <AvatarImage src={dmUser.avatarUrl} />}
               <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">{dmUser.displayName.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ${STATUS_COLOR[dmUserStatus] || 'bg-gray-500'} border-2 border-background`} />
+            {dmUserPlatform === 'mobile' && dmUserStatus !== 'offline' ? (
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 flex items-center justify-center bg-background rounded-full border border-border/50">
+                <Smartphone className="w-2.5 h-2.5 text-green-500" />
+              </div>
+            ) : (
+              <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ${STATUS_COLOR[dmUserStatus] || 'bg-gray-500'} border-2 border-background`} />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <span className="font-semibold text-foreground text-sm block truncate">{dmUser.displayName}</span>
